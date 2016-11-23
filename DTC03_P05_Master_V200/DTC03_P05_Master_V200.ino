@@ -5,8 +5,8 @@
 #include <DTC03Master_P02.h>
 #include <DTC03_MS.h>
 #include <Wire.h>
-#include<openGLCD.h>
-#include<fonts/SystemFont5x7.h>
+#include <openGLCD.h>
+#include <fonts/SystemFont5x7.h>
 #include <fonts/Iain5x7.h>
 #include <fonts/fixed_bold10x15.h>
 

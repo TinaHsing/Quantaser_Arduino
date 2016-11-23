@@ -25,7 +25,9 @@
 #define CURRENTLIMMAX 50 //maximun of g_currentlim
 #define BCONSTMAX 4500//maximun of bconst
 #define HIGHLOWBOUNDRY 500 //
-
+//#define TESTGOPERIOD 18000000 // testing period for one temperature in the unit of ms (18,000,000 = 5hrs)
+#define TESTGOPERIOD 600000 //testing period for one tempeature in the unit of ms (600,000 = 10 mins) used for functional test should be remove after function varification 
+#define TESTGOSTEP 24.00 // testgo temperature step, usually ttstart = Tamb -12 so the second step will be ttstart + 24 = Tamb +12
 
 //=================pin definition=========================
 #define ENC_B 3
@@ -75,24 +77,27 @@
 #define BCONST_V_Y 48
 
 
-#define VBEH1_X 0
-#define VBEH1_X2 42//
-#define VBEH1_Y 0
-#define VBEH2_X 0
-#define VBEH2_X2 42//
-#define VBEH2_Y 8
-#define VBEC1_X 0
-#define VBEC1_X2 42//
-#define VBEC1_Y 16
-#define VBEC2_X 0
-#define VBEC2_X2 42//
-#define VBEC2_Y 24
+#define VR1_X 0
+#define VR1_X2 42//
+#define VR1_Y 0
+#define VR2_X 0
+#define VR2_X2 42//
+#define VR2_Y 8
+#define TPIDOFF_X 0
+#define TPIDOFF_X2 42//
+#define TPIDOFF_Y 16
 #define VFBC_X 0
 #define VFBC_X2 36
-#define VFBC_Y 32
+#define VFBC_Y 24
 #define VMOD_X 0
 #define VMOD_X2 36
-#define VMOD_Y 40
+#define VMOD_Y 32
+#define TTSTART_X 0
+#define TTSTART_X2 42
+#define TTSTART_Y 40
+#define TESTGO_X 0
+#define TESTGO_X2 42
+#define TESTGO_Y 48
 
 // define GLCD parameter
 #define COLUMNPIXEL1015 11 //column pixels of fixed_bold10x15
@@ -140,39 +145,31 @@ public:
 	void PrintFactaryMode();
 	void CheckStatus();
 	void PrintEngBG();
-	void PrintVbeh1();
-	void PrintVbeh2();
-	void PrintVbec1();
-	void PrintVbec2();
+	void PrintR1();
+	void PrintR2();
+	void PrintTpidoff();
+	void PrintTtstart();
+	void PrintTestgo();
 	void PrintVfbc();
 	void PrintVmod();
 	void ShowCursor();
     void UpdateEnable();//
 	
-    // unsigned int ReturnVset(float tset, bool type);
-	// void ReturnKi();
-	// void ReturnLs();
 	unsigned int g_vact, g_vset;
 	bool g_sensortype, g_en_state, g_mod_status;
-	//bool g_sensortype, g_en_state,g_paramupdate; //
     unsigned long g_vactsum; 
-	//long g_itecsum;
 	int g_itecsum;//
     float g_tset;
     unsigned char g_cursorstate;
 private:
 	glcd lcd;
 	int g_counter;
-	//int Iarray[IAVGTIMES];//
     unsigned int g_bconst, g_fbcbase, Varray[VAVGTIMES], Iarray[IAVGTIMES], g_icount ,g_vmodoffset;
-	//unsigned int g_bconst, g_fbcbase, Varray[VAVGTIMES], g_icount;
-    unsigned char g_p, g_ki,g_ls,g_currentlim, g_vbec1, g_vbec2, g_vbeh1, g_vbeh2, g_kiindex;
-	//unsigned char g_iarrayindex, g_varrayindex, g_lastencoded, g_cursorstate, g_engmode;
+    unsigned char g_p, g_ki,g_ls,g_currentlim, g_tpidoff, g_vbec2, g_r1, g_r2, g_kiindex;
 	unsigned char g_iarrayindex, g_varrayindex, g_lastencoded, g_engmode;
- 	//bool g_errcode1, g_errcode2, g_flag, g_countersensor;
-    bool g_errcode1, g_errcode2, g_flag, g_paramupdate, g_countersensor;
+    bool g_errcode1, g_errcode2, g_flag, g_paramupdate, g_countersensor, g_testgo;
     unsigned long g_tenc;
-	float g_tsetstep;
+	float g_tsetstep, g_ttstart;
 
 
 };
