@@ -87,16 +87,16 @@
 #define TPIDOFF_X2 42//
 #define TPIDOFF_Y 16
 #define VFBC_X 0
-#define VFBC_X2 36
+#define VFBC_X2 42
 #define VFBC_Y 24
 #define VMOD_X 0
-#define VMOD_X2 36
+#define VMOD_X2 42
 #define VMOD_Y 32
 #define TTSTART_X 0
-#define TTSTART_X2 42
+#define TTSTART_X2 49
 #define TTSTART_Y 40
 #define TESTGO_X 0
-#define TESTGO_X2 42
+#define TESTGO_X2 49
 #define TESTGO_Y 48
 
 // define GLCD parameter
