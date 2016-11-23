@@ -39,7 +39,7 @@ void DTC03Master::WelcomeScreen()
 {
   lcd.SelectFont(SystemFont5x7);
   lcd.GotoXY(0,0);
-  lcd.print("DTC03 Ver.2.00");
+  lcd.print("DTC03 Ver.2.01");
   lcd.GotoXY(0,ROWPIXEL0507*1);
   lcd.print("Initializing");
   for (byte i=9; i>0; i--)
