@@ -18,7 +18,10 @@ void DTC03SMaster::ParamInit()
 	g_en_state =0;
 	g_scan =0;
 	g_timer=0;
-	g_tenc =0;
+	g_tenc[0] =0;
+	g_tenc[1] =0;
+	g_tenc[2] =0;
+	
 }
 void DTC03SMaster::WelcomeScreen()
 {
@@ -155,9 +158,9 @@ void DTC03SMaster::PrintBG()
 	lcd.ClearScreen(0);
 	lcd.SelectFont(SystemFont5x7);
 	lcd.GotoXY(TSTART_COORD_X, TSTART_COORD_Y);
-	lcd.print("START:");
+	lcd.print("T1:");
 	lcd.GotoXY(TEND_COORD_X, TEND_COORD_Y);
-	lcd.print("END:");
+	lcd.print("T2:");
 	lcd.GotoXY(RATE_COORD_X, RATE_COORD_Y);
 	lcd.print("RATE:");
 	lcd.GotoXY(EN_COORD_X, EN_COORD_Y);
@@ -396,27 +399,32 @@ void DTC03SMaster::Encoder() // use rising edge triger of ENC_B
 	unsigned long tenc;
 	bool MSB, LSB;
 	tenc = millis();
-	dt = tenc - g_tenc;
-	if(dt < DEBOUNCETIME) return;
+	
+	if (( abs(tenc - g_tenc[0])) > COUNTERINCRE ) {
+		g_tenc[1] = 0;
+		g_tenc[2] = 0;
+	}
+	else g_tenc[1] = tenc - g_tenc[0];
+	g_tenc[2] += g_tenc[1];
+	 
 	MSB = digitalRead(ENC_B);
 	LSB = digitalRead(ENC_A);
 	encoded = (MSB <<1)| LSB;
-	sum = (g_lastencoded <<2)| encoded;
-	if(sum == 0b0010)
+    if(encoded == 0b10)
+	{
+		g_paramterupdate =-1;
+		g_counter =-1;
+		if (g_tenc[2] > COUNTERSPEEDUP) g_counter2 =-10;
+		else g_counter2 =-1;		
+	}
+	else if(encoded == 0b11)
 	{
 		g_paramterupdate =1;
 		g_counter =1;
-		if (dt < COUNTERFAST) g_counter2 =100;
-		else if (dt < COUNTERSLOW) g_counter2 = 10;
-		else g_counter2 =1;		
+		if (g_tenc[2] > 3000) g_counter2 =10;
+		else g_counter2 = 1;	
 	}
-	else if(sum == 0b0111)
-	{
-		g_paramterupdate =1;
-		g_counter =-1;
-		if (dt < COUNTERFAST) g_counter2 =-100;
-		else if (dt < COUNTERSLOW) g_counter2 = -10;
-		else g_counter2 = -1;	
-	}
+	g_tenc[0] = tenc;	
 }
+
 

@@ -32,8 +32,8 @@
 #define PERIOD			100
 #define MAXRATEINDEX	7 // Should be set rate index -1 current rate index is 8
 #define DEBOUNCETIME 	2
-#define COUNTERFAST		150
-#define COUNTERSLOW		600
+#define COUNTERINCRE	100
+#define COUNTERSPEEDUP	2000
 
 //------pin definition ----------------
 #define ENC_A 2
@@ -74,11 +74,11 @@
 //----------Print Coordinate ---------
 #define TSTART_COORD_X 	6
 #define TSTART_COORD_Y 	0
-#define TSTART_COORD_X2	42
+#define TSTART_COORD_X2	24
 
-#define TEND_COORD_X	70
+#define TEND_COORD_X	72
 #define TEND_COORD_Y	0
-#define TEND_COORD_X2	106
+#define TEND_COORD_X2	90
 
 #define RATE_COORD_X	6
 #define RATE_COORD_Y	12
@@ -158,7 +158,7 @@ private:
 	char g_counter, g_counter2;
 	unsigned char g_rateindex, g_trate, g_cursorstate, g_lastencoded;
 	unsigned int  g_fbcbase, g_vstart, g_vset, g_vend;
-	unsigned long g_timer, g_tenc;
+	unsigned long g_timer, g_tenc[3];
 	float g_tstart, g_tstop, g_tend, g_tset;
 
 

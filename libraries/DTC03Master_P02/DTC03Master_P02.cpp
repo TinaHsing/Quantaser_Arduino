@@ -589,7 +589,7 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
 
       case 13:
       if(g_fbcbase>44900) g_fbcbase=44900;//
-      if(g_fbcbase<20100) g_fbcbase=20100;//
+      if(g_fbcbase<16100) g_fbcbase=16100;//
       g_fbcbase +=(g_counter*100);
       I2CWriteData(I2C_COM_FBC);
       PrintVfbc();

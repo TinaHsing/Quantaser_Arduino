@@ -40,7 +40,6 @@ void setup() {
   Wire.begin(DTC03P05);//
   Wire.onReceive(ReceiveEvent);//
   Wire.onRequest(RequestEvent);//
-  
 }
 
 void loop() {
@@ -50,7 +49,7 @@ void loop() {
   int ierr;
   long terr;
   unsigned int pidoffset = dtc.g_tpidoffset*1000;
-//  if (i%500==0) {
+  if (i%500==0) {
 //  Serial.print("r1 r2 offset: ");
 //  Serial.print(dtc.g_r1);
 //  Serial.print(", ");
@@ -58,9 +57,13 @@ void loop() {
 //  Serial.print(", ");
 //  Serial.print(dtc.g_tpidoffset);
 //  Serial.print(", ");
-//  Serial.println(pidoffset);
+//  Serial.print(pidoffset);
+//  Serial.print(",");
+//  Serial.print(dtc.g_mod_status);
+//  Serial.print(",");
+//  Serial.println(dtc.g_vmodoffset);
 //
-//  }
+  }
  
   if(dtc.g_sensortype) digitalWrite(SENSOR_TYPE, HIGH);
   else digitalWrite(SENSOR_TYPE,LOW);
@@ -76,10 +79,7 @@ void loop() {
 
   terr = (long)dtc.g_vact - (long)dtc.g_vset_limitt;
 //  if (i%500==0) {
-//  Serial.print("Vact, Vset :  ");
-//  Serial.print(dtc.g_vact);
-//  Serial.print(", ");
-//  Serial.println(dtc.g_vset_limitt);
+//  Serial.println(isense);
 //  }
   if(ierr > -20) 
   {

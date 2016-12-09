@@ -21,9 +21,8 @@ void DTC03::DynamicVcc()
 {
     float restec;
     unsigned int Rcal_step = RMEASUREVOUT - g_fbc_base ;
-  	
     if(g_sensortype) digitalWrite(SENSOR_TYPE,g_sensortype);
-    
+    SetMosOff();
     g_isense0 = ReadIsense();
     g_r1 = float(g_vbeh1)*0.1;
     g_r2 = (float(g_vbeh2)*0.1);
@@ -65,6 +64,11 @@ float DTC03::CalculateR(unsigned int fb_value, unsigned int stabletime, int ravg
 
   SetMosOff();
   g_itecavgsum = 0;
+  Serial.println("Vtec0");
+//  for (int i=5; i--; i>0) {
+//  	Serial.println(i);
+//  	delay(1000);
+//  }
   vtec0=ReadVtec(vavgtime);
 
   #ifdef DEBUGFLAG01
@@ -423,6 +427,7 @@ void DTC03::CurrentLimit()
   unsigned int dacout;
   unsigned char i;//
   noInterrupts();//
+//  analogRead(ISENSE0); //20161129 Adam
   g_itecavgsum -=Itecarray[g_currentindex];
   Itecarray[g_currentindex] = analogRead(ISENSE0);
   g_itecavgsum +=Itecarray[g_currentindex];//20161101 wrong sign
@@ -596,6 +601,7 @@ void DTC03::I2CReceive()
     case I2C_COM_VBEC:
     g_vbec1 = temp[0];
     g_vbec2 = temp[1];
+    g_tpidoffset = g_vbec1;
     g_ee_change_state = EEADD_VBE_C1;
     //Serial.println("BC");
     break;
