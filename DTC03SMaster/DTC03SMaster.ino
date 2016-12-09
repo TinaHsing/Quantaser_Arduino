@@ -26,13 +26,23 @@ void setup() {
   master.PrintRate();
   master.CheckVact(); // Check Vact from slave and print
   master.PrintScan();
+  master.PrintEnable();
+  master.PrintScan();
+  attachInterrupt(digitalPinToInterrupt(ENC_B), CheckEncoder, RISING);
  
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
- master.CheckStatus();
  master.CheckVact();
  master.UpdateEnable();
+ master.CheckScan();
+ master.CheckStatus(); //Check which cursor state it is
+ master.ShowCursor(); 
+ master.UpdateParam();
 
+}
+void CheckEncoder()
+{  
+  master.Encoder();
 }
