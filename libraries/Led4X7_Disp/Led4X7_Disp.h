@@ -1,7 +1,6 @@
-#include <Arduino.h>
 #ifndef LED4X7_DISP_H
 #define LED4X7_DISP_H
-
+#include <Arduino.h>
 
 class led4X7_disp //use PORTD pins for p_pinA~D; PORTB for pin0~3 and pinh
 {
