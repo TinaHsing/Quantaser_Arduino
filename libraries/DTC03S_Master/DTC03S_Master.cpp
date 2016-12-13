@@ -192,7 +192,7 @@ void DTC03SMaster::PrintRate()
 {
 	lcd.SelectFont(SystemFont5x7);
 	lcd.GotoXY(RATE_COORD_X2, RATE_COORD_Y);
-	lcd.print(g_tend,2);
+	lcd.print(g_tend,2); // check here 
 }
 void DTC03SMaster::PrintScan()
 {
@@ -349,7 +349,7 @@ void DTC03SMaster::UpdateParam()
 				I2CWriteData(I2C_COM_VSET); 
 			}		
 		}
-		else g_tstart = g_tset;			 
+		else g_tstart = g_tset; // check if this line is need4ed or not
 	}
 	if(g_paramterupdate)
 	{
