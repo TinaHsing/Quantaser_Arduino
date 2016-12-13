@@ -263,7 +263,7 @@ void DTC03SMaster::CheckScan()
 	if(digitalRead(SCANB)==0) 
 	{
 		PrintScan();
-		while(~digitalRead(SCANB)){}
+//		while(~digitalRead(SCANB)){}
 		g_scan = ~g_scan;
 			
 	}	
@@ -412,7 +412,7 @@ void DTC03SMaster::Encoder() // use rising edge triger of ENC_B
 	encoded = (MSB <<1)| LSB;
     if(encoded == 0b10)
 	{
-		g_paramterupdate =-1;
+		g_paramterupdate =1;
 		g_counter =-1;
 		if (g_tenc[2] > COUNTERSPEEDUP) g_counter2 =-10;
 		else g_counter2 =-1;		
