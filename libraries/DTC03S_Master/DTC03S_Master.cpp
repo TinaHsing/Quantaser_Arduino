@@ -414,14 +414,14 @@ void DTC03SMaster::Encoder() // use rising edge triger of ENC_B
 	{
 		g_paramterupdate =1;
 		g_counter =-1;
-		if (g_tenc[2] > COUNTERSPEEDUP) g_counter2 =-10;
+		if (g_tenc[2] > COUNTERSPEEDUP) g_counter2 =-20;
 		else g_counter2 =-1;		
 	}
 	else if(encoded == 0b11)
 	{
 		g_paramterupdate =1;
 		g_counter =1;
-		if (g_tenc[2] > COUNTERSPEEDUP) g_counter2 =10;
+		if (g_tenc[2] > COUNTERSPEEDUP) g_counter2 =20;
 		else g_counter2 = 1;	
 	}
 	g_tenc[0] = tenc;	

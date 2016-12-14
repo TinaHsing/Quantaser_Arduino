@@ -32,13 +32,13 @@
 #define PERIOD			100
 #define MAXRATEINDEX	7 // Should be set rate index -1 current rate index is 8
 #define DEBOUNCETIME 	2
-#define COUNTERINCRE	100
-#define COUNTERSPEEDUP	2000
+#define COUNTERINCRE	50
+#define COUNTERSPEEDUP	100
 
 //------pin definition ----------------
 #define ENC_A 2
 #define ENC_B 3
-#define SCANB 11
+#define SCANB 12 // MOSI
 #define PUSHB A7
 #define ENSW A6
 
