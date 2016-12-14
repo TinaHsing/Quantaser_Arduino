@@ -27,7 +27,6 @@ void setup() {
   master.CheckVact(); // Check Vact from slave and print
   master.PrintScan();
   master.PrintEnable();
-  master.PrintScan();
   attachInterrupt(digitalPinToInterrupt(ENC_B), CheckEncoder, RISING);
  
 }

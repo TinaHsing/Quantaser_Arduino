@@ -177,22 +177,24 @@ void DTC03SMaster::PrintTend()
 {
 	lcd.SelectFont(SystemFont5x7);
 	lcd.GotoXY(TEND_COORD_X2, TEND_COORD_Y);
-	//if(g_tend < 10.00) lcd.print(" ");
-	lcd.print(g_tend,2.2); // need to check if 2.2 is workikng or not, if not working uncomment previous line
+	if(g_tend < 10.00) lcd.print(" ");
+	lcd.print(g_tend,2); // need to check if 2.2 is workikng or not, if not working uncomment previous line
 }
 void DTC03SMaster::PrintTact(float tact)
 {
 	lcd.SelectFont(Arial_bold_14);
 	lcd.GotoXY(TACT_COORD_X, TACT_COORD_Y);
-	//if(tact< 10.00) lcd.print(" ");
-	lcd.print(tact, 2.2); // Need to check if 2.2 is working or not if not working uncomment previous line
+	if(tact< 10.00) lcd.print(" ");
+	lcd.print(tact, 2); // Need to check if 2.2 is working or not if not working uncomment previous line
 
 }
 void DTC03SMaster::PrintRate()
 {
 	lcd.SelectFont(SystemFont5x7);
 	lcd.GotoXY(RATE_COORD_X2, RATE_COORD_Y);
-	lcd.print(g_tend,2);
+	if (g_trate < 10) lcd.print("  ");
+	else if (g_trate < 100) lcd.print(" ");
+	lcd.print(g_trate);
 }
 void DTC03SMaster::PrintScan()
 {
@@ -260,13 +262,18 @@ void DTC03SMaster::UpdateEnable()//20161101
 }
 void DTC03SMaster::CheckScan()
 {
+	unsigned long t_temp;
+	
 	if(digitalRead(SCANB)==0) 
 	{
+		t_temp = millis();
+		if ((t_temp - g_tscan) > 50 ) {
+		g_scan = !g_scan;
 		PrintScan();
-//		while(~digitalRead(SCANB)){}
-		g_scan = ~g_scan;
-			
-	}	
+		}
+	}
+	g_tscan = t_temp;
+	
 }
 void DTC03SMaster::CheckStatus()
 {
@@ -349,7 +356,7 @@ void DTC03SMaster::UpdateParam()
 				I2CWriteData(I2C_COM_VSET); 
 			}		
 		}
-		else g_tstart = g_tset;			 
+//		else g_tstart = g_tset;			 
 	}
 	if(g_paramterupdate)
 	{
@@ -376,10 +383,11 @@ void DTC03SMaster::UpdateParam()
 			break;
 
 			case 2:
-				if(g_rateindex <1) g_rateindex =1;
-				if(g_rateindex > MAXRATEINDEX) g_rateindex = MAXRATEINDEX;
 				g_rateindex +=g_counter;
+				if(g_rateindex <1) g_rateindex =1;
+				if(g_rateindex > MAXRATEINDEX) g_rateindex = MAXRATEINDEX;				
 				g_trate = pgm_read_word_near(RateTable+g_rateindex);
+				PrintRate(); 
 			break;
 
 			case 4:
