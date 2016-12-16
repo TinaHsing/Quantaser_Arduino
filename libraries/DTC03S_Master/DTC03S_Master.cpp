@@ -195,6 +195,7 @@ void DTC03SMaster::PrintRate()
 	if (g_trate < 10) lcd.print("  ");
 	else if (g_trate < 100) lcd.print(" ");
 	lcd.print(g_trate);
+	lcd.print(g_tend,2); // check here 
 }
 void DTC03SMaster::PrintScan()
 {
@@ -356,7 +357,9 @@ void DTC03SMaster::UpdateParam()
 				I2CWriteData(I2C_COM_VSET); 
 			}		
 		}
+
 //		else g_tstart = g_tset;			 
+		else g_tstart = g_tset; // check if this line is need4ed or not
 	}
 	if(g_paramterupdate)
 	{

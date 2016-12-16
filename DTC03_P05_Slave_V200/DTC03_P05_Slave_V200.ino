@@ -49,7 +49,7 @@ void loop() {
   int ierr;
   long terr;
   unsigned int pidoffset = dtc.g_tpidoffset*1000;
-  if (i%500==0) {
+//  if (i%500==0) {
 //  Serial.print("r1 r2 offset: ");
 //  Serial.print(dtc.g_r1);
 //  Serial.print(", ");
@@ -62,8 +62,8 @@ void loop() {
 //  Serial.print(dtc.g_mod_status);
 //  Serial.print(",");
 //  Serial.println(dtc.g_vmodoffset);
-//
-  }
+    Serial.println(dtc.g_vset_limitt);
+//  }
  
   if(dtc.g_sensortype) digitalWrite(SENSOR_TYPE, HIGH);
   else digitalWrite(SENSOR_TYPE,LOW);
