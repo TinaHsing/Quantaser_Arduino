@@ -195,13 +195,12 @@ void DTC03SMaster::PrintRate()
 	if (g_trate < 10) lcd.print("  ");
 	else if (g_trate < 100) lcd.print(" ");
 	lcd.print(g_trate);
-	lcd.print(g_tend,2); // check here 
 }
 void DTC03SMaster::PrintScan()
 {
 	lcd.SelectFont(SystemFont5x7);
 	lcd.GotoXY(SCAN_COORD_X, SCAN_COORD_Y);
-	if(g_scan==0) lcd.print("SCAN");
+	if(g_scan) lcd.print("SCAN");
 	else lcd.print("STOP");
 }
 void DTC03SMaster::PrintEnable()
@@ -231,15 +230,17 @@ void DTC03SMaster::CalculateRate()
 {
 	if(g_heater) 
 		{
-			g_tset +=g_trate;
+//			g_tset = g_tstart + g_trate;
+			g_tset += 0.01;
 			if(g_tset > g_tend) g_tset = g_tend;
 		}	
 	else 
 		{
-			g_tset -=g_trate;
+//			g_tset = g_tstart - g_trate;
+			g_tset -= 0.01;
 			if(g_tset < g_tend) g_tset = g_tend;
 		}
-	g_vset = ReturnTemp(g_tset, 0);
+	g_vset = ReturnVset(g_tset, 0);
 }
 void DTC03SMaster::CheckVact()
 {
@@ -273,8 +274,7 @@ void DTC03SMaster::CheckScan()
 		PrintScan();
 		}
 	}
-	g_tscan = t_temp;
-	
+	g_tscan = t_temp;	
 }
 void DTC03SMaster::CheckStatus()
 {
@@ -349,17 +349,19 @@ void DTC03SMaster::UpdateParam()
 		if(g_scan)
 		{
 			CalculateRate(); // only change the g_vset while g_en_state =1 and g_scan =1
-			t1 = millis();
-			if(t1 >=g_timer+PERIOD) I2CWriteData(I2C_COM_VSET);
-			else
-			{
-				while(t1 < g_timer+PERIOD) t1=millis(); // Wait until 100ms is reached.
+//			t1 = millis();
+//			if(t1 >=g_timer+PERIOD) I2CWriteData(I2C_COM_VSET);
+//			else
+//			{
+//				while(t1 < g_timer+PERIOD) t1=millis(); // Wait until 100ms is reached.
 				I2CWriteData(I2C_COM_VSET); 
-			}		
+//			}		
 		}
-
-//		else g_tstart = g_tset;			 
-		else g_tstart = g_tset; // check if this line is need4ed or not
+		else 
+		{
+		    g_vset = ReturnVset(g_tset, 0);
+		    I2CWriteData(I2C_COM_VSET); 
+		} 
 	}
 	if(g_paramterupdate)
 	{
@@ -372,6 +374,7 @@ void DTC03SMaster::UpdateParam()
 				if(g_tstart < 7.00) g_tstart = 7.00;
 				if(~g_scan)
 				{
+//					g_tset = g_tstart;
 					g_vset = ReturnVset(g_tstart, 0);
 					I2CWriteData(I2C_COM_VSET);
 				}
