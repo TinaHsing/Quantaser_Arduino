@@ -84,6 +84,10 @@
 #define RATE_COORD_Y	12
 #define RATE_COORD_X2	42
 
+#define TFINE_COORD_X	72
+#define TFINE_COORD_Y	12
+//#define TFINE_COORD_X2	90
+
 #define TACT_COORD_X	0
 #define TACT_COORD_Y	24
 
@@ -136,6 +140,7 @@ public:
 	void PrintTend();
 	void PrintRate();
 	void PrintScan();
+	void PrintTnow();
 	void PrintEnable();
 	void PrintTact(float tact);
 	void PrintFbcbase();
@@ -143,6 +148,7 @@ public:
 	unsigned int ReturnVset(float tset, bool type);
 	void CalculateRate();
 	void CheckStatus();
+	void checkTnowStatus();
 	void CheckScan();
 	void UpdateEnable();
 	void ShowCursor();
@@ -155,12 +161,12 @@ public:
 
 private:
 	glcd lcd;
-	bool g_scan, g_heater, g_paramterupdate;
+	bool g_scan, g_heater, g_paramterupdate, p_en[2], p_scan[2], p_tnow_flag;
 	char g_counter, g_counter2;
 	unsigned char g_rateindex, g_trate, g_cursorstate, g_lastencoded;
 	unsigned int  g_fbcbase, g_vstart, g_vset, g_vend;
 	unsigned long g_timer, g_tenc[3], g_tscan;
-	float g_tstart, g_tstop, g_tend, g_tset;
+	float g_tstart, g_tstop, g_tend, g_tnow, g_tfine;
 
 
 };

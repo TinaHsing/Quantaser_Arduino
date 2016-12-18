@@ -37,9 +37,11 @@ void loop() {
  master.CheckVact();
  master.UpdateEnable();
  master.CheckScan();
+ master.checkTnowStatus();
  master.CheckStatus(); //Check which cursor state it is
  master.ShowCursor(); 
  master.UpdateParam();
+ master.CalculateRate();
 
 }
 void CheckEncoder()

@@ -18,10 +18,14 @@ void DTC03SMaster::ParamInit()
 	g_en_state =0;
 	g_scan =0;
 	g_timer=0;
+	g_tfine = 0;
 	g_tenc[0] =0;
 	g_tenc[1] =0;
 	g_tenc[2] =0;
-	
+	p_en[0] = p_en[1] = 0;
+	p_scan[0] = p_scan[1] = 0;
+	p_tnow_flag = 0;
+
 }
 void DTC03SMaster::WelcomeScreen()
 {
@@ -74,7 +78,7 @@ void DTC03SMaster::ReadEEPROM()
 
 	}
 	g_vset = g_vstart;
-	g_tset = g_tstart;
+	g_tnow = g_tstart;
 	g_trate = pgm_read_word_near(RateTable+g_rateindex);
 	I2CWriteData(I2C_COM_VSET); // Set Vset to Slave in the begining
 	if(g_tend >= g_tstart) g_heater =1;
@@ -210,6 +214,25 @@ void DTC03SMaster::PrintEnable()
 	if(g_en_state==0) lcd.print("OFF");
 	else lcd.print(" ON");	
 }
+void DTC03SMaster::PrintTnow()
+{
+	lcd.SelectFont(SystemFont5x7);
+	lcd.GotoXY(TFINE_COORD_X, TFINE_COORD_Y);
+	if (p_tnow_flag) lcd.print(g_tnow+g_tfine);
+	else lcd.print("     ");
+	
+}
+void DTC03SMaster::checkTnowStatus()
+{
+	if (p_en[0]) {
+		if (p_scan[1] < p_scan[0]) p_tnow_flag = 1;
+	}
+	else p_tnow_flag = 0;
+	if (p_scan[1]) p_tnow_flag = 0;
+	if (~p_en[1]) p_tnow_flag = 0;
+	p_en[0] = p_en[1];
+	p_scan[0] = p_scan[1];
+}
 void DTC03SMaster::PrintFbcbase()
 {
 	lcd.SelectFont(SystemFont5x7);
@@ -228,19 +251,19 @@ unsigned int DTC03SMaster::ReturnVset(float tset, bool type)
 }
 void DTC03SMaster::CalculateRate()
 {
-	if(g_heater) 
+	if (g_en_state && g_scan) {
+		if(g_tend > g_tstart) 
 		{
-//			g_tset = g_tstart + g_trate;
-			g_tset += 0.01;
-			if(g_tset > g_tend) g_tset = g_tend;
+			g_tnow += 0.01;
+			if(g_tnow > g_tend) g_tnow = g_tend;
 		}	
 	else 
 		{
-//			g_tset = g_tstart - g_trate;
-			g_tset -= 0.01;
-			if(g_tset < g_tend) g_tset = g_tend;
+			g_tnow -= 0.01;
+			if(g_tnow < g_tend) g_tnow = g_tend;
 		}
-	g_vset = ReturnVset(g_tset, 0);
+	g_vset = ReturnVset(g_tnow+g_tfine, 0);
+	}
 }
 void DTC03SMaster::CheckVact()
 {
@@ -251,13 +274,22 @@ void DTC03SMaster::CheckVact()
 }
 void DTC03SMaster::UpdateEnable()//20161101
 {
-	bool en_state;
-	if(analogRead(ENSW)>ANAREADVIH) en_state=1;
-	else en_state=0;
-	if(g_en_state != en_state)
+//	bool en_state;
+//	if(analogRead(ENSW)>ANAREADVIH) en_state=1;
+//	else en_state=0;
+//	if(g_en_state != en_state)
+//	{
+//		
+//		g_en_state=en_state;
+//		I2CWriteData(I2C_COM_INIT);
+//		PrintEnable();
+//	}
+	if(analogRead(ENSW)>ANAREADVIH) p_en[1] = 1;
+	else p_en[1] = 0;
+	if(g_en_state != p_en[1])
 	{
 		
-		g_en_state=en_state;
+		g_en_state = p_en[1];
 		I2CWriteData(I2C_COM_INIT);
 		PrintEnable();
 	}
@@ -265,8 +297,8 @@ void DTC03SMaster::UpdateEnable()//20161101
 void DTC03SMaster::CheckScan()
 {
 	unsigned long t_temp;
-	
-	if(digitalRead(SCANB)==0) 
+	p_scan[1] = digitalRead(SCANB);
+	if(p_scan[1]==0) 
 	{
 		t_temp = millis();
 		if ((t_temp - g_tscan) > 50 ) {
@@ -290,7 +322,7 @@ void DTC03SMaster::CheckStatus()
 			if(t2-t1 > LONGPRESSTIME)
 				g_cursorstate =4;
 		}		
-		if(g_cursorstate ==3)
+		if(g_cursorstate ==4)
 			g_cursorstate =0;
 		
 		if(g_cursorstate ==5)
@@ -335,6 +367,14 @@ void DTC03SMaster::ShowCursor()
 			lcd.GotoXY(RATE_COORD_X-COLUMEPIXEL0507, RATE_COORD_Y);
 			lcd.print(" ");
 		break;
+		case 3:
+			lcd.SelectFont(SystemFont5x7,BLACK);
+			lcd.GotoXY(TFINE_COORD_X-COLUMEPIXEL0507, TFINE_COORD_Y);
+			lcd.print(" ");
+			lcd.SelectFont(SystemFont5x7, WHITE);
+			lcd.GotoXY(TFINE_COORD_X-COLUMEPIXEL0507, TFINE_COORD_Y);
+			lcd.print(" ");
+		break;
 
 		case 4:
 			lcd.ClearScreen(0);
@@ -344,25 +384,25 @@ void DTC03SMaster::ShowCursor()
 void DTC03SMaster::UpdateParam()
 {
 	unsigned long t1;
-	if(g_en_state)
-	{
-		if(g_scan)
-		{
-			CalculateRate(); // only change the g_vset while g_en_state =1 and g_scan =1
-//			t1 = millis();
-//			if(t1 >=g_timer+PERIOD) I2CWriteData(I2C_COM_VSET);
-//			else
-//			{
-//				while(t1 < g_timer+PERIOD) t1=millis(); // Wait until 100ms is reached.
-				I2CWriteData(I2C_COM_VSET); 
-//			}		
-		}
-		else 
-		{
-		    g_vset = ReturnVset(g_tset, 0);
-		    I2CWriteData(I2C_COM_VSET); 
-		} 
-	}
+//	if(g_en_state)
+//	{
+//		if(g_scan)
+//		{
+//			CalculateRate(); // only change the g_vset while g_en_state =1 and g_scan =1
+////			t1 = millis();
+////			if(t1 >=g_timer+PERIOD) I2CWriteData(I2C_COM_VSET);
+////			else
+////			{
+////				while(t1 < g_timer+PERIOD) t1=millis(); // Wait until 100ms is reached.
+//				I2CWriteData(I2C_COM_VSET); 
+////			}		
+//		}
+//		else 
+//		{
+//		    g_vset = ReturnVset(g_tnow, 0);
+//		    I2CWriteData(I2C_COM_VSET); 
+//		} 
+//	}
 	if(g_paramterupdate)
 	{
 		g_paramterupdate =0;
@@ -372,11 +412,16 @@ void DTC03SMaster::UpdateParam()
 				g_tstart += g_counter2*0.01;
 				if(g_tstart > 60.00) g_tstart =60.00;
 				if(g_tstart < 7.00) g_tstart = 7.00;
-				if(~g_scan)
-				{
-//					g_tset = g_tstart;
+				if(~g_en_state){
+					g_tnow = g_tstart;
 					g_vset = ReturnVset(g_tstart, 0);
 					I2CWriteData(I2C_COM_VSET);
+				}
+				else{
+					if (~g_scan) {
+						g_vset = ReturnVset(g_tnow+g_tfine, 0);
+						I2CWriteData(I2C_COM_VSET);
+					}
 				}
 				PrintTstart();
 			break;
@@ -394,6 +439,10 @@ void DTC03SMaster::UpdateParam()
 				if(g_rateindex > MAXRATEINDEX) g_rateindex = MAXRATEINDEX;				
 				g_trate = pgm_read_word_near(RateTable+g_rateindex);
 				PrintRate(); 
+			break;
+			case 3:
+				g_tfine += g_counter2*0.01;				
+				PrintTnow() ;
 			break;
 
 			case 4:
