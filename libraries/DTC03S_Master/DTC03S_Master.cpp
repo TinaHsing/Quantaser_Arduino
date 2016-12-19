@@ -28,7 +28,9 @@ void DTC03SMaster::ParamInit()
 	p_tnow_flag[1] = 0;
 	g_oldcursorstate = 0;
 	p_curstatus0flag = 0;
-
+	p_rateflag = 1;
+	p_trate = 0;
+	p_loopcount = 0;
 }
 void DTC03SMaster::WelcomeScreen()
 {
@@ -130,6 +132,11 @@ void DTC03SMaster::I2CWriteData(unsigned char com)
     		temp[0]=LS;
     		temp[1]=KI;
     	break;
+    	
+    	case I2C_COM_TEST:
+    		temp[0]=p_trate;
+    		temp[1]=p_trate>>8;
+    	break;
 
   }
   Wire.beginTransmission(DTC03P05);//20161031 add
@@ -173,12 +180,22 @@ void DTC03SMaster::PrintBG()
 	lcd.GotoXY(EN_COORD_X, EN_COORD_Y);
 	lcd.print("CTRL:");
 }
-void DTC03SMaster::Printloopt(unsigned long t1, unsigned long t2)
+void DTC03SMaster::Printloopt(unsigned long tp)
 {
-	lcd.SelectFont(SystemFont5x7);
-	lcd.GotoXY(LOOPT_X, LOOPT_Y);
-	if ( (t2-t1)<10 ) lcd.print(' ');
-	lcd.print(t2-t1);
+	float loopt_avg;
+	p_tlp[p_loopcount] = tp;
+	p_loopcount++;
+	
+	if (p_loopcount == 5) {
+		p_loopcount = 0;
+		lcd.SelectFont(SystemFont5x7);
+		lcd.GotoXY(LOOPT_X, LOOPT_Y);
+		loopt_avg = float(( (p_tlp[1]-p_tlp[0])+(p_tlp[2]-p_tlp[1])+
+		(p_tlp[3]-p_tlp[2])+(p_tlp[4]-p_tlp[3]) ))/4.0;
+		if ( loopt_avg<10 ) lcd.print(' ');
+		lcd.print(loopt_avg);
+	}
+	
 }
 void DTC03SMaster::PrintTstart()
 {
@@ -278,21 +295,35 @@ unsigned int DTC03SMaster::ReturnVset(float tset, bool type)
 }
 void DTC03SMaster::CalculateRate()
 {
+	unsigned int t_temp;
+	
+	t_temp = millis(); 
 	if ( g_en_state && g_scan) {
 		
-		if(g_tend > g_tstart) 
-		{
-			g_tnow += 0.01;
-			if( (g_tnow+g_tfine) > g_tend) g_tnow = g_tend - g_tfine;
-		}	
-	else 
-		{
-			g_tnow -= 0.01;
-			if( (g_tnow+g_tfine) < g_tend) g_tnow = g_tend - g_tfine;
-		}
-	g_vset = ReturnVset(g_tnow+g_tfine, 0);
-	I2CWriteData(I2C_COM_VSET);
+		if ( (t_temp-p_trate) >= SCANSAMPLERATE ) {			
+			
+			if(g_tend > g_tstart) 
+			{
+				g_tnow += 0.01;
+				if( (g_tnow+g_tfine) > g_tend) g_tnow = g_tend - g_tfine;
+			}	
+		else 
+			{
+				g_tnow -= 0.01;
+				if( (g_tnow+g_tfine) < g_tend) g_tnow = g_tend - g_tfine;
+			}
+		p_rateflag = 1;	
+	    }
 	}
+					
+	if (p_rateflag == 1) {
+		p_rateflag = 0;
+		p_trate = t_temp;
+		I2CWriteData(I2C_COM_TEST);
+		g_vset = ReturnVset(g_tnow+g_tfine, 0);
+	    I2CWriteData(I2C_COM_VSET);
+	}
+		
 }
 void DTC03SMaster::CheckVact()
 {

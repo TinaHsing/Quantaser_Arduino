@@ -34,7 +34,8 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  master.g_tloopstart = millis();
+  master.g_tloop = millis();
+  master.Printloopt(master.g_tloop);
  master.CheckVact();
  master.UpdateEnable();
  master.CheckScan();
@@ -44,8 +45,7 @@ void loop() {
  master.ShowCursor(); 
  master.UpdateParam();
  master.CalculateRate();
- master.g_tloopend = millis();
- master.Printloopt(master.g_tloopstart, master.g_tloopend);
+ 
 
 }
 void CheckEncoder()

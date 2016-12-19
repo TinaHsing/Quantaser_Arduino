@@ -17,6 +17,7 @@
 #define I2C_COM_FBC		0x19
 #define	I2C_COM_VMOD	0x1A
 #define I2C_COM_KI 		0x1B
+#define I2C_COM_TEST	0x1C 
 
 
 //=========request Events Mask ============

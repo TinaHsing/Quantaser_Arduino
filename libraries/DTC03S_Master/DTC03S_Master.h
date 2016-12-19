@@ -35,6 +35,7 @@
 #define COUNTERINCRE	50
 #define COUNTERSPEEDUP	100
 #define FINETUNEAMP 3
+#define SCANSAMPLERATE 50
 
 //------pin definition ----------------
 #define ENC_A 2
@@ -101,6 +102,7 @@
 #define LOOPT_X	84
 #define LOOPT_Y	0
 
+
 const PROGMEM unsigned char RateTable[]
 {
 	0,		// dummy index
@@ -157,20 +159,20 @@ public:
 	void ShowCursor();
 	void UpdateParam();
 	void Encoder();
-	void Printloopt(unsigned long, unsigned long);
+	void Printloopt(unsigned long);
 	bool g_en_state;
 	unsigned int g_vact;
-	unsigned long g_tloopstart, g_tloopend;
+	unsigned long g_tloop;
 
 
 
 private:
 	glcd lcd;
-	bool g_scan, g_heater, g_paramterupdate, p_en[2], p_scan[2], p_tnow_flag[2], p_curstatus0flag;
+	bool g_scan, g_heater, g_paramterupdate, p_en[2], p_scan[2], p_tnow_flag[2], p_curstatus0flag, p_rateflag;
 	char g_counter, g_counter2;
 	unsigned char g_rateindex, g_trate, g_cursorstate,g_oldcursorstate, g_lastencoded;
-	unsigned int  g_fbcbase, g_vstart, g_vset, g_vend;
-	unsigned long g_timer, g_tenc[3], g_tscan;
+	unsigned int  g_fbcbase, g_vstart, g_vset, g_vend, p_loopcount, p_trate;
+	unsigned long g_timer, g_tenc[3], g_tscan, p_tlp[5];
 	float g_tstart, g_tstop, g_tend, g_tnow, g_tfine;
 
 

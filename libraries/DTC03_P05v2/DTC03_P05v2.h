@@ -170,7 +170,7 @@ public:
 	unsigned long g_vactavgsum, g_itecavgsum;
 	bool g_en_state, g_heating, g_errcode1, g_errcode2, g_sensortype, g_mod_status, g_ee_changed;
     unsigned int g_b_upper, g_b_lower,g_vset_limit, g_ilimdacout,g_vset_limitt,g_vmod;
-    unsigned int g_vmodoffset;//
+    unsigned int g_vmodoffset, g_i2ctest;//
     int g_iteclimitset;//
     float g_r1, g_r2;
     AD5541 dacformos, dacforilim;

@@ -621,6 +621,11 @@ void DTC03::I2CReceive()
     g_ee_change_state = EEADD_Vmodoffset_lower;
     //Serial.println("MOD");
     break;
+    
+    case I2C_COM_TEST:  		
+    	g_i2ctest = (temp[1] << 8) | temp[0];
+    	Serial.println(g_i2ctest);
+    	break;
   }
  }
 
