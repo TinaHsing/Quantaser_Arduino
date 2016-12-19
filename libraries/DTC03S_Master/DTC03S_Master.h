@@ -34,6 +34,7 @@
 #define DEBOUNCETIME 	2
 #define COUNTERINCRE	50
 #define COUNTERSPEEDUP	100
+#define FINETUNEAMP 3
 
 //------pin definition ----------------
 #define ENC_A 2
@@ -74,22 +75,21 @@
 //----------Print Coordinate ---------
 #define TSTART_COORD_X 	6
 #define TSTART_COORD_Y 	0
-#define TSTART_COORD_X2	24
+#define TSTART_COORD_X2	TSTART_COORD_X+42
 
-#define TEND_COORD_X	72
-#define TEND_COORD_Y	0
-#define TEND_COORD_X2	90
+#define TEND_COORD_X	6
+#define TEND_COORD_Y	12
+#define TEND_COORD_X2	TEND_COORD_X+42
 
 #define RATE_COORD_X	6
-#define RATE_COORD_Y	12
-#define RATE_COORD_X2	42
+#define RATE_COORD_Y	24
+#define RATE_COORD_X2	RATE_COORD_X+42
 
 #define TFINE_COORD_X	72
-#define TFINE_COORD_Y	12
-//#define TFINE_COORD_X2	90
+#define TFINE_COORD_Y	36
 
-#define TACT_COORD_X	0
-#define TACT_COORD_Y	24
+#define TACT_COORD_X	6
+#define TACT_COORD_Y	36
 
 #define EN_COORD_X		6
 #define EN_COORD_Y		56
@@ -97,6 +97,9 @@
 
 #define SCAN_COORD_X	70
 #define SCAN_COORD_Y	56
+
+#define LOOPT_X	84
+#define LOOPT_Y	0
 
 const PROGMEM unsigned char RateTable[]
 {
@@ -154,16 +157,18 @@ public:
 	void ShowCursor();
 	void UpdateParam();
 	void Encoder();
+	void Printloopt(unsigned long, unsigned long);
 	bool g_en_state;
 	unsigned int g_vact;
+	unsigned long g_tloopstart, g_tloopend;
 
 
 
 private:
 	glcd lcd;
-	bool g_scan, g_heater, g_paramterupdate, p_en[2], p_scan[2], p_tnow_flag;
+	bool g_scan, g_heater, g_paramterupdate, p_en[2], p_scan[2], p_tnow_flag[2], p_curstatus0flag;
 	char g_counter, g_counter2;
-	unsigned char g_rateindex, g_trate, g_cursorstate, g_lastencoded;
+	unsigned char g_rateindex, g_trate, g_cursorstate,g_oldcursorstate, g_lastencoded;
 	unsigned int  g_fbcbase, g_vstart, g_vset, g_vend;
 	unsigned long g_timer, g_tenc[3], g_tscan;
 	float g_tstart, g_tstop, g_tend, g_tnow, g_tfine;

@@ -34,14 +34,18 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
+  master.g_tloopstart = millis();
  master.CheckVact();
  master.UpdateEnable();
  master.CheckScan();
  master.checkTnowStatus();
+// master.PrintTnow();
  master.CheckStatus(); //Check which cursor state it is
  master.ShowCursor(); 
  master.UpdateParam();
  master.CalculateRate();
+ master.g_tloopend = millis();
+ master.Printloopt(master.g_tloopstart, master.g_tloopend);
 
 }
 void CheckEncoder()

@@ -24,7 +24,10 @@ void DTC03SMaster::ParamInit()
 	g_tenc[2] =0;
 	p_en[0] = p_en[1] = 0;
 	p_scan[0] = p_scan[1] = 0;
-	p_tnow_flag = 0;
+	p_tnow_flag[0] = 0;
+	p_tnow_flag[1] = 0;
+	g_oldcursorstate = 0;
+	p_curstatus0flag = 0;
 
 }
 void DTC03SMaster::WelcomeScreen()
@@ -162,13 +165,20 @@ void DTC03SMaster::PrintBG()
 	lcd.ClearScreen(0);
 	lcd.SelectFont(SystemFont5x7);
 	lcd.GotoXY(TSTART_COORD_X, TSTART_COORD_Y);
-	lcd.print("T1:");
+	lcd.print("Tstart:");
 	lcd.GotoXY(TEND_COORD_X, TEND_COORD_Y);
-	lcd.print("T2:");
+	lcd.print("Tstop :");
 	lcd.GotoXY(RATE_COORD_X, RATE_COORD_Y);
 	lcd.print("RATE:");
 	lcd.GotoXY(EN_COORD_X, EN_COORD_Y);
 	lcd.print("CTRL:");
+}
+void DTC03SMaster::Printloopt(unsigned long t1, unsigned long t2)
+{
+	lcd.SelectFont(SystemFont5x7);
+	lcd.GotoXY(LOOPT_X, LOOPT_Y);
+	if ( (t2-t1)<10 ) lcd.print(' ');
+	lcd.print(t2-t1);
 }
 void DTC03SMaster::PrintTstart()
 {
@@ -182,14 +192,14 @@ void DTC03SMaster::PrintTend()
 	lcd.SelectFont(SystemFont5x7);
 	lcd.GotoXY(TEND_COORD_X2, TEND_COORD_Y);
 	if(g_tend < 10.00) lcd.print(" ");
-	lcd.print(g_tend,2); // need to check if 2.2 is workikng or not, if not working uncomment previous line
+	lcd.print(g_tend,2); 
 }
 void DTC03SMaster::PrintTact(float tact)
 {
 	lcd.SelectFont(Arial_bold_14);
 	lcd.GotoXY(TACT_COORD_X, TACT_COORD_Y);
 	if(tact< 10.00) lcd.print(" ");
-	lcd.print(tact, 2); // Need to check if 2.2 is working or not if not working uncomment previous line
+	lcd.print(tact, 2); 
 
 }
 void DTC03SMaster::PrintRate()
@@ -218,18 +228,35 @@ void DTC03SMaster::PrintTnow()
 {
 	lcd.SelectFont(SystemFont5x7);
 	lcd.GotoXY(TFINE_COORD_X, TFINE_COORD_Y);
-	if (p_tnow_flag) lcd.print(g_tnow+g_tfine);
+	if (p_tnow_flag[1]) lcd.print(g_tnow+g_tfine);
 	else lcd.print("     ");
+    
 	
 }
 void DTC03SMaster::checkTnowStatus()
 {
+	//
 	if (p_en[0]) {
-		if (p_scan[1] < p_scan[0]) p_tnow_flag = 1;
+		if (p_scan[1] < p_scan[0]) p_tnow_flag[1] = 1;
 	}
-	else p_tnow_flag = 0;
-	if (p_scan[1]) p_tnow_flag = 0;
-	if (~p_en[1]) p_tnow_flag = 0;
+	else {
+		p_tnow_flag[1] = 0;
+		g_tfine = 0;
+	}
+	if (p_scan[1]) p_tnow_flag[1] = 0;
+	//
+	if (p_tnow_flag[0] != p_tnow_flag[1]) {
+		if (p_tnow_flag[1]==1) {
+		    g_cursorstate = 3;
+		    p_curstatus0flag = 1;
+	    }
+		else {
+			g_cursorstate = 0;
+			g_oldcursorstate = 0;
+		}
+		PrintTnow();
+	}
+	p_tnow_flag[0] = p_tnow_flag[1];
 	p_en[0] = p_en[1];
 	p_scan[0] = p_scan[1];
 }
@@ -251,18 +278,20 @@ unsigned int DTC03SMaster::ReturnVset(float tset, bool type)
 }
 void DTC03SMaster::CalculateRate()
 {
-	if (g_en_state && g_scan) {
+	if ( g_en_state && g_scan) {
+		
 		if(g_tend > g_tstart) 
 		{
 			g_tnow += 0.01;
-			if(g_tnow > g_tend) g_tnow = g_tend;
+			if( (g_tnow+g_tfine) > g_tend) g_tnow = g_tend - g_tfine;
 		}	
 	else 
 		{
 			g_tnow -= 0.01;
-			if(g_tnow < g_tend) g_tnow = g_tend;
+			if( (g_tnow+g_tfine) < g_tend) g_tnow = g_tend - g_tfine;
 		}
 	g_vset = ReturnVset(g_tnow+g_tfine, 0);
+	I2CWriteData(I2C_COM_VSET);
 	}
 }
 void DTC03SMaster::CheckVact()
@@ -274,16 +303,6 @@ void DTC03SMaster::CheckVact()
 }
 void DTC03SMaster::UpdateEnable()//20161101
 {
-//	bool en_state;
-//	if(analogRead(ENSW)>ANAREADVIH) en_state=1;
-//	else en_state=0;
-//	if(g_en_state != en_state)
-//	{
-//		
-//		g_en_state=en_state;
-//		I2CWriteData(I2C_COM_INIT);
-//		PrintEnable();
-//	}
 	if(analogRead(ENSW)>ANAREADVIH) p_en[1] = 1;
 	else p_en[1] = 0;
 	if(g_en_state != p_en[1])
@@ -297,12 +316,12 @@ void DTC03SMaster::UpdateEnable()//20161101
 void DTC03SMaster::CheckScan()
 {
 	unsigned long t_temp;
-	p_scan[1] = digitalRead(SCANB);
-	if(p_scan[1]==0) 
+	if(digitalRead(SCANB)==0) 
 	{
 		t_temp = millis();
 		if ((t_temp - g_tscan) > 50 ) {
 		g_scan = !g_scan;
+		p_scan[1] = g_scan;
 		PrintScan();
 		}
 	}
@@ -315,17 +334,17 @@ void DTC03SMaster::CheckStatus()
 	if(analogRead(PUSHB)< ANAREADVIL)
 	{
 		t1 = millis();
-		g_cursorstate +=1;
+		g_cursorstate +=1;				
+		if(g_cursorstate ==3 || g_cursorstate ==4) g_cursorstate =0;
+		g_oldcursorstate = g_cursorstate;
+		
 		while(analogRead(PUSHB)< ANAREADVIL)
 		{
 			t2 = millis();
 			if(t2-t1 > LONGPRESSTIME)
-				g_cursorstate =4;
-		}		
-		if(g_cursorstate ==4)
-			g_cursorstate =0;
-		
-		if(g_cursorstate ==5)
+				g_cursorstate =5;
+		}
+		if(g_cursorstate ==6)
 		{
 			g_cursorstate =0;
 			PrintBG();
@@ -343,7 +362,11 @@ void DTC03SMaster::ShowCursor()
 	{
 		case 0:
 			lcd.SelectFont(SystemFont5x7,BLACK);
-			lcd.GotoXY(RATE_COORD_X-COLUMEPIXEL0507, RATE_COORD_Y);
+			if (p_curstatus0flag) {
+				p_curstatus0flag = 0;
+				lcd.GotoXY(TFINE_COORD_X-COLUMEPIXEL0507, TFINE_COORD_Y);
+			}
+			else lcd.GotoXY(RATE_COORD_X-COLUMEPIXEL0507, RATE_COORD_Y);
 			lcd.print(" ");
 			lcd.SelectFont(SystemFont5x7, WHITE);
 			lcd.GotoXY(TSTART_COORD_X-COLUMEPIXEL0507, TSTART_COORD_Y);
@@ -369,7 +392,17 @@ void DTC03SMaster::ShowCursor()
 		break;
 		case 3:
 			lcd.SelectFont(SystemFont5x7,BLACK);
-			lcd.GotoXY(TFINE_COORD_X-COLUMEPIXEL0507, TFINE_COORD_Y);
+			switch (g_oldcursorstate){
+				case 0 :
+					lcd.GotoXY(TSTART_COORD_X-COLUMEPIXEL0507, TSTART_COORD_Y);
+			        break;
+			    case 1 :
+					lcd.GotoXY(TEND_COORD_X-COLUMEPIXEL0507, TEND_COORD_Y);
+			        break;
+			    case 2 :
+					lcd.GotoXY(RATE_COORD_X-COLUMEPIXEL0507, RATE_COORD_Y);
+			        break;					
+			}
 			lcd.print(" ");
 			lcd.SelectFont(SystemFont5x7, WHITE);
 			lcd.GotoXY(TFINE_COORD_X-COLUMEPIXEL0507, TFINE_COORD_Y);
@@ -384,25 +417,7 @@ void DTC03SMaster::ShowCursor()
 void DTC03SMaster::UpdateParam()
 {
 	unsigned long t1;
-//	if(g_en_state)
-//	{
-//		if(g_scan)
-//		{
-//			CalculateRate(); // only change the g_vset while g_en_state =1 and g_scan =1
-////			t1 = millis();
-////			if(t1 >=g_timer+PERIOD) I2CWriteData(I2C_COM_VSET);
-////			else
-////			{
-////				while(t1 < g_timer+PERIOD) t1=millis(); // Wait until 100ms is reached.
-//				I2CWriteData(I2C_COM_VSET); 
-////			}		
-//		}
-//		else 
-//		{
-//		    g_vset = ReturnVset(g_tnow, 0);
-//		    I2CWriteData(I2C_COM_VSET); 
-//		} 
-//	}
+
 	if(g_paramterupdate)
 	{
 		g_paramterupdate =0;
@@ -441,11 +456,15 @@ void DTC03SMaster::UpdateParam()
 				PrintRate(); 
 			break;
 			case 3:
-				g_tfine += g_counter2*0.01;				
+				g_tfine += g_counter2*0.01;	
+				if (g_tfine > FINETUNEAMP) g_tfine = FINETUNEAMP;
+				if (g_tfine < -FINETUNEAMP) g_tfine = -FINETUNEAMP;
+				g_vset = ReturnVset(g_tnow+g_tfine, 0);
+				I2CWriteData(I2C_COM_VSET);
 				PrintTnow() ;
 			break;
 
-			case 4:
+			case 5:
 				if(g_fbcbase>44900) g_fbcbase=44900;//
       			if(g_fbcbase<15100) g_fbcbase=15100;//
       			g_fbcbase +=(g_counter2*100);
