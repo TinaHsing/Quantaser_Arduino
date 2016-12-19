@@ -1,5 +1,4 @@
 #include <DTC03S_Master.h>
-//1219
 DTC03SMaster::DTC03SMaster()
 {
 
