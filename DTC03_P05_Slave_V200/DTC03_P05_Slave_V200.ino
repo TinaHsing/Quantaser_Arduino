@@ -62,7 +62,7 @@ void loop() {
 //  Serial.print(dtc.g_mod_status);
 //  Serial.print(",");
 //  Serial.println(dtc.g_vmodoffset);
-    Serial.println(dtc.g_vset_limitt);
+//    Serial.println(dtc.g_vset_limitt);
 //  }
  
   if(dtc.g_sensortype) digitalWrite(SENSOR_TYPE, HIGH);

@@ -319,8 +319,8 @@ void DTC03SMaster::CalculateRate()
 					
 	if (p_rateflag == 1) {
 		p_rateflag = 0;
-//		p_trate = t_temp; // use to check rate update time
-//		I2CWriteData(I2C_COM_TEST);
+		p_trate = t_temp; 
+//		I2CWriteData(I2C_COM_TEST);// use to check rate update time
 		g_vset = ReturnVset(g_tnow+g_tfine, 0);
 	    I2CWriteData(I2C_COM_VSET);
 	}
