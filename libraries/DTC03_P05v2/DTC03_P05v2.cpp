@@ -624,7 +624,7 @@ void DTC03::I2CReceive()
     
     case I2C_COM_TEST:  		
     	g_i2ctest = (temp[1] << 8) | temp[0];
-    	Serial.println(g_i2ctest);
+//    	Serial.println(g_i2ctest);
     	break;
   }
  }

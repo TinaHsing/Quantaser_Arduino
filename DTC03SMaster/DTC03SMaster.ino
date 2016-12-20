@@ -34,8 +34,8 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  master.g_tloop = millis();
-  master.Printloopt(master.g_tloop);
+//  master.g_tloop = millis();
+//  master.Printloopt(master.g_tloop);
  master.CheckVact();
  master.UpdateEnable();
  master.CheckScan();

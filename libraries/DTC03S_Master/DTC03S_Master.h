@@ -35,7 +35,7 @@
 #define COUNTERINCRE	50
 #define COUNTERSPEEDUP	100
 #define FINETUNEAMP 3
-#define SCANSAMPLERATE 50
+#define SCANSAMPLERATE 40
 
 //------pin definition ----------------
 #define ENC_A 2
