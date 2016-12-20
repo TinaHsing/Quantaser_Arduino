@@ -2,7 +2,7 @@
 #include <SawtoothGen.h>
 #define AI_PIN A2
 led4X7_disp led(2,3,4,5,8,9,10,11,12); // (A,B,C,D,0,1,2,3,h), A~D: BCD pins, 0~3: position pins, h : point
-SawtoothGen fn_gen(0,1,6,0.005,4.995);//(refsense pin, output sense pin, charge control pin, Vmax, Vmin) 
+SawtoothGen fn_gen(0,1,6,0.2,4.8);//(refsense pin, output sense pin, charge control pin, Vmin, Vmax) 
 void setup() {
   led.init(10, 30); // adc bits, option : 10, 12, 16; gain 
 }
