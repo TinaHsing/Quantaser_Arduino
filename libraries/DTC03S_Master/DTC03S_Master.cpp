@@ -223,9 +223,10 @@ void DTC03SMaster::PrintRate()
 {
 	lcd.SelectFont(SystemFont5x7);
 	lcd.GotoXY(RATE_COORD_X2, RATE_COORD_Y);
-	if (g_trate < 10) lcd.print("  ");
-	else if (g_trate < 100) lcd.print(" ");
-	lcd.print(g_trate);
+//	if (g_trate < 10) lcd.print(" ");
+//	else if (g_trate < 100) lcd.print(" ");
+	lcd.print(float(g_trate)/10,1);
+//	lcd.print(p_rate,3);
 }
 void DTC03SMaster::PrintScan()
 {
@@ -304,12 +305,12 @@ void DTC03SMaster::CalculateRate()
 			
 			if(g_tend > g_tstart) 
 			{
-				g_tnow += 0.01;
+				g_tnow += p_rate;
 				if( (g_tnow+g_tfine) > g_tend) g_tnow = g_tend - g_tfine;
 			}	
 		else 
 			{
-				g_tnow -= 0.01;
+				g_tnow -= p_rate;
 				if( (g_tnow+g_tfine) < g_tend) g_tnow = g_tend - g_tfine;
 			}
 		p_rateflag = 1;	
@@ -484,6 +485,7 @@ void DTC03SMaster::UpdateParam()
 				if(g_rateindex <1) g_rateindex =1;
 				if(g_rateindex > MAXRATEINDEX) g_rateindex = MAXRATEINDEX;				
 				g_trate = pgm_read_word_near(RateTable+g_rateindex);
+				p_rate = float(g_trate)*SCANSAMPLERATE/10000.0;
 				PrintRate(); 
 			break;
 			case 3:

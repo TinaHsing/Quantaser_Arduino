@@ -30,7 +30,7 @@
 #define ANAREADVIH 		500
 #define LONGPRESSTIME 	10000
 #define PERIOD			100
-#define MAXRATEINDEX	9 // Should be set rate index -1 current rate index is 8
+#define MAXRATEINDEX	10 // Should be set rate index -1 current rate index is 8
 #define DEBOUNCETIME 	2
 #define COUNTERINCRE	50
 #define COUNTERSPEEDUP	100
@@ -106,15 +106,16 @@
 const PROGMEM unsigned char RateTable[]
 {
 	0,		// dummy index
-	0,		//index =1,	0
-	1,		//index =2, 0.01
-	2,		//index =3, 0.02
-	5,		//index =4, 0.05
-	10,		//index =5, 0.1
-	20, 	//index =6, 0.2
-	50,		//index =7, 0.5
-	100,	//index =8, 1
-	200, 	//index =9, 2
+	1,		//index =1,	0.1k/s
+	2,		//index =2, 0.2
+	3,		//index =3, 0.3
+	4,		//index =4, 0.4
+	5,		//index =5, 0.5
+	6, 		//index =6, 0.6
+	7,		//index =7, 0.7
+	8,		//index =8, 0.8
+	9, 		//index =9, 0.9
+	10,		//       10, 1.0 
 };
 
 // Rate definition in the unit of degree/sec // in the unit of m degree/ 100ms 
@@ -173,7 +174,7 @@ private:
 	unsigned char g_rateindex, g_trate, g_cursorstate,g_oldcursorstate, g_lastencoded;
 	unsigned int  g_fbcbase, g_vstart, g_vset, g_vend, p_loopcount, p_trate;
 	unsigned long g_timer, g_tenc[3], g_tscan, p_tlp[5];
-	float g_tstart, g_tstop, g_tend, g_tnow, g_tfine;
+	float g_tstart, g_tstop, g_tend, g_tnow, g_tfine, p_rate;
 
 
 };
