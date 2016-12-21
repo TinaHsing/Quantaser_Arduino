@@ -17,6 +17,15 @@
 
 DTC03::DTC03()
 {}
+float DTC03::ReturnTemp(unsigned int vact, bool type)
+{
+  float tact;
+  if(type)
+    tact = (float)(vact/129.8701) - 273.15;
+  else
+    tact = 1/(log((float)vact/RTHRatio)/BVALUE+T0INV)-273.15;
+  return tact;
+}
 void DTC03::DynamicVcc()
 {
     float restec;

@@ -44,6 +44,7 @@
 #define ILIMDACOUTSTART 500		// define the current limit start current 500mA
 #define ILIMDACSTEP 50  		// define the current limit step current 50mA
 #define LIMCOUNTER 10
+#define BVALUE 3988 
 
 //=================end of Frequently update define======================
 
@@ -164,6 +165,7 @@ public:
 	void I2CReceive();
 	void SaveEEPROM();
     int ReadIsense();//
+    float ReturnTemp(unsigned int vact, bool type);
 
 	unsigned int g_vact, g_vset, g_fbc_base, g_isense0,Vactarray[VACTAVGTIME], Itecarray[ITECAVGTIME],g_currentabs,g_itecread;//
     unsigned char g_p, g_ki, g_ls, g_currentlim, g_ee_change_state,g_kiindex, g_limcounter,g_currentindex, g_vbec1, g_vbec2, g_vbeh1, g_vbeh2, g_tpidoffset;
