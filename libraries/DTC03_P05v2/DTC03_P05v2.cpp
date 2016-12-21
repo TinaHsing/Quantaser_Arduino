@@ -543,15 +543,13 @@ void DTC03::I2CReceive()
   unsigned char temp[2], com, errcodeall, bconst_upper, bconst_lower, vset_upper, vset_lower;
   unsigned char fbc_lower, fbc_upper, vmodoffset_upper, vmodoffset_lower;
   unsigned long t1,t2,t_delta;//added
-  //Serial.println("RECEIVE");
+
   while(Wire.available() == 3)
   {
-//    t1=millis();//
     t1=micros();
     com=Wire.read();
     temp[0]=Wire.read();
     temp[1]=Wire.read();
-//    t2=millis();//
     t2=micros();
     t_delta=t2-t1;//
   }
