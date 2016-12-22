@@ -134,8 +134,10 @@ void DTC03SMaster::I2CWriteData(unsigned char com)
     	break;
     	
     	case I2C_COM_TEST:
-    		temp[0]=p_trate;
-    		temp[1]=p_trate>>8;
+    		temp[0]=g_cursorstate;
+//    		temp[1]=p_trate>>8;
+//    		((g_tstart==12.34) && g_scan && ~g_en_state && (g_trate==1) )
+    		
     	break;
 
   }
@@ -172,7 +174,8 @@ void DTC03SMaster::PrintBG()
 	lcd.ClearScreen(0);
 	lcd.SelectFont(SystemFont5x7);
 	lcd.GotoXY(TSTART_COORD_X, TSTART_COORD_Y);
-	lcd.print("Tstart:");
+	if (g_cursorstate != 6)lcd.print("Tstart:");
+	else lcd.print("SHIT:");
 	lcd.GotoXY(TEND_COORD_X, TEND_COORD_Y);
 	lcd.print("Tstop :");
 	lcd.GotoXY(RATE_COORD_X, RATE_COORD_Y);
@@ -328,10 +331,13 @@ void DTC03SMaster::CalculateRate()
 }
 void DTC03SMaster::CheckVact()
 {
-	float tact;
-	I2CReadVact();
-  	tact = ReturnTemp(g_vact,0);
-  	PrintTact(tact);
+	if (g_cursorstate != 5) {
+		float tact;
+	    I2CReadVact();
+  	    tact = ReturnTemp(g_vact,0);
+  	    PrintTact(tact);
+	}
+	
 }
 void DTC03SMaster::UpdateEnable()//20161101
 {
@@ -361,32 +367,46 @@ void DTC03SMaster::CheckScan()
 }
 void DTC03SMaster::CheckStatus()
 {
-	unsigned long t1, t2;
+	unsigned long t1, t2, i=0;
 	
 	if(analogRead(PUSHB)< ANAREADVIL)
 	{
 		t1 = millis();
-		g_cursorstate +=1;				
+		g_cursorstate +=1;	
+				
 		if(g_cursorstate ==3 || g_cursorstate ==4) g_cursorstate =0;
 		g_oldcursorstate = g_cursorstate;
 		
 		while(analogRead(PUSHB)< ANAREADVIL)
 		{
 			t2 = millis();
-			if(t2-t1 > LONGPRESSTIME)
-				g_cursorstate =5;
+			if(t2-t1 > LONGPRESSTIME){
+			
+//				g_cursorstate =5;
+            }
 		}
+		
+		if ( ~g_en_state && g_scan && (g_trate==1) ) {
+			g_cursorstate = 5;
+			lcd.ClearScreen(0);
+		}	
+//		if ((g_tstart<7.01) &&  ~g_en_state && g_scan && (g_trate==1) ) {
+        
 		if(g_cursorstate ==6)
 		{
 			g_cursorstate =0;
 			PrintBG();
 			PrintTstart();
 			PrintTend();
-			CheckVact();
+			PrintRate();
 			PrintEnable();
 			PrintScan();
 		}
 	}
+	if (i%1000==0) {			
+		I2CWriteData(I2C_COM_TEST);		
+		}
+		i++;
 }
 void DTC03SMaster::ShowCursor()
 {
@@ -480,7 +500,7 @@ void DTC03SMaster::UpdateParam()
 				PrintTend(); 
 			break;
 
-			case 2:
+			case 2: // change to rate from 0.01 k/s
 				g_rateindex +=g_counter;
 				if(g_rateindex <1) g_rateindex =1;
 				if(g_rateindex > MAXRATEINDEX) g_rateindex = MAXRATEINDEX;				

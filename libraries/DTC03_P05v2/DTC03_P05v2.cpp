@@ -566,7 +566,7 @@ void DTC03::I2CReceive()
 //    g_sensortype = temp[1] & REQMSK_SENSTYPE; //20161113
 	g_mod_status = temp[1] & REQMSK_SENSTYPE; 
     g_ee_change_state = EEADD_B_lower;
-    //Serial.println("EN");
+//    Serial.println("EN");
     break;
 
     case I2C_COM_CTR:
@@ -631,8 +631,8 @@ void DTC03::I2CReceive()
     
     case I2C_COM_TEST:  		
     	g_i2ctest = (temp[1] << 8) | temp[0];
-//    	Serial.println(g_i2ctest);
-    	break;
+    	Serial.println(temp[0]);
+    break;
   }
  }
 

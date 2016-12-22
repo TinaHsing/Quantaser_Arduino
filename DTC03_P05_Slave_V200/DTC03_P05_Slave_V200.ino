@@ -45,11 +45,11 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   int isense; //
-  long ioutput,toutput,output;
+  long ioutput,toutput,output, tlp1, tlp2;
   int ierr;
   long terr;
   unsigned int pidoffset = dtc.g_tpidoffset*1000;
-//  if (i%500==0) {
+//  if (i%100==0) {
 //  Serial.print("r1 r2 offset: ");
 //  Serial.print(dtc.g_r1);
 //  Serial.print(", ");
@@ -61,7 +61,7 @@ void loop() {
 //  Serial.print(",");
 //  Serial.print(dtc.g_mod_status);
 //  Serial.print(",");
-//  Serial.println(dtc.g_vmodoffset);
+//  Serial.println(dtc.g_en_state);
 //    Serial.println(dtc.g_vset_limitt);
 //  Serial.print(dtc.ReturnTemp(dtc.g_vset_limitt,0));
 //  Serial.print(", ");
@@ -125,13 +125,6 @@ void loop() {
   else if (toutput>0) dtc.SetMos(COOLING,output);
   
   if(dtc.g_ee_changed) dtc.SaveEEPROM();
-//  Serial.print(dtc.g_vmodoffset);
-//  Serial.print(",");
-//  Serial.print(dtc.g_vmod);
-//  Serial.print(",");
-//  Serial.print(dtc.g_vset_limit);
-//  Serial.print(",");
-//  Serial.println(dtc.g_vset_limitt);
   i++;
 }
 

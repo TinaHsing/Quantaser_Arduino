@@ -28,7 +28,7 @@
 #define RTHRatio 		25665 
 #define ANAREADVIL 		240
 #define ANAREADVIH 		500
-#define LONGPRESSTIME 	10000
+#define LONGPRESSTIME 	5000
 #define PERIOD			100
 #define MAXRATEINDEX	10 // Should be set rate index -1 current rate index is 8
 #define DEBOUNCETIME 	2

@@ -9,7 +9,6 @@ DTC03SMaster master;
 unsigned char vstep;
 float tstep, frate;
 void setup() {
-  // put your setup code here, to run once:
   float tact;
   master.SetPinMode();
   master.ParamInit();
