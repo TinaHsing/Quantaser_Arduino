@@ -39,7 +39,6 @@ void loop() {
  master.UpdateEnable();
  master.CheckScan();
  master.checkTnowStatus();
-// master.PrintTnow();
  master.CheckStatus(); //Check which cursor state it is
  master.ShowCursor(); 
  master.UpdateParam();

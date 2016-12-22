@@ -29,8 +29,11 @@ void DTC03SMaster::ParamInit()
 	g_oldcursorstate = 0;
 	p_curstatus0flag = 0;
 	p_rateflag = 1;
-	p_trate = 0;
 	p_loopcount = 0;
+	// change to NOEE after
+	p_trate = 0;
+	g_kiindex = 1;
+	g_p = 10;
 }
 void DTC03SMaster::WelcomeScreen()
 {
@@ -104,8 +107,8 @@ void DTC03SMaster::I2CWriteData(unsigned char com)
 		break;
 
     	case I2C_COM_CTR:
-    		temp[0]= 0;
-    		temp[1]= PGAIN;
+    		temp[0]= 49;
+    		temp[1]= g_p;
     	break;
 
     	case I2C_COM_VSET:
@@ -129,15 +132,14 @@ void DTC03SMaster::I2CWriteData(unsigned char com)
     	break;
    
     	case I2C_COM_KI:
-    		temp[0]=LS;
-    		temp[1]=KI;
+    		temp[0]=pgm_read_word_near(kilstable+g_kiindex*2);
+            temp[1]=pgm_read_word_near(kilstable+g_kiindex*2+1);
     	break;
     	
     	case I2C_COM_TEST:
     		temp[0]=g_cursorstate;
 //    		temp[1]=p_trate>>8;
-//    		((g_tstart==12.34) && g_scan && ~g_en_state && (g_trate==1) )
-    		
+//    		((g_tstart==12.34) && g_scan && ~g_en_state && (g_trate==1) )   		
     	break;
 
   }
@@ -169,19 +171,58 @@ float DTC03SMaster::ReturnTemp(unsigned int vact, bool type)
     tact = 1/(log((float)vact/RTHRatio)/BVALUE+T0INV)-273.15;
   return tact;
 }
+void DTC03SMaster::PrintP()
+{
+  lcd.GotoXY(P_X, P_Y);
+  if(g_p<10)
+   lcd.print("   ");
+  else if (g_p<100)
+   lcd.print("  ");
+  else if (g_p<1000)
+   lcd.print(" ");
+  lcd.print(g_p);
+}
+void DTC03SMaster::PrintKi()
+{
+  float tconst;
+  tconst = float(pgm_read_word_near(timeconst+g_kiindex))/100.0;
+  lcd.GotoXY(I_X2, I_Y);
+  if (g_kiindex < 3) {
+  	if (g_kiindex==1) lcd.print("OFF");
+  	else lcd.print(tconst,2);
+  }   
+  else if (g_kiindex < 33){
+   lcd.print(" ");
+   lcd.print(tconst,1);
+  }
+  else{
+  lcd.print(" ");
+  lcd.print(tconst,0);
+  }
+}
 void DTC03SMaster::PrintBG()
 {
 	lcd.ClearScreen(0);
 	lcd.SelectFont(SystemFont5x7);
 	lcd.GotoXY(TSTART_COORD_X, TSTART_COORD_Y);
-	if (g_cursorstate != 6)lcd.print("Tstart:");
-	else lcd.print("SHIT:");
+	lcd.print("Tstart:");
 	lcd.GotoXY(TEND_COORD_X, TEND_COORD_Y);
 	lcd.print("Tstop :");
 	lcd.GotoXY(RATE_COORD_X, RATE_COORD_Y);
 	lcd.print("RATE:");
 	lcd.GotoXY(EN_COORD_X, EN_COORD_Y);
 	lcd.print("CTRL:");
+}
+void DTC03SMaster::PrintEngBG()
+{
+	lcd.ClearScreen(0);
+	lcd.SelectFont(SystemFont5x7);
+	lcd.GotoXY(ENG_X, ENG_Y);
+	lcd.print("ENG MODE");
+	lcd.GotoXY(P_X, P_Y);
+	lcd.print("P:");
+	lcd.GotoXY(I_X, I_Y);
+	lcd.print("I:");
 }
 void DTC03SMaster::Printloopt(unsigned long tp)
 {
@@ -228,8 +269,7 @@ void DTC03SMaster::PrintRate()
 	lcd.GotoXY(RATE_COORD_X2, RATE_COORD_Y);
 //	if (g_trate < 10) lcd.print(" ");
 //	else if (g_trate < 100) lcd.print(" ");
-	lcd.print(float(g_trate)/10,1);
-//	lcd.print(p_rate,3);
+	lcd.print(float(g_trate)/100,2);
 }
 void DTC03SMaster::PrintScan()
 {
@@ -382,17 +422,18 @@ void DTC03SMaster::CheckStatus()
 			t2 = millis();
 			if(t2-t1 > LONGPRESSTIME){
 			
-//				g_cursorstate =5;
             }
 		}
-		
+//		if ((g_tstart<7.01) &&  ~g_en_state && g_scan && (g_trate==1) )	
 		if ( ~g_en_state && g_scan && (g_trate==1) ) {
-			g_cursorstate = 5;
-			lcd.ClearScreen(0);
+			g_cursorstate = 5;			
+			PrintEngBG();
+			PrintP();
+			PrintKi();
 		}	
-//		if ((g_tstart<7.01) &&  ~g_en_state && g_scan && (g_trate==1) ) {
-        
-		if(g_cursorstate ==6)
+
+        if( (g_cursorstate==7) && g_scan) g_cursorstate = 6;
+		if(g_cursorstate ==8)
 		{
 			g_cursorstate =0;
 			PrintBG();
@@ -461,8 +502,21 @@ void DTC03SMaster::ShowCursor()
 			lcd.print(" ");
 		break;
 
-		case 4:
-			lcd.ClearScreen(0);
+		case 6:
+			lcd.SelectFont(SystemFont5x7,BLACK);
+			lcd.GotoXY(I_X-COLUMEPIXEL0507, I_Y);
+			lcd.print(" ");
+			lcd.SelectFont(SystemFont5x7, WHITE);
+			lcd.GotoXY(P_X-COLUMEPIXEL0507, P_Y);
+			lcd.print(" ");
+		break;
+		case 7:
+			lcd.SelectFont(SystemFont5x7,BLACK);
+			lcd.GotoXY(P_X-COLUMEPIXEL0507, P_Y);			
+			lcd.print(" ");
+			lcd.SelectFont(SystemFont5x7, WHITE);
+			lcd.GotoXY(I_X-COLUMEPIXEL0507, I_Y);
+			lcd.print(" ");
 		break;
 	}
 }
@@ -500,12 +554,12 @@ void DTC03SMaster::UpdateParam()
 				PrintTend(); 
 			break;
 
-			case 2: // change to rate from 0.01 k/s
+			case 2: 
 				g_rateindex +=g_counter;
 				if(g_rateindex <1) g_rateindex =1;
 				if(g_rateindex > MAXRATEINDEX) g_rateindex = MAXRATEINDEX;				
 				g_trate = pgm_read_word_near(RateTable+g_rateindex);
-				p_rate = float(g_trate)*SCANSAMPLERATE/10000.0;
+				p_rate = float(g_trate)*SCANSAMPLERATE/100000.0;
 				PrintRate(); 
 			break;
 			case 3:
@@ -516,13 +570,29 @@ void DTC03SMaster::UpdateParam()
 				I2CWriteData(I2C_COM_VSET);
 				PrintTnow() ;
 			break;
+			
+			case 6:
+				g_p += g_counter;
+				if(g_p>254) g_p=254;//20161031
+                if(g_p<1) g_p=1;             
+                I2CWriteData(I2C_COM_CTR);
+                PrintP();
+            break;
+			
+			case 7:
+				g_kiindex += g_counter;
+				if(g_kiindex>50) g_kiindex=50;
+		        if(g_kiindex<1) g_kiindex=1;		        
+		        I2CWriteData(I2C_COM_KI);
+		        PrintKi();
+			break;
 
-			case 5:
-				if(g_fbcbase>44900) g_fbcbase=44900;//
-      			if(g_fbcbase<15100) g_fbcbase=15100;//
-      			g_fbcbase +=(g_counter2*100);
-      			I2CWriteData(I2C_COM_FBC);
-			break;					
+//			case 5:
+//				if(g_fbcbase>44900) g_fbcbase=44900;//
+//      			if(g_fbcbase<15100) g_fbcbase=15100;//
+//      			g_fbcbase +=(g_counter2*100);
+//      			I2CWriteData(I2C_COM_FBC);
+//			break;					
 		}
 
 	}

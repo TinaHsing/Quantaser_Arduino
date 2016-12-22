@@ -96,6 +96,17 @@
 #define EN_COORD_Y		56
 #define EN_COORD_X2 	42
 
+#define P_X		6
+#define P_Y		12
+#define P_X2 	P_X+12
+
+#define I_X		6
+#define I_Y		18
+#define I_X2 	I_X+12
+
+#define ENG_X		6
+#define ENG_Y		0
+
 #define SCAN_COORD_X	70
 #define SCAN_COORD_Y	56
 
@@ -106,16 +117,26 @@
 const PROGMEM unsigned char RateTable[]
 {
 	0,		// dummy index
-	1,		//index =1,	0.1k/s
-	2,		//index =2, 0.2
-	3,		//index =3, 0.3
-	4,		//index =4, 0.4
-	5,		//index =5, 0.5
-	6, 		//index =6, 0.6
-	7,		//index =7, 0.7
-	8,		//index =8, 0.8
-	9, 		//index =9, 0.9
-	10,		//       10, 1.0 
+	1,		//index =1,	0.01k/s
+	2,		//index =2, 
+	3,		//index =3, 
+	4,		//index =4, 
+	5,		//index =5, 
+	6, 		//index =6, 
+	7,		//index =7, 
+	8,		//index =8, 
+	9, 		//index =9, 
+	10,		//       10, 0.1 
+	20,		//       11, 0.2
+	30,		//       12, 0.3
+	40,		//       13, 0.4
+	50,		//       14, 0.5
+	60,		//       15, 0.6
+	70,		//       16, 0.7
+	80,		//       17, 0.8
+	90,		//       18, 0.9
+	100,	//       19, 1.0
+	200,	//       20, 2.0
 };
 
 // Rate definition in the unit of degree/sec // in the unit of m degree/ 100ms 
@@ -150,6 +171,9 @@ public:
 	void PrintEnable();
 	void PrintTact(float tact);
 	void PrintFbcbase();
+	void PrintKi();
+	void PrintP();
+	void PrintEngBG();
 	void CheckVact();
 	unsigned int ReturnVset(float tset, bool type);
 	void CalculateRate();
@@ -171,7 +195,7 @@ private:
 	glcd lcd;
 	bool g_scan, g_heater, g_paramterupdate, p_en[2], p_scan[2], p_tnow_flag[2], p_curstatus0flag, p_rateflag;
 	char g_counter, g_counter2;
-	unsigned char g_rateindex, g_trate, g_cursorstate,g_oldcursorstate, g_lastencoded;
+	unsigned char g_rateindex, g_trate, g_cursorstate,g_oldcursorstate, g_lastencoded, g_kiindex, g_p;
 	unsigned int  g_fbcbase, g_vstart, g_vset, g_vend, p_loopcount, p_trate;
 	unsigned long g_timer, g_tenc[3], g_tscan, p_tlp[5];
 	float g_tstart, g_tstop, g_tend, g_tnow, g_tfine, p_rate;

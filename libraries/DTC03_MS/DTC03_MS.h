@@ -91,10 +91,11 @@ const PROGMEM unsigned char kilstable[] =
 
 const PROGMEM unsigned int timeconst[] =
 {
-  0,
-  5,
-  10, 
-  20,
+  0, //index 0, dummy index
+  0, //index 1, time const=0, OFF
+  5, //index 2, time const=0.05
+  10, //index 3, time const=0.1
+  20,//index 4
   30,
   40,
   50,
@@ -122,7 +123,7 @@ const PROGMEM unsigned int timeconst[] =
   600,
   700,
   800,
-  900,
+  900, //index 32, time const=9.0
   1000,
   1200,
   1400,
@@ -140,7 +141,7 @@ const PROGMEM unsigned int timeconst[] =
   6500,
   7000,
   7500,
-  8000,
+  8000, //index 50, time const=80
 };
 
 #endif
