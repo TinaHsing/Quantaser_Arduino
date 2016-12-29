@@ -36,7 +36,7 @@ led4X7_disp::led4X7_disp(uint8_t pa, uint8_t pb, uint8_t pc, uint8_t pd, uint8_t
 	pinMode(ph, OUTPUT);
 		}
 
-void led4X7_disp::init(uint8_t adc_bit, uint8_t gain)
+void led4X7_disp::init(uint8_t adc_bit, float gain)
 {
 	switch (adc_bit) {
 		case 10 :
