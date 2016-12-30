@@ -9,15 +9,14 @@
 #define I2C_COM_INIT 	0x11
 #define I2C_COM_CTR 	0x12
 #define I2C_COM_VSET 	0x13
-#define I2C_COM_KIINDEX	0x14
+#define I2C_COM_KI	    0x14
 #define I2C_COM_VACT	0x15
 #define I2C_COM_ITEC_ER	0x16
 #define I2C_COM_VBEH	0x17 //use for DVCC R1 R2
 #define I2C_COM_VBEC	0x18 //use for t.pid offset 
 #define I2C_COM_FBC		0x19
 #define	I2C_COM_VMOD	0x1A
-#define I2C_COM_KI 		0x1B
-#define I2C_COM_TEST	0x1C 
+#define I2C_COM_TEST	0x1B
 
 
 //=========request Events Mask ============
@@ -35,6 +34,7 @@
 /*matrix modified on 168us 20161103*/
 const PROGMEM unsigned char kilstable[] =
 { 
+0,   0, //dummy
 0,   0, //0
 16,	220, //0.05
 17,	220,//0.1

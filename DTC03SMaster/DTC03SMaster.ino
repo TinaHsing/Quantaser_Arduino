@@ -32,9 +32,9 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
 //  master.g_tloop = millis();
 //  master.Printloopt(master.g_tloop);
+//
  master.CheckVact();
  master.UpdateEnable();
  master.CheckScan();
@@ -43,6 +43,9 @@ void loop() {
  master.ShowCursor(); 
  master.UpdateParam();
  master.CalculateRate();
+ master.SaveEEPROM();
+ //
+// master.RuntestI2C();
  
 
 }

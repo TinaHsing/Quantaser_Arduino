@@ -479,10 +479,6 @@ void DTC03::I2CRequest()
     temp[0] = g_ki;
     temp[1] = g_ls;
     break;
-
-    case I2C_COM_KIINDEX://
-    temp[0] = g_kiindex;//
-    break;
     
     case I2C_COM_VACT:
     vact=g_vactavgsum >> VACTAVGPWR;
@@ -496,7 +492,6 @@ void DTC03::I2CRequest()
     if(itec<0) itecsign = 1;
     else itecsign = 0;
     temp[0]=abs(itec);
-    //temp[1]=abs(itec >> 8);
     temp[1]=abs(itec) >> 8;//
     
     
@@ -511,9 +506,6 @@ void DTC03::I2CRequest()
 //    Serial.print(temp[0]);
 //    Serial.print(", ");
 //    Serial.println(g_itecavgsum);
-    
-    
-
     break;
 
     case I2C_COM_VBEH:
@@ -573,7 +565,11 @@ void DTC03::I2CReceive()
     g_currentlim = temp[0];
     g_p = temp[1];
     g_ee_change_state = EEADD_P;
-    //Serial.println("LIM");
+    
+//    Serial.println("CTR:");
+//    Serial.print(g_currentlim);
+//    Serial.print(", ");
+//    Serial.println(g_p);
     break;
 
     case I2C_COM_VSET:
@@ -581,21 +577,20 @@ void DTC03::I2CReceive()
     vset_upper = temp[1];
     g_vset_limit = vset_upper<<8 | vset_lower;
     g_ee_change_state = EEADD_Vset_lower;
-    //Serial.println("SET");
+    
+//    Serial.println("VSET:");
+//    Serial.println( ReturnTemp(g_vset_limit,0) );
     break;
 
-    case I2C_COM_KIINDEX://20161101 add
-    g_kiindex = temp[0];//
-    g_ee_change_state = EEADD_KIINDEX;//
-    //Serial.println("INDEX");
-    break;//
     
     case I2C_COM_KI:
-    //g_ki = temp[0];
-    //g_ls = temp[1];
     g_ls = temp[0];//20161104 changed
     g_ki = temp[1];
-    //Serial.println("KILS");
+    
+//    Serial.println("LSKI:");
+//    Serial.print(g_ls);
+//    Serial.print(", ");
+//    Serial.println(g_ki);
     break;
 
     case I2C_COM_VBEH:
@@ -630,8 +625,10 @@ void DTC03::I2CReceive()
     break;
     
     case I2C_COM_TEST:  		
-    	g_i2ctest = (temp[1] << 8) | temp[0];
-    	Serial.println(temp[0]);
+//    	g_i2ctest = (temp[1] << 8) | temp[0];
+//    	Serial.print(temp[0],HEX);
+//    	Serial.print(", ");
+//    	Serial.println(temp[1],HEX);
     break;
   }
  }

@@ -124,7 +124,7 @@ void loop() {
   if (toutput<=0) dtc.SetMos(HEATING,output);
   else if (toutput>0) dtc.SetMos(COOLING,output);
   
-  if(dtc.g_ee_changed) dtc.SaveEEPROM();
+//  if(dtc.g_ee_changed) dtc.SaveEEPROM();
   i++;
 }
 

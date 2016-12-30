@@ -30,7 +30,7 @@
 #define ANAREADVIH 		500
 #define LONGPRESSTIME 	5000
 #define PERIOD			100
-#define MAXRATEINDEX	10 // Should be set rate index -1 current rate index is 8
+#define MAXRATEINDEX	20 
 #define DEBOUNCETIME 	2
 #define COUNTERINCRE	50
 #define COUNTERSPEEDUP	100
@@ -53,17 +53,20 @@
 #define EEADD_DUMMY			5
 #define EEADD_FBC_UPPER		6
 #define EEADD_FBC_LOWER		7
-#define EEADD_KI			8
-#define EEADD_LS			9
+#define EEADD_P             8
+#define EEADD_KIINDEX	    9
+
 
 //----------NOEE Default value------
-#define NOEE_VSTART		20000
-#define NOEE_VEND		20000
-#define NOEE_RATE		0
+#define NOEE_VSTART		53244
+#define NOEE_VEND		9313
+#define NOEE_RATE		1
 #define NOEE_DUMMY		104
 #define NOEE_FBC		22000
-#define NOEE_KI			176
-#define NOEE_LS			20
+#define NOEE_KI			0
+#define NOEE_LS			0
+#define NOEE_P          10
+#define NOEE_kiindex    0
 
 #define TEMP_RISING 	1
 #define TEMP_FALLING 	0
@@ -96,16 +99,18 @@
 #define EN_COORD_Y		56
 #define EN_COORD_X2 	42
 
+#define ENG_X		6
+#define ENG_Y		0
+
 #define P_X		6
 #define P_Y		12
 #define P_X2 	P_X+12
 
 #define I_X		6
-#define I_Y		18
+#define I_Y		24
 #define I_X2 	I_X+12
 
-#define ENG_X		6
-#define ENG_Y		0
+
 
 #define SCAN_COORD_X	70
 #define SCAN_COORD_Y	56
@@ -162,6 +167,7 @@ public:
 	void I2CReadVact();
 	void I2CWriteData(unsigned char com);
 	float ReturnTemp(unsigned int vact, bool type);
+	unsigned int ReturnVset(float tset, bool type);
 	void PrintBG();
 	void PrintTstart();
 	void PrintTend();
@@ -175,7 +181,6 @@ public:
 	void PrintP();
 	void PrintEngBG();
 	void CheckVact();
-	unsigned int ReturnVset(float tset, bool type);
 	void CalculateRate();
 	void CheckStatus();
 	void checkTnowStatus();
@@ -185,6 +190,8 @@ public:
 	void UpdateParam();
 	void Encoder();
 	void Printloopt(unsigned long);
+	void SaveEEPROM();
+	void RuntestI2C();
 	bool g_en_state;
 	unsigned int g_vact;
 	unsigned long g_tloop;
@@ -193,12 +200,12 @@ public:
 
 private:
 	glcd lcd;
-	bool g_scan, g_heater, g_paramterupdate, p_en[2], p_scan[2], p_tnow_flag[2], p_curstatus0flag, p_rateflag;
+	bool g_scan, g_heater, g_paramterupdate, p_en[2], p_scan[2], p_tnow_flag[2], p_curstatus0flag, p_rateflag, p_EngFlag;
+	bool p_ee_changed;
 	char g_counter, g_counter2;
-	unsigned char g_rateindex, g_trate, g_cursorstate,g_oldcursorstate, g_lastencoded, g_kiindex, g_p;
+	unsigned char g_rateindex, g_trate, g_cursorstate,g_oldcursorstate, g_lastencoded, g_kiindex, g_p, p_ee_change_state;
 	unsigned int  g_fbcbase, g_vstart, g_vset, g_vend, p_loopcount, p_trate;
 	unsigned long g_timer, g_tenc[3], g_tscan, p_tlp[5];
-	float g_tstart, g_tstop, g_tend, g_tnow, g_tfine, p_rate;
-
+	float g_tstart, g_tend, g_tnow, g_tfine, p_rate;
 
 };
