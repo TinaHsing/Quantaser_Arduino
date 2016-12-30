@@ -52,6 +52,30 @@ void led4X7_disp::init(uint8_t adc_bit, float gain)
 	p_gain = gain;
 	get_mask();
 }
+void led4X7_disp::init(uint8_t ain, uint8_t adc_bit, float gain)
+{
+	switch (adc_bit) {
+		case 10 :
+			p_adcbase = 1023;
+			break;
+		case 12 :
+			p_adcbase = 4095;
+			break;
+		case 16 :
+			p_adcbase = 65535;
+		break;
+	}
+	p_gain = gain;
+	get_mask();
+	p_pinai = ain;
+	avgcount = 0;
+	p_vinsum = 0;
+	for (int i=0; i<AVGTIMES; i++) {
+		p_vinarray[i] = analogRead(p_pinai);
+		p_vinsum += p_vinarray[i];
+	}
+	
+}
 void led4X7_disp::print(unsigned int code) {
 	float number;
 	uint8_t n[4], case_select, dt=5;
@@ -85,6 +109,45 @@ void led4X7_disp::print(unsigned int code) {
     break;
   }
 	
+}
+void led4X7_disp::print() {
+	float number;
+	uint8_t n[4], case_select, dt=5;
+	
+	p_vinsum -= p_vinarray[avgcount];
+	p_vinarray[avgcount] = analogRead(p_pinai);
+	p_vinsum += p_vinarray[avgcount];
+	
+	number = float(p_vinsum >> AVGPOWER) /p_adcbase*5*p_gain;
+	if (number >= 100) case_select = 3;
+	else if (number >= 10) case_select = 2;
+	else case_select = 1;
+	
+	switch (case_select) {
+    case 3 :
+      n[3] = int(number)/100;
+      number -= n[3]*100;
+      SetDisplay(n[3], 3);
+      delay(dt);
+
+    case 2 :
+      n[2] = int(number)/10;
+      number -= n[2]*10;
+      SetDisplay(n[2], 2);
+      delay(dt);
+
+    case 1 :
+      n[1] = int(number);
+      number -= n[1];  
+      SetDisplay(n[1], 1);
+      delay(dt);
+      n[0] = number*10;
+      SetDisplay(n[0], 0);
+      delay(dt);
+    break;
+  }
+	avgcount++;
+	if(avgcount == AVGTIMES) avgcount = 0;
 }
 
 void led4X7_disp::get_mask() {
