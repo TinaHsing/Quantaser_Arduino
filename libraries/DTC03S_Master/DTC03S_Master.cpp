@@ -320,9 +320,9 @@ void DTC03SMaster::PrintTnow()
 }
 void DTC03SMaster::checkTnowStatus()
 {
-	//
+	// p_en[1] : the most updated enble state  
 	if (p_en[0]) {
-		if (p_scan[1] < p_scan[0]) p_tnow_flag[1] = 1;
+		if (p_scan[1] < p_scan[0]) p_tnow_flag[1] = 1; // falling edge @ enable = 1
 	}
 	else {
 		p_tnow_flag[1] = 0;
@@ -330,7 +330,7 @@ void DTC03SMaster::checkTnowStatus()
 	}
 	if (p_scan[1]) p_tnow_flag[1] = 0;
 	//
-	if (p_tnow_flag[0] != p_tnow_flag[1]) {
+	if (p_tnow_flag[0] != p_tnow_flag[1]) { // enter this "if" only when p_tnow_flag toggle
 		if (p_tnow_flag[1]==1) {
 		    g_cursorstate = 3;
 		    p_curstatus0flag = 1;
