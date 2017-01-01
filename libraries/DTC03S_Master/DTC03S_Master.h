@@ -36,6 +36,8 @@
 #define COUNTERSPEEDUP	100
 #define FINETUNEAMP 3
 #define SCANSAMPLERATE 40
+#define ILIMSTART 0.5
+#define ILIMSTEP 0.05
 
 //------pin definition ----------------
 #define ENC_A 2
@@ -74,6 +76,7 @@
 
 //-----------Font Parameters---------
 #define ROWPIXEL0507 8 //row pixel of SystemFont5x7
+#define ROWPIXELdef 12
 #define COLUMEPIXEL0507 6  
 
 //----------Print Coordinate ---------
@@ -99,24 +102,65 @@
 #define EN_COORD_Y		56
 #define EN_COORD_X2 	42
 
-#define ENG_X		6
-#define ENG_Y		0
-
-#define P_X		6
-#define P_Y		12
-#define P_X2 	P_X+12
-
-#define I_X		6
-#define I_Y		24
-#define I_X2 	I_X+12
-
-
-
 #define SCAN_COORD_X	70
 #define SCAN_COORD_Y	56
 
-#define LOOPT_X	84
-#define LOOPT_Y	0
+//-------ENG mode related-------
+
+#define TS_X		COLUMEPIXEL0507
+#define TS_Y		0
+#define TS_X2		COLUMEPIXEL0507*4
+#define Text_TS		"TS:"
+
+#define TA_X		COLUMEPIXEL0507*12
+#define TA_Y		0
+#define TA_X2		COLUMEPIXEL0507*15
+#define Text_TA		"TA:"
+
+#define Ilim_X		COLUMEPIXEL0507
+#define Ilim_Y		ROWPIXELdef*1
+#define Ilim_X2		COLUMEPIXEL0507*6
+#define Text_Ilim	"Ilim:"
+
+#define Ic_X		COLUMEPIXEL0507*12
+#define Ic_Y		ROWPIXELdef*1
+#define Ic_X2		COLUMEPIXEL0507*15
+#define Text_Ic		"Ic:"
+
+#define P_X			COLUMEPIXEL0507
+#define P_Y			ROWPIXELdef*2
+#define P_X2 		COLUMEPIXEL0507*3
+#define Text_P		"P:"
+
+#define I_X			COLUMEPIXEL0507*7
+#define I_Y			ROWPIXELdef*2
+#define I_X2		COLUMEPIXEL0507*9
+#define Text_I		"I:"
+
+#define R1_X		COLUMEPIXEL0507*15
+#define R1_Y		ROWPIXELdef*2
+#define R1_X2 		COLUMEPIXEL0507*18
+#define Text_R1		"R1:"
+
+#define R2_X		COLUMEPIXEL0507
+#define R2_Y		ROWPIXELdef*3
+#define R2_X2 		COLUMEPIXEL0507*4
+#define Text_R2		"R2:"
+
+#define FBC_X		COLUMEPIXEL0507*11
+#define FBC_Y		ROWPIXELdef*3
+#define FBC_X2 	    COLUMEPIXEL0507*15
+#define Text_FBC	"FBC:"
+
+#define Totp_X		COLUMEPIXEL0507
+#define Totp_Y		ROWPIXELdef*4
+#define Totp_X2 	COLUMEPIXEL0507*6
+#define Text_Totp	"Totp:"
+
+#define Tpcb_X		COLUMEPIXEL0507*12
+#define Tpcb_Y		ROWPIXELdef*4
+#define Tpcb_X2 	COLUMEPIXEL0507*17
+#define Text_Tpcb	"Tpcb:"
 
 
 const PROGMEM unsigned char RateTable[]
@@ -169,17 +213,26 @@ public:
 	float ReturnTemp(unsigned int vact, bool type);
 	unsigned int ReturnVset(float tset, bool type);
 	void PrintBG();
+	void PrintEngBG();
+	
 	void PrintTstart();
 	void PrintTend();
 	void PrintRate();
 	void PrintScan();
 	void PrintTnow();
 	void PrintEnable();
-	void PrintTact(float tact);
-	void PrintFbcbase();
+	void PrintTact(float);
+	void PrintItec(float);
+	void PrintVfbc();
 	void PrintKi();
 	void PrintP();
-	void PrintEngBG();
+	void PrintIlim();
+	void PrintR1();
+	void PrintR2();
+	void PrintTpidoff();
+	void PrintTotp();
+	void PrintTpcb();
+		
 	void CheckVact();
 	void CalculateRate();
 	void CheckStatus();
@@ -193,9 +246,9 @@ public:
 	void SaveEEPROM();
 	void RuntestI2C();
 	bool g_en_state;
-	unsigned int g_vact;
+	unsigned int g_vact, g_fbcbase;
 	unsigned long g_tloop;
-
+    unsigned char g_currentlim, g_r1, g_r2, g_tpidoff, g_otp; 
 
 
 private:

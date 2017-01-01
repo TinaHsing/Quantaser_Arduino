@@ -372,12 +372,12 @@ void DTC03::CheckTemp()
 {
   int Vtemp;
   Vtemp = analogRead(TEMP_SENSOR);
-  if(Vtemp > V_OVERTEMP) 
+  if(Vtemp > g_otp) 
     {
       g_errcode2 = 1;
       g_en_state =0;
     }
-  else g_errcode2 = 0;
+//  else g_errcode2 = 0;
 }
 void DTC03::ReadVoltage()
 {
