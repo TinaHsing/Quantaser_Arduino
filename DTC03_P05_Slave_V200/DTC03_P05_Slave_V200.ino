@@ -21,7 +21,7 @@ void setup() {
   dtc.SetSPI();
   dtc.SetPinMode();
   dtc.ParamInit();
-  dtc.ReadEEPROMnew();
+//  dtc.ReadEEPROMnew();
   dtc.DynamicVcc();
   dtc.InitVactArray();
   

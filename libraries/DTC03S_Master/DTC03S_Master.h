@@ -23,8 +23,23 @@
 #define KI 176
 #define LS 20
 
+// define I2C parameter
+#define I2CSENDDELAY 100 //delay100us
+#define I2CREADDELAY 100 //delay100us
+
+//=========request Events Mask ============
+#define REQMSK_ENSTATE 		0x80 //B1000 0000
+#define REQMSK_SENSTYPE		0x40 //B0100 0000
+#define REQMSK_BUPPER		0x07 //B0000 0111
+
+#define REQMSK_ITECU		0x03 //B0000 0011
+#define REQMSK_ITECSIGN		0x04 //B0000 0100
+#define REQMSK_ERR1		 	0x10 //B0001 0000
+#define REQMSK_ERR2			0x20 //B0010 0000
+
 //-------constant definition -----
 #define T0INV 			0.003354
+#define CURRENTRatio    0.009997// code * 5/1023/50/0.01= code * 0.09997 (A)
 #define RTHRatio 		25665 
 #define ANAREADVIL 		240
 #define ANAREADVIH 		500
@@ -80,30 +95,38 @@
 #define COLUMEPIXEL0507 6  
 
 //----------Print Coordinate ---------
-#define TSTART_COORD_X 	6
+#define TSTART_COORD_X 	COLUMEPIXEL0507
 #define TSTART_COORD_Y 	0
-#define TSTART_COORD_X2	TSTART_COORD_X+42
+#define TSTART_COORD_X2	COLUMEPIXEL0507*8
+#define Text_Tstart		"Tstart:"
 
-#define TEND_COORD_X	6
-#define TEND_COORD_Y	12
-#define TEND_COORD_X2	TEND_COORD_X+42
+#define TEND_COORD_X	COLUMEPIXEL0507
+#define TEND_COORD_Y	ROWPIXELdef*1
+#define TEND_COORD_X2	COLUMEPIXEL0507*8
+#define Text_Tstop		"Tstop:"
 
-#define RATE_COORD_X	6
-#define RATE_COORD_Y	24
-#define RATE_COORD_X2	RATE_COORD_X+42
+#define RATE_COORD_X	COLUMEPIXEL0507
+#define RATE_COORD_Y	ROWPIXELdef*2
+#define RATE_COORD_X2	COLUMEPIXEL0507*8
+#define Text_RATE		"RATE:"
 
-#define TFINE_COORD_X	72
-#define TFINE_COORD_Y	36
+#define TFINE_COORD_X	COLUMEPIXEL0507*6
+#define TFINE_COORD_Y	ROWPIXELdef*3
+
+#define EN_COORD_X		COLUMEPIXEL0507
+#define EN_COORD_Y		56
+#define EN_COORD_X2 	COLUMEPIXEL0507*10
+#define Text_CTRL		"CTRL  :"
+
+#define SCAN_COORD_X	COLUMEPIXEL0507*14
+#define SCAN_COORD_Y	56
 
 #define TACT_COORD_X	6
 #define TACT_COORD_Y	36
 
-#define EN_COORD_X		6
-#define EN_COORD_Y		56
-#define EN_COORD_X2 	42
 
-#define SCAN_COORD_X	70
-#define SCAN_COORD_Y	56
+
+
 
 //-------ENG mode related-------
 
@@ -208,8 +231,9 @@ public:
 	void ParamInit();
 	void WelcomeScreen();
 	void ReadEEPROM();
-	void I2CReadVact();
+	void I2CReadData(unsigned char com);
 	void I2CWriteData(unsigned char com);
+	void I2CWriteAll();
 	float ReturnTemp(unsigned int vact, bool type);
 	unsigned int ReturnVset(float tset, bool type);
 	void PrintBG();
@@ -223,6 +247,7 @@ public:
 	void PrintEnable();
 	void PrintTact(float);
 	void PrintItec(float);
+	void PrintTpcb(float);
 	void PrintVfbc();
 	void PrintKi();
 	void PrintP();
@@ -231,24 +256,26 @@ public:
 	void PrintR2();
 	void PrintTpidoff();
 	void PrintTotp();
-	void PrintTpcb();
+	
 		
-	void CheckVact();
-	void CalculateRate();
 	void CheckStatus();
+	void CalculateRate();
 	void checkTnowStatus();
 	void CheckScan();
 	void UpdateEnable();
 	void ShowCursor();
+	void CursorState();
 	void UpdateParam();
 	void Encoder();
 	void Printloopt(unsigned long);
 	void SaveEEPROM();
 	void RuntestI2C();
 	bool g_en_state;
-	unsigned int g_vact, g_fbcbase;
+	int g_itec;
+	unsigned int g_vact, g_fbcbase, g_tpcb, g_otp;
 	unsigned long g_tloop;
-    unsigned char g_currentlim, g_r1, g_r2, g_tpidoff, g_otp; 
+    unsigned char g_currentlim, g_r1, g_r2, g_tpidoff; 
+    bool g_errcode1, g_errcode2;
 
 
 private:
@@ -257,8 +284,8 @@ private:
 	bool p_ee_changed;
 	char g_counter, g_counter2;
 	unsigned char g_rateindex, g_trate, g_cursorstate,g_oldcursorstate, g_lastencoded, g_kiindex, g_p, p_ee_change_state;
-	unsigned int  g_fbcbase, g_vstart, g_vset, g_vend, p_loopcount, p_trate;
-	unsigned long g_timer, g_tenc[3], g_tscan, p_tlp[5];
+	unsigned int  g_vstart, g_vset, g_vend, p_loopcount, p_trate;
+	unsigned long loopindex, g_timer, g_tenc[3], g_tscan, g_tpush, p_tlp[5];
 	float g_tstart, g_tend, g_tnow, g_tfine, p_rate;
 
 };

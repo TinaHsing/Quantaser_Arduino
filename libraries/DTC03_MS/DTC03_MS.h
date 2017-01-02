@@ -11,15 +11,15 @@
 #define I2C_COM_KI	    0x13
 #define I2C_COM_VSET 	0x14
 #define I2C_COM_R1R2	0x15
-#define I2C_COM_VBEC	0x16 
-#define I2C_COM_FBC		0x17
+#define I2C_COM_FBC		0x16
+#define I2C_COM_OTP  	0x17
 #define I2C_COM_ITEC_ER	0x18
 #define I2C_COM_VACT	0x19
-#define I2C_COM_OTP  	0x1A
-#define I2C_COM_PCB		0X1B
 
-#define	I2C_COM_VMOD	0x1C // mod offset, not use in Scan DTC03 case
-#define I2C_COM_TEST	0x1D
+#define I2C_COM_PCB		0X1A
+
+#define	I2C_COM_VMOD	0x1B // mod offset, not use in Scan DTC03 case
+#define I2C_COM_TEST	0x1C
 
 
 //=========request Events Mask ============

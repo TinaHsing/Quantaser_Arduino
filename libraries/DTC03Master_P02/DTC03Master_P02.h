@@ -106,7 +106,7 @@
 
 
 // define I2C parameter
-#define I2CSENDDELAY 100 //delay100ms
+#define I2CSENDDELAY 100 //delay100us
 #define I2CREADDELAY 100 //delay100us
 
 //define calculation parameter
