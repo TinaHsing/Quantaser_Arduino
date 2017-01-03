@@ -25,9 +25,9 @@
 #define CURRENTLIMMAX 50 //maximun of g_currentlim
 #define BCONSTMAX 4500//maximun of bconst
 #define HIGHLOWBOUNDRY 500 //
-//#define TESTGOPERIOD 18000000 // testing period for one temperature in the unit of ms (18,000,000 = 5hrs)
-#define TESTGOPERIOD 600000 //testing period for one tempeature in the unit of ms (600,000 = 10 mins) used for functional test should be remove after function varification 
-#define TESTGOSTEP 24.00 // testgo temperature step, usually ttstart = Tamb -12 so the second step will be ttstart + 24 = Tamb +12
+#define TESTGOPERIOD 18000000 // testing period for one temperature in the unit of ms (18,000,000 = 5hrs)
+//#define TESTGOPERIOD 60000 //testing period for one tempeature in the unit of ms (600,000 = 10 mins) used for functional test should be remove after function varification 
+#define TESTGOSTEP 22.00 // testgo temperature step, usually ttstart = Tamb -12 so the second step will be ttstart + 24 = Tamb +12
 
 //=================pin definition=========================
 #define ENC_B 3
