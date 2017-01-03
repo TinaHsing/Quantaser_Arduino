@@ -32,6 +32,7 @@ void DTC03::DynamicVcc()
     unsigned int Rcal_step = RMEASUREVOUT - g_fbc_base ;
     if(g_sensortype) digitalWrite(SENSOR_TYPE,g_sensortype);
     SetMosOff();
+    while(g_wakeup == 0) {};
     g_isense0 = ReadIsense();
 //    g_r1=10;
 //    g_r2=20;
@@ -150,9 +151,9 @@ void DTC03::ParamInit()
   g_ilimdacout = 65535;
   g_limcounter =0;
   g_tpidoffset = 2;
+  g_wakeup = 0;
   ADCSRA &=~PS_128;
   ADCSRA |=PS_32;
-//  delay(5000);
 }
 void DTC03::SetPinMode()
 {
@@ -591,6 +592,13 @@ void DTC03::I2CReceive()
 //    	Serial.println("OTP:");
 //    	Serial.println(g_otp);
     break;
+    
+    case I2C_COM_WAKEUP:
+    	g_wakeup = temp[0];
+//    	Serial.println("OTP:");
+//    	Serial.println(g_otp);
+    break;
+    
     
     case I2C_COM_TEST:  		
 //    	g_i2ctest = (temp[1] << 8) | temp[0];

@@ -43,7 +43,7 @@ void DTC03SMaster::WelcomeScreen()
 	lcd.print("DTC03S Ver.2.01");
 	lcd.GotoXY(0,ROWPIXEL0507*1);
 	lcd.print("Initializing...");
-	for (byte i=9; i>0; i--)
+	for (byte i=5; i>0; i--)
   {
     lcd.GotoXY(0,ROWPIXEL0507*2);
     lcd.print(i);
@@ -158,7 +158,7 @@ void DTC03SMaster::SaveEEPROM() {
 }
 void DTC03SMaster::I2CWriteAll()
 {
-	for (int i=I2C_COM_INIT; i<=I2C_COM_OTP; i++) I2CWriteData(i);
+	for (int i=I2C_COM_INIT; i<=I2C_COM_WAKEUP; i++) I2CWriteData(i);
 }
 
 void DTC03SMaster::I2CWriteData(unsigned char com)
@@ -204,8 +204,12 @@ void DTC03SMaster::I2CWriteData(unsigned char com)
     		temp[1] = g_otp>>8;
     	break;
     	
+    	case I2C_COM_WAKEUP:
+    		temp[0] = 1;
+    		temp[1] = 0;
+    	break;
+    	
     	case I2C_COM_TEST:
-
     		temp[0] = g_cursorstate;
     		temp[1] = g_vend;
     	break;

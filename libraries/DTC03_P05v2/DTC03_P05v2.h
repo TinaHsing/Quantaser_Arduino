@@ -170,7 +170,7 @@ public:
     unsigned char g_p, g_ki, g_ls, g_currentlim, g_ee_change_state,g_kiindex, g_limcounter,g_currentindex, g_vbec1, g_vbec2, g_vbeh1, g_vbeh2, g_tpidoffset;
     unsigned char g_r1, g_r2;;
 	unsigned long g_vactavgsum, g_itecavgsum;
-	bool g_en_state, g_heating, g_errcode1, g_errcode2, g_sensortype, g_mod_status, g_ee_changed;
+	bool g_en_state, g_heating, g_errcode1, g_errcode2, g_sensortype, g_mod_status, g_ee_changed, g_wakeup;
     unsigned int g_b_upper, g_b_lower,g_vset_limit, g_ilimdacout,g_vset_limitt,g_vmod, g_otp;
     unsigned int g_vmodoffset, g_i2ctest;//
     int g_iteclimitset, g_Vtemp;//
