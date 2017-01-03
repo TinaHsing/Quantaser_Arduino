@@ -7,7 +7,7 @@
 
 // =====================DEBUGFLAG Table =================================
 #define DEBUGFLAG01
-//#define DEBUGFLAG02 1
+//#define DEBUGFLAG02 2
 //#define DEBUGFLAG03
 
 #ifdef DTCDEBUG01

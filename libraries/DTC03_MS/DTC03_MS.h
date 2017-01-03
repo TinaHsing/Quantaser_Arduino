@@ -25,10 +25,10 @@
 //=========request Events Mask ============
 #define REQMSK_ENSTATE 		0x80 //B1000 0000
 #define REQMSK_SENSTYPE		0x40 //B0100 0000
-#define REQMSK_BUPPER		0x07 //B0111
+#define REQMSK_BUPPER		0x07 //B0000 0111
 
-#define REQMSK_ITECU		0x03 //B0011
-#define REQMSK_ITECSIGN		0x04 //B0100
+#define REQMSK_ITECU		0x03 //B0000 0011
+#define REQMSK_ITECSIGN		0x04 //B0000 0100
 #define REQMSK_ERR1		 	0x10 //B0001 0000
 #define REQMSK_ERR2			0x20 //B0010 0000			
 

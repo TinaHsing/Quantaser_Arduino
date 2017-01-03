@@ -67,26 +67,35 @@
 #define EEADD_VEND_UPPER	2
 #define EEADD_VEND_LOWER	3
 #define EEADD_RATE_INDEX	4
-#define EEADD_DUMMY			5
+#define EEADD_currentlim 	5
 #define EEADD_FBC_UPPER		6
 #define EEADD_FBC_LOWER		7
 #define EEADD_P             8
 #define EEADD_KIINDEX	    9
-
+#define EEADD_TOTP_UPPER    10
+#define EEADD_TOTP_LOWER    11
+#define EEADD_R1            12
+#define EEADD_R2            13
+#define EEADD_DUMMY			100
 
 //----------NOEE Default value------
 #define NOEE_VSTART		53244
 #define NOEE_VEND		9313
 #define NOEE_RATE		1
-#define NOEE_DUMMY		104
+#define NOEE_ILIM       50 // currntlimit,3A=50
 #define NOEE_FBC		22000
+#define NOEE_P          10
 #define NOEE_KI			0
 #define NOEE_LS			0
-#define NOEE_P          10
-#define NOEE_kiindex    0
+#define NOEE_kiindex    1
+#define NOEE_TOTP       441 //90C
+#define NOEE_R1         20
+#define NOEE_R2         30
+#define NOEE_DUMMY		104
 
 #define TEMP_RISING 	1
 #define TEMP_FALLING 	0
+
 
 
 //-----------Font Parameters---------

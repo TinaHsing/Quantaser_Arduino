@@ -43,7 +43,12 @@ void DTC03SMaster::WelcomeScreen()
 	lcd.print("DTC03S Ver.2.01");
 	lcd.GotoXY(0,ROWPIXEL0507*1);
 	lcd.print("Initializing...");
-	delay(1000);
+	for (byte i=9; i>0; i--)
+  {
+    lcd.GotoXY(0,ROWPIXEL0507*2);
+    lcd.print(i);
+    delay(1000);
+  }
 }
 void DTC03SMaster::ReadEEPROM()
 {
@@ -51,13 +56,17 @@ void DTC03SMaster::ReadEEPROM()
 	noeedummy = EEPROM.read(EEADD_DUMMY);
 	if(noeedummy == NOEE_DUMMY)
 	{
-		g_vstart = EEPROM.read(EEADD_VSTART_UPPER) << 8 | EEPROM.read(EEADD_VSTART_LOWER);
-		g_vend = EEPROM.read(EEADD_VEND_UPPER) <<8 | EEPROM.read(EEADD_VEND_LOWER);
+		g_vstart = EEPROM.read(EEADD_VSTART_UPPER)<<8 | EEPROM.read(EEADD_VSTART_LOWER);
+		g_vend = EEPROM.read(EEADD_VEND_UPPER)<<8 | EEPROM.read(EEADD_VEND_LOWER);
 		g_rateindex = EEPROM.read(EEADD_RATE_INDEX);
 		g_p = EEPROM.read(EEADD_P);
 		g_kiindex = EEPROM.read(EEADD_KIINDEX);
-//		g_fbcbase = temp_upper <<8 | temp_lower;
-
+		g_fbcbase = EEPROM.read(EEADD_FBC_UPPER)<<8 | EEPROM.read(EEADD_FBC_LOWER);
+        g_currentlim = EEPROM.read(EEADD_currentlim);
+        g_r1 = EEPROM.read(EEADD_R1);
+        g_r2 = EEPROM.read(EEADD_R2);
+        g_otp = EEPROM.read(EEADD_TOTP_UPPER)<<8 | EEPROM.read(EEADD_TOTP_LOWER);
+        
 	}
 	else
 	{
@@ -67,18 +76,26 @@ void DTC03SMaster::ReadEEPROM()
 		EEPROM.write(EEADD_VEND_UPPER, NOEE_VEND>>8);
 		EEPROM.write(EEADD_VEND_LOWER, NOEE_DUMMY);
 		EEPROM.write(EEADD_RATE_INDEX, NOEE_RATE);
-		EEPROM.write(EEADD_DUMMY, NOEE_DUMMY);
 		EEPROM.write(EEADD_FBC_UPPER, NOEE_FBC>>8);
 		EEPROM.write(EEADD_FBC_LOWER, NOEE_FBC);
 		EEPROM.write(EEADD_P, NOEE_P);
 		EEPROM.write(EEADD_KIINDEX, NOEE_kiindex);
+		EEPROM.write(EEADD_currentlim, NOEE_ILIM);
+		EEPROM.write(EEADD_R1, NOEE_R1);
+		EEPROM.write(EEADD_R2, NOEE_R2);
+		EEPROM.write(EEADD_TOTP_UPPER, NOEE_TOTP>>8);
+		EEPROM.write(EEADD_TOTP_LOWER, NOEE_TOTP);
 
 		g_vstart = NOEE_VSTART;
 		g_vend = NOEE_VEND;
 		g_rateindex = NOEE_RATE;
 		g_p = NOEE_P;
 		g_kiindex = NOEE_kiindex;
+		g_r1 = NOEE_R1;
+		g_r2 = NOEE_R2;
 		g_fbcbase = NOEE_FBC;
+		g_otp = NOEE_TOTP; 
+		g_currentlim = NOEE_ILIM;
 	}
 	g_vset = g_vstart;
     g_tstart = ReturnTemp(g_vstart, 0);
@@ -86,8 +103,6 @@ void DTC03SMaster::ReadEEPROM()
     g_tend = ReturnTemp(g_vend, 0);
 	g_trate = pgm_read_word_near(RateTable+g_rateindex);
 	p_rate = float(g_trate)*SCANSAMPLERATE/100000.0;
-
-
 }
 void DTC03SMaster::SaveEEPROM() {
 	
@@ -116,12 +131,34 @@ void DTC03SMaster::SaveEEPROM() {
             case EEADD_KIINDEX:
                 EEPROM.write(EEADD_KIINDEX, g_kiindex);
                 break;
+                
+            case EEADD_currentlim:
+                EEPROM.write(EEADD_currentlim, g_currentlim);
+                break;
+                
+            case EEADD_FBC_UPPER:
+                EEPROM.write(EEADD_FBC_UPPER, g_fbcbase>>8);
+                EEPROM.write(EEADD_FBC_LOWER, g_fbcbase);
+                break;
+             
+			case EEADD_R1:
+                EEPROM.write(EEADD_R1, g_r1);
+                break;
+               
+			case EEADD_R2:
+                EEPROM.write(EEADD_R2, g_r2);
+                break;
+               
+			case EEADD_TOTP_UPPER:
+                EEPROM.write(EEADD_TOTP_UPPER, g_otp>>8);
+                EEPROM.write(EEADD_TOTP_LOWER, g_otp);
+                break;             
         }
 	}
 }
 void DTC03SMaster::I2CWriteAll()
 {
-	for (int i=I2C_COM_INIT; i<=I2C_COM_FBC; i++) I2CWriteData(i);
+	for (int i=I2C_COM_INIT; i<=I2C_COM_OTP; i++) I2CWriteData(i);
 }
 
 void DTC03SMaster::I2CWriteData(unsigned char com)
@@ -455,6 +492,7 @@ void DTC03SMaster::PrintTotp()
   lcd.SelectFont(SystemFont5x7);
   lcd.GotoXY(Totp_X2, Totp_Y);
   Topt_set = float(g_otp)/4.0-20.5;
+  if (Topt_set < 99.5 ) lcd.print(" ");
   lcd.print(Topt_set,0);
 }
 
@@ -576,11 +614,17 @@ void DTC03SMaster::CursorState()
 //		}
 //		if ((g_tstart<7.01) &&  ~g_en_state && g_scan && (g_trate==1) )	
 		if ( (g_en_state==0) && (g_scan==1) && (g_trate==1) && (p_EngFlag==0) ) {
-			g_cursorstate = 5;			
+			g_cursorstate = 5;	
+			p_EngFlag = 1;		
 			PrintEngBG();
+			PrintTstart();
 			PrintP();
 			PrintKi();
-			p_EngFlag = 1;
+			PrintIlim();
+			PrintVfbc();
+			PrintR1();
+			PrintR2();
+			PrintTotp();
 		}	
 
         if( (g_cursorstate==14) && g_scan) g_cursorstate = 6;
@@ -789,10 +833,11 @@ void DTC03SMaster::UpdateParam()
             
             case 7:
             	g_currentlim += g_counter;
-				if(g_currentlim>49) g_currentlim=49; //20161031
+				if(g_currentlim>50) g_currentlim=50; //20161031
 		        if(g_currentlim<1) g_currentlim=1;//		        
 		        I2CWriteData(I2C_COM_CTR);
-		        PrintIlim();				
+		        PrintIlim();
+				p_ee_change_state = EEADD_currentlim;				
 			break;
 			
 			case 8:
@@ -819,6 +864,7 @@ void DTC03SMaster::UpdateParam()
                 if(g_r1<1) g_r1=1;//
                 I2CWriteData(I2C_COM_R1R2);
                 PrintR1();
+                p_ee_change_state = EEADD_R1;
 				
 			break;
 			
@@ -828,7 +874,7 @@ void DTC03SMaster::UpdateParam()
                 if(g_r2<1) g_r2=1;//R2, 1~30 for 1.0~3.0 ohm set 
                 I2CWriteData(I2C_COM_R1R2);
                 PrintR2();
-				
+				p_ee_change_state = EEADD_R2;
 			break;
 			
 			case 12:
@@ -837,7 +883,7 @@ void DTC03SMaster::UpdateParam()
                 if(g_fbcbase<16100) g_fbcbase=16100;//
                 I2CWriteData(I2C_COM_FBC);
                 PrintVfbc();
-				
+				p_ee_change_state = EEADD_FBC_UPPER;
 			break;
 			
 			case 13:
@@ -846,6 +892,7 @@ void DTC03SMaster::UpdateParam()
 				if (g_otp > 561) g_otp = 561; //120C
 				I2CWriteData(I2C_COM_OTP);
                 PrintTotp();
+                p_ee_change_state = EEADD_TOTP_UPPER;
 			break;				
 		}
 

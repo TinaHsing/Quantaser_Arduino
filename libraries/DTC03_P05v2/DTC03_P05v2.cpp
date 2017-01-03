@@ -33,19 +33,24 @@ void DTC03::DynamicVcc()
     if(g_sensortype) digitalWrite(SENSOR_TYPE,g_sensortype);
     SetMosOff();
     g_isense0 = ReadIsense();
+//    g_r1=10;
+//    g_r2=20;
     g_r1_f = float(g_r1)*0.1;
     g_r2_f = float(g_r2)*0.1;
+    
     #ifdef DEBUGFLAG01
       Serial.begin(9600);
+      Serial.print("g_r1=");
+      Serial.println(g_r1);
       Serial.println("g_fbc_base, Rcal_step: (if g_fbc_base > RMEASUREVOUT, Vgs=RMEASUREVOUT; otherwise Vgs = g_fbc_base + Rcal_step )");
       Serial.print(g_fbc_base);
       Serial.print(",  ");
       Serial.println(Rcal_step);
       Serial.println("  ");
       Serial.println("R1, R2 for dynamic Vcc selection: ");
-      Serial.print(g_r1);
+      Serial.print(g_r1_f);
       Serial.print(", ");
-      Serial.println(g_r2);
+      Serial.println(g_r2_f);
       Serial.println("=====Isense0 parameter====");
       Serial.print("Avgtime:");
       Serial.println(IAVGTIME);
@@ -144,9 +149,10 @@ void DTC03::ParamInit()
   g_vactindex = 0;
   g_ilimdacout = 65535;
   g_limcounter =0;
-
+  g_tpidoffset = 2;
   ADCSRA &=~PS_128;
   ADCSRA |=PS_32;
+//  delay(5000);
 }
 void DTC03::SetPinMode()
 {
@@ -507,7 +513,10 @@ void DTC03::I2CReceive()
 //    g_sensortype = temp[1] & REQMSK_SENSTYPE; //20161113
 	g_mod_status = temp[1] & REQMSK_SENSTYPE; 
     g_ee_change_state = EEADD_B_lower;
-//    Serial.println("EN");
+//    Serial.println("INTI:");
+//    Serial.print(g_en_state);
+//    Serial.print(", ");
+//    Serial.println(g_mod_status);
     break;
 
     case I2C_COM_CTR:
@@ -533,7 +542,7 @@ void DTC03::I2CReceive()
 
     
     case I2C_COM_KI:
-    g_ls = temp[0];//20161104 changed
+    g_ls = temp[0];
     g_ki = temp[1];
     
 //    Serial.println("LSKI:");
@@ -546,7 +555,10 @@ void DTC03::I2CReceive()
     g_r1 = temp[0];
     g_r2 = temp[1];
     g_ee_change_state = EEADD_VBE_H1;
-    //Serial.println("HB");
+	Serial.println("R1R2:");
+    Serial.print(g_r1);
+    Serial.print(", ");
+    Serial.println(g_r2);
     break;
 
 //    case I2C_COM_VBEC:
@@ -562,7 +574,8 @@ void DTC03::I2CReceive()
     fbc_upper = temp[1];
     g_fbc_base =(fbc_upper <<8)|fbc_lower;//20161101
     g_ee_change_state = EEADD_FBC_base_lower;
-    //Serial.println("FB");
+//    Serial.println("FBC:");
+//    Serial.println(g_fbc_base);
     break;
 
 //    case I2C_COM_VMOD:
@@ -575,7 +588,8 @@ void DTC03::I2CReceive()
 
     case I2C_COM_OTP:
     	g_otp = temp[1]<<8 | temp[0];
-    	Serial.println(g_otp);
+//    	Serial.println("OTP:");
+//    	Serial.println(g_otp);
     break;
     
     case I2C_COM_TEST:  		

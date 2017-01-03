@@ -12,15 +12,10 @@ void setup() {
   float tact;
   master.SetPinMode();
   master.ParamInit();
-  master.WelcomeScreen();
+  
   master.ReadEEPROM();
   master.I2CWriteAll();
-//  master.I2CWriteData(I2C_COM_CTR);// Seting Pgain and current limit
-//  master.I2CWriteData(I2C_COM_VBEH);/// Change to R1 R2 setting
-//  master.I2CWriteData(I2C_COM_VBEC); // Setting TPIDOFF (tpidoffset)
-//  master.I2CWriteData(I2C_COM_FBC); // set gate threshould voltage for NMOS
-//  master.I2CWriteData(I2C_COM_KI); // set KI and LS
-//  master.I2CWriteData(I2C_COM_VSET); // Set the Vset
+  master.WelcomeScreen();
   master.PrintBG();
   master.PrintTstart();
   master.PrintTend();
