@@ -368,7 +368,7 @@ void DTC03::CheckTemp()
       g_errcode2 = 1;
       g_en_state =0;
     }
-  else g_errcode2 = 0;
+//  else g_errcode2 = 0;
 }
 void DTC03::ReadVoltage()
 {
@@ -493,7 +493,9 @@ void DTC03::I2CRequest()
     
     if(g_errcode1)  temp[1] |= REQMSK_ERR1;
     else temp[1] &= (~REQMSK_ERR1);//20161101 add
-    if(g_errcode2)  temp[1] |= REQMSK_ERR2;
+//    if(g_errcode2)  temp[1] |= REQMSK_ERR2;
+//    else temp[1] &= (~REQMSK_ERR2);//
+    if(g_errcode2)  temp[1] &= REQMSK_ERR2;
     else temp[1] &= (~REQMSK_ERR2);//
     if(itecsign) temp[1]|= REQMSK_ITECSIGN;
     else temp[1] &= (~REQMSK_ITECSIGN);//
