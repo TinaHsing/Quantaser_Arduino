@@ -79,11 +79,11 @@
 #define EEADD_DUMMY			100
 
 //----------NOEE Default value------
-#define NOEE_VSTART		53244
+#define NOEE_VSTART		32932
 #define NOEE_VEND		9313
 #define NOEE_RATE		1
 #define NOEE_ILIM       50 // currntlimit,3A=50
-#define NOEE_FBC		22000
+#define NOEE_FBC		22400
 #define NOEE_P          10
 #define NOEE_KI			0
 #define NOEE_LS			0
@@ -119,7 +119,7 @@
 #define RATE_COORD_X2	COLUMEPIXEL0507*8
 #define Text_RATE		"RATE:"
 
-#define TFINE_COORD_X	COLUMEPIXEL0507*6
+#define TFINE_COORD_X	COLUMEPIXEL0507*12
 #define TFINE_COORD_Y	ROWPIXELdef*3
 
 #define EN_COORD_X		COLUMEPIXEL0507

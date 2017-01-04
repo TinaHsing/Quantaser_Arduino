@@ -12,7 +12,6 @@ void setup() {
   float tact;
   master.SetPinMode();
   master.ParamInit();
-  
   master.ReadEEPROM();
   master.I2CWriteAll();
   master.WelcomeScreen();

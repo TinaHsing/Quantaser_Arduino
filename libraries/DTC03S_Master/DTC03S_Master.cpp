@@ -43,7 +43,7 @@ void DTC03SMaster::WelcomeScreen()
 	lcd.print("DTC03S Ver.2.01");
 	lcd.GotoXY(0,ROWPIXEL0507*1);
 	lcd.print("Initializing...");
-	for (byte i=5; i>0; i--)
+	for (byte i=9; i>0; i--)
   {
     lcd.GotoXY(0,ROWPIXEL0507*2);
     lcd.print(i);
@@ -195,8 +195,8 @@ void DTC03SMaster::I2CWriteData(unsigned char com)
     	break;
    
     	case I2C_COM_KI:
-    		temp[0]=pgm_read_word_near(kilstable+g_kiindex*2);
-            temp[1]=pgm_read_word_near(kilstable+g_kiindex*2+1);
+    		temp[0]=pgm_read_word_near(kilstable280+g_kiindex*2);
+            temp[1]=pgm_read_word_near(kilstable280+g_kiindex*2+1);
     	break;
     	
     	case I2C_COM_OTP:
@@ -386,7 +386,8 @@ void DTC03SMaster::PrintTact(float tact)
 		lcd.SelectFont(Arial_bold_14);
 		lcd.GotoXY(TACT_COORD_X, TACT_COORD_Y);
 	}
-	if(g_errcode2 == 1) lcd.print("OT");
+	if(g_errcode2 == 1) lcd.print("error2");
+//	else if (g_errcode1 == 1) lcd.print("error1");
 	else {
 		if(tact< 10.00) lcd.print(" ");
 		lcd.print(tact, 2); 
@@ -482,12 +483,14 @@ void DTC03SMaster::PrintR1()
 {
   lcd.SelectFont(SystemFont5x7);
   lcd.GotoXY(R1_X2, R1_Y);
+  if (g_r1<10) lcd.print(" ");
   lcd.print(g_r1);
 }
 void DTC03SMaster::PrintR2()
 {
   lcd.SelectFont(SystemFont5x7);
   lcd.GotoXY(R2_X2, R2_Y);
+  if (g_r2<10) lcd.print(" ");
   lcd.print(g_r2);
 }
 void DTC03SMaster::PrintTotp()
@@ -504,12 +507,13 @@ void DTC03SMaster::PrintTotp()
 void DTC03SMaster::checkTnowStatus()
 {
 	// p_en[1] : the most updated enble state  
-	if (p_en[0]) {
+	if (p_en[0] == 1) {
 		if (p_scan[1] < p_scan[0]) p_tnow_flag[1] = 1; // falling edge @ enable = 1 
 	}
 	else {
 		p_tnow_flag[1] = 0;
 		g_tfine = 0;
+		g_tnow = 0;
 	}
 	if (p_scan[1]) p_tnow_flag[1] = 0;
 	//
@@ -544,7 +548,7 @@ void DTC03SMaster::CalculateRate()
 	unsigned int t_temp;
 	
 	t_temp = millis(); 
-	if ( g_en_state && g_scan) {
+	if ( g_en_state && g_scan && (p_EngFlag==0)) {
 		
 		if ( (t_temp-p_trate) >= SCANSAMPLERATE ) {			
 			
@@ -609,14 +613,6 @@ void DTC03SMaster::CursorState()
 				
 		if(g_cursorstate ==3 || g_cursorstate ==4) g_cursorstate =0;
 		g_oldcursorstate = g_cursorstate;
-// check if needed		
-//		while(analogRead(PUSHB)< ANAREADVIL)
-//		{
-//			t2 = millis();
-//			if(t2-t1 > LONGPRESSTIME){		
-//            }
-//		}
-//		if ((g_tstart<7.01) &&  ~g_en_state && g_scan && (g_trate==1) )	
 		if ( (g_en_state==0) && (g_scan==1) && (g_trate==1) && (p_EngFlag==0) ) {
 			g_cursorstate = 5;	
 			p_EngFlag = 1;		
@@ -780,13 +776,13 @@ void DTC03SMaster::UpdateParam()
 				g_tstart += g_counter2*0.01;
 				if(g_tstart > 60.00) g_tstart =60.00;
 				if(g_tstart < 7.00) g_tstart = 7.00;
-				if(g_en_state==0 ){
+				if(g_en_state==0 ){ // EN switch OFF
 					g_tnow = g_tstart;
 					g_vset = ReturnVset(g_tstart, 0);
 					I2CWriteData(I2C_COM_VSET);
 				}
-				else{
-					if (g_scan==0 ) {
+				else{ // EN switch ON
+					if (g_scan==0 ) { // Scan OFF
 						g_vset = ReturnVset(g_tnow+g_tfine, 0);
 						I2CWriteData(I2C_COM_VSET);
 					}

@@ -29,10 +29,10 @@ float DTC03::ReturnTemp(unsigned int vact, bool type)
 void DTC03::DynamicVcc()
 {
     float restec, g_r1_f, g_r2_f;
-    unsigned int Rcal_step = RMEASUREVOUT - g_fbc_base ;
+//    unsigned int Rcal_step = 29000 - g_fbc_base ;
     if(g_sensortype) digitalWrite(SENSOR_TYPE,g_sensortype);
     SetMosOff();
-    while(g_wakeup == 0) {};
+    while(g_wakeup == 0) delay(1);
     g_isense0 = ReadIsense();
 //    g_r1=10;
 //    g_r2=20;
@@ -41,13 +41,11 @@ void DTC03::DynamicVcc()
     
     #ifdef DEBUGFLAG01
       Serial.begin(9600);
-      Serial.print("g_r1=");
-      Serial.println(g_r1);
-      Serial.println("g_fbc_base, Rcal_step: (if g_fbc_base > RMEASUREVOUT, Vgs=RMEASUREVOUT; otherwise Vgs = g_fbc_base + Rcal_step )");
-      Serial.print(g_fbc_base);
-      Serial.print(",  ");
-      Serial.println(Rcal_step);
-      Serial.println("  ");
+      Serial.println("g_fbc_base:");
+      Serial.println(g_fbc_base);
+//      Serial.print(",  ");
+//      Serial.println(Rcal_step);
+//      Serial.println("  ");
       Serial.println("R1, R2 for dynamic Vcc selection: ");
       Serial.print(g_r1_f);
       Serial.print(", ");
@@ -60,9 +58,9 @@ void DTC03::DynamicVcc()
     #else
     #endif
     
-    if (g_fbc_base > RMEASUREVOUT) restec = CalculateR(RMEASUREVOUT,RMEASUREDELAY,RMEASUREAVGTIME,IAVGTIME);
-	else restec = CalculateR(g_fbc_base + Rcal_step ,RMEASUREDELAY,RMEASUREAVGTIME,IAVGTIME);
-//	restec = CalculateR(RMEASUREVOUT,RMEASUREDELAY,RMEASUREAVGTIME,IAVGTIME);
+//    if (g_fbc_base > RMEASUREVOUT) restec = CalculateR(RMEASUREVOUT,RMEASUREDELAY,RMEASUREAVGTIME,IAVGTIME);
+//	else restec = CalculateR(g_fbc_base + Rcal_step ,RMEASUREDELAY,RMEASUREAVGTIME,IAVGTIME);
+	restec = CalculateR(RMEASUREVOUT,RMEASUREDELAY,RMEASUREAVGTIME,IAVGTIME);
     if (restec < g_r1_f ) SetVcc(VCCLOW);
     else if(restec < g_r2_f ) SetVcc(VCCMEDIUM);
     else SetVcc(VCCHIGH);
@@ -322,8 +320,7 @@ void DTC03::CheckSensorType()
 void DTC03::CheckTemp()
 {
   g_Vtemp = analogRead(TEMP_SENSOR);
-//  if(g_Vtemp > g_otp) 
-  if(g_Vtemp > 240) 
+  if(g_Vtemp > g_otp) 
     {
       g_errcode2 = 1;
       g_en_state =0;
@@ -452,7 +449,6 @@ void DTC03::I2CRequest()
     else temp[1] &= (~REQMSK_ERR2);//
     if(itecsign) temp[1]|= REQMSK_ITECSIGN;
     else temp[1] &= (~REQMSK_ITECSIGN);//
-    //Serial.print(temp[1]);
 //    Serial.print(", ");
 //    Serial.print(temp[0]);
 //    Serial.print(", ");
@@ -556,10 +552,10 @@ void DTC03::I2CReceive()
     g_r1 = temp[0];
     g_r2 = temp[1];
     g_ee_change_state = EEADD_VBE_H1;
-	Serial.println("R1R2:");
-    Serial.print(g_r1);
-    Serial.print(", ");
-    Serial.println(g_r2);
+//	Serial.println("R1R2:");
+//    Serial.print(g_r1);
+//    Serial.print(", ");
+//    Serial.println(g_r2);
     break;
 
 //    case I2C_COM_VBEC:
@@ -595,8 +591,8 @@ void DTC03::I2CReceive()
     
     case I2C_COM_WAKEUP:
     	g_wakeup = temp[0];
-//    	Serial.println("OTP:");
-//    	Serial.println(g_otp);
+//    	Serial.println("wake up:");
+//    	Serial.println(g_wakeup);
     break;
     
     

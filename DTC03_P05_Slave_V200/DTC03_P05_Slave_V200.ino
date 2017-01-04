@@ -16,15 +16,18 @@ PID ipid, tpid;
 
 int iset;
 unsigned int i=0;
+unsigned long loop_time[5];
 void setup() {
+  Wire.begin(DTC03P05);
+  Wire.onReceive(ReceiveEvent);
+  Wire.onRequest(RequestEvent);
   // put your setup code here, to run once:
   dtc.SetSPI();
   dtc.SetPinMode();
   dtc.ParamInit();
-//  dtc.ReadEEPROMnew();
-  dtc.DynamicVcc();
-  dtc.InitVactArray();
   
+  dtc.InitVactArray();
+  dtc.DynamicVcc();
   if(dtc.g_sensortype) digitalWrite(SENSOR_TYPE, HIGH);
   else digitalWrite(SENSOR_TYPE, LOW);
   dtc.CheckSensorType();
@@ -37,9 +40,7 @@ void setup() {
   dtc.g_vset=dtc.g_vact;
   dtc.dacformos.ModeWrite(0);
   
-  Wire.begin(DTC03P05);//
-  Wire.onReceive(ReceiveEvent);//
-  Wire.onRequest(RequestEvent);//
+ 
 }
 
 void loop() {
@@ -49,6 +50,13 @@ void loop() {
   int ierr;
   long terr;
   unsigned int pidoffset = dtc.g_tpidoffset*1000;
+//  if (i==5) {
+//    i=0;
+//    for (int j=0;j<5;j++) Serial.println(loop_time[j]);
+//    Serial.println(); 
+//  }
+//  loop_time[i] = micros();
+  
 //  if (i%100==0) {
 //  Serial.print("r1 r2 offset: ");
 //  Serial.print(dtc.g_r1);
@@ -79,10 +87,13 @@ void loop() {
 
   dtc.ReadVoltage();
   dtc.VsetSlow();
+  
 
   terr = (long)dtc.g_vact - (long)dtc.g_vset_limitt;
 //  if (i%500==0) {
-//  Serial.println(isense);
+//    Serial.print(dtc.ReturnTemp(dtc.g_vact,0));
+//    Serial.print(", ");
+//    Serial.println(dtc.ReturnTemp(dtc.g_vset_limitt,0));
 //  }
   if(ierr > -20) 
   {
