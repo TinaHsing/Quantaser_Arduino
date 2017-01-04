@@ -54,17 +54,17 @@ long PID::Compute(bool en, long errin, unsigned char kp, unsigned char ki, unsig
 		if(g_index == PIDDEBUGFLAG )
 		{
 			g_index = 0;
-		    Serial.print(kp);
-			Serial.print(",");
 			Serial.print(errin);
 			Serial.print(",");
+		    Serial.print(kp);
+			Serial.print(",");			
             //Serial.print(g_errorsum);
             //Serial.print(",");
             
-            Serial.print(long(g_errorsum>>32),HEX);
-            Serial.print(",");
-            Serial.print(long(g_errorsum),HEX);
-            Serial.print(",");
+//            Serial.print(long(g_errorsum>>32),HEX);
+//            Serial.print(",");
+//            Serial.print(long(g_errorsum),HEX);
+//            Serial.print(",");
             
             //Serial.print(long(esumki),HEX);//
             //Serial.print(",");//

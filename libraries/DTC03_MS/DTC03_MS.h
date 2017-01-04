@@ -8,31 +8,34 @@
 // =========receive Events Command and Address======
 #define I2C_COM_INIT 	0x11
 #define I2C_COM_CTR 	0x12
-#define I2C_COM_VSET 	0x13
-#define I2C_COM_KI	    0x14
-#define I2C_COM_VACT	0x15
-#define I2C_COM_ITEC_ER	0x16
-#define I2C_COM_VBEH	0x17 //use for DVCC R1 R2
-#define I2C_COM_VBEC	0x18 //use for t.pid offset 
-#define I2C_COM_FBC		0x19
-#define	I2C_COM_VMOD	0x1A
-#define I2C_COM_TEST	0x1B
+#define I2C_COM_KI	    0x13
+#define I2C_COM_VSET 	0x14
+#define I2C_COM_R1R2	0x15
+#define I2C_COM_FBC		0x16
+#define I2C_COM_OTP  	0x17
+#define I2C_COM_WAKEUP  0x18 
+
+#define I2C_COM_ITEC_ER	0x19
+#define I2C_COM_VACT	0x1A
+#define I2C_COM_PCB		0X1B
+#define	I2C_COM_VMOD	0x1C // mod offset, not use in Scan DTC03 case
+#define I2C_COM_TEST	0x1D
 
 
 //=========request Events Mask ============
-#define REQMSK_ENSTATE 		0x80
-#define REQMSK_SENSTYPE		0x40
-#define REQMSK_BUPPER		0x07
+#define REQMSK_ENSTATE 		0x80 //B1000 0000
+#define REQMSK_SENSTYPE		0x40 //B0100 0000
+#define REQMSK_BUPPER		0x07 //B0000 0111
 
-#define REQMSK_ITECU		0x03
-#define REQMSK_ITECSIGN		0x04
-#define REQMSK_ERR1		 	0x10
-#define REQMSK_ERR2			0x20			
+#define REQMSK_ITECU		0x03 //B0000 0011
+#define REQMSK_ITECSIGN		0x04 //B0000 0100
+#define REQMSK_ERR1		 	0x10 //B0001 0000
+#define REQMSK_ERR2			0x20 //B0010 0000			
 
 
 // first colume ki, second colume ls
 /*matrix modified on 168us 20161103*/
-const PROGMEM unsigned char kilstable[] =
+const PROGMEM unsigned char kilstable168[] =
 { 
 0,   0, //dummy
 0,   0, //0
@@ -85,7 +88,63 @@ const PROGMEM unsigned char kilstable[] =
 26,	161,//70
 26,	150,//75
 26,	141,//80
+};
 
+// first colume ki, second colume ls
+/*matrix modified on 280us 20170104*/
+const PROGMEM unsigned char kilstable280[] =
+{ 
+0,   0, //dummy
+0,   0, //0
+15,	184, //0.05
+16,	184,//0.1
+17,	184,//0.2
+18,	245,//0.3
+18,	184,//0.4
+18,	147,//0.5
+19,	245,//0.6
+19,	210,//0.7
+19,	184,//0.8
+19,	163,//0.9
+19,	147,//1
+19,	133,//1.1
+19,	122,//1.2
+19,	113,//1.3
+19,	105,//1.4
+20,	196,//1.5
+20,	184,//1.6
+20,	173,//1.7
+20,	163,//1.8
+20,	155,//1.9
+20,	147,//2
+20,	117,//2.5
+21,	196,//3
+21,	168,//3.5
+21,	147,//4
+21,	130,//4.5
+22,	235,//5
+22,	196,//6
+22,	168,//7
+22,	147,//8
+22,	130,//9
+23,	235,//10
+23,	196,//12
+23,	168,//14
+23,	147,//16
+23,	130,//18
+24,	235,//20
+24,	188,//25
+24,	157,//30
+24,	134,//35
+25,	235,//40
+25,	209,//45
+25,	188,//50
+25,	171,//55
+25,	157,//60
+25,	145,//65
+25,	134,//70
+26,	251,//75
+26,	235,//80
 };
 
 

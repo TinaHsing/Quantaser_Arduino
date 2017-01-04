@@ -12,21 +12,18 @@ void setup() {
   float tact;
   master.SetPinMode();
   master.ParamInit();
-  master.WelcomeScreen();
   master.ReadEEPROM();
-  master.I2CWriteData(I2C_COM_CTR);// Seting Pgain and current limit
-  master.I2CWriteData(I2C_COM_VBEH);/// Change to R1 R2 setting
-  master.I2CWriteData(I2C_COM_VBEC); // Setting TPIDOFF (tpidoffset)
-  master.I2CWriteData(I2C_COM_FBC); // set gate threshould voltage for NMOS
-  master.I2CWriteData(I2C_COM_KI); // set KI and LS
-  master.I2CWriteData(I2C_COM_VSET); // Set the Vset
+  master.I2CWriteAll();
+  master.WelcomeScreen();
   master.PrintBG();
   master.PrintTstart();
   master.PrintTend();
   master.PrintRate();
-  master.CheckVact(); // Check Vact from slave and print
-  master.PrintScan();
+  master.CheckStatus();
+  master.UpdateEnable();
   master.PrintEnable();
+  master.CheckScan();
+  master.PrintScan();
   attachInterrupt(digitalPinToInterrupt(ENC_B), CheckEncoder, RISING);
  
 }
@@ -35,17 +32,17 @@ void loop() {
 //  master.g_tloop = millis();
 //  master.Printloopt(master.g_tloop);
 //
- master.CheckVact();
+ master.CheckStatus();
  master.UpdateEnable();
  master.CheckScan();
  master.checkTnowStatus();
- master.CheckStatus(); //Check which cursor state it is
+ master.CursorState(); //Check which cursor state it is
  master.ShowCursor(); 
  master.UpdateParam();
  master.CalculateRate();
  master.SaveEEPROM();
  //
-// master.RuntestI2C();
+ master.RuntestI2C();
  
 
 }

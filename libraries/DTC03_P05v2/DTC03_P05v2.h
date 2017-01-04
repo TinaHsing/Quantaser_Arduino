@@ -6,8 +6,8 @@
 // ===================================================
 
 // =====================DEBUGFLAG Table =================================
-#define DEBUGFLAG01
-//#define DEBUGFLAG02 1
+//#define DEBUGFLAG01
+//#define DEBUGFLAG02 2
 //#define DEBUGFLAG03
 
 #ifdef DTCDEBUG01
@@ -130,7 +130,6 @@
 #define RTHRatio 25665 //(Isen*R0)*65535/vref concert Isense*R0 to 16bit ADC code
 #define T0INV 0.003354
 #define V_NOAD590 30000 
-#define V_OVERTEMP 481 // 90 degree
 
 const unsigned char PS_16 = (1<<ADPS2);
 const unsigned char PS_32 = (1<<ADPS2)|(1<<ADPS0);
@@ -169,12 +168,12 @@ public:
 
 	unsigned int g_vact, g_vset, g_fbc_base, g_isense0,Vactarray[VACTAVGTIME], Itecarray[ITECAVGTIME],g_currentabs,g_itecread;//
     unsigned char g_p, g_ki, g_ls, g_currentlim, g_ee_change_state,g_kiindex, g_limcounter,g_currentindex, g_vbec1, g_vbec2, g_vbeh1, g_vbeh2, g_tpidoffset;
+    unsigned char g_r1, g_r2;;
 	unsigned long g_vactavgsum, g_itecavgsum;
-	bool g_en_state, g_heating, g_errcode1, g_errcode2, g_sensortype, g_mod_status, g_ee_changed;
-    unsigned int g_b_upper, g_b_lower,g_vset_limit, g_ilimdacout,g_vset_limitt,g_vmod;
+	bool g_en_state, g_heating, g_errcode1, g_errcode2, g_sensortype, g_mod_status, g_ee_changed, g_wakeup;
+    unsigned int g_b_upper, g_b_lower,g_vset_limit, g_ilimdacout,g_vset_limitt,g_vmod, g_otp;
     unsigned int g_vmodoffset, g_i2ctest;//
-    int g_iteclimitset;//
-    float g_r1, g_r2;
+    int g_iteclimitset, g_Vtemp;//
     AD5541 dacformos, dacforilim;
 
 private:
