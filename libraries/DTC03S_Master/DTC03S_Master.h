@@ -88,8 +88,8 @@
 #define NOEE_KI			0
 #define NOEE_LS			0
 #define NOEE_kiindex    1
-#define NOEE_TOTP       441 //90C
-#define NOEE_R1         20
+#define NOEE_TOTP       561 //120C
+#define NOEE_R1         10
 #define NOEE_R2         30
 #define NOEE_DUMMY		104
 

@@ -513,7 +513,7 @@ void DTC03SMaster::checkTnowStatus()
 	else {
 		p_tnow_flag[1] = 0;
 		g_tfine = 0;
-		g_tnow = 0;
+		g_tnow = g_tstart;
 	}
 	if (p_scan[1]) p_tnow_flag[1] = 0;
 	//
@@ -783,6 +783,7 @@ void DTC03SMaster::UpdateParam()
 				}
 				else{ // EN switch ON
 					if (g_scan==0 ) { // Scan OFF
+				    	g_tnow += g_counter2*0.01;
 						g_vset = ReturnVset(g_tnow+g_tfine, 0);
 						I2CWriteData(I2C_COM_VSET);
 					}
