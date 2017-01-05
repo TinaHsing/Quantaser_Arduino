@@ -68,8 +68,9 @@ void led4X7_disp::init(uint8_t ain, uint8_t adc_bit, float gain)
 	p_gain = gain;
 	get_mask();
 	p_pinai = ain;
-	avgcount = 0;
+	p_avgcount = 0;
 	p_vinsum = 0;
+	p_delayflag = 1;
 	for (int i=0; i<AVGTIMES; i++) {
 		p_vinarray[i] = analogRead(p_pinai);
 		p_vinsum += p_vinarray[i];
@@ -110,46 +111,107 @@ void led4X7_disp::print(unsigned int code) {
   }
 	
 }
+//void led4X7_disp::print() {
+//	float number;
+//	uint8_t n[4], case_select, dt=5;
+//	
+//	p_vinsum -= p_vinarray[p_avgcount];
+//	p_vinarray[p_avgcount] = analogRead(p_pinai);
+//	p_vinsum += p_vinarray[p_avgcount];
+//	
+//	number = float(p_vinsum >> AVGPOWER) /p_adcbase*5*p_gain;
+//	if (number >= 100) case_select = 3;
+//	else if (number >= 10) case_select = 2;
+//	else case_select = 1;
+//	
+//	switch (case_select) {
+//    case 3 :
+//      n[3] = int(number)/100;
+//      number -= n[3]*100;
+//      SetDisplay(n[3], 3);
+//      delay(dt);
+//
+//    case 2 :
+//      n[2] = int(number)/10;
+//      number -= n[2]*10;
+//      SetDisplay(n[2], 2);
+//      delay(dt);
+//
+//    case 1 :
+//      n[1] = int(number);
+//      number -= n[1];  
+//      SetDisplay(n[1], 1);
+//      delay(dt);
+//      n[0] = number*10;
+//      SetDisplay(n[0], 0);
+//      delay(dt);
+//    break;
+//  }
+//	p_avgcount++;
+//	if(p_avgcount == AVGTIMES) p_avgcount = 0;
+//}
 void led4X7_disp::print() {
 	float number;
 	uint8_t n[4], case_select, dt=5;
+	unsigned long tnow;
 	
-	p_vinsum -= p_vinarray[avgcount];
-	p_vinarray[avgcount] = analogRead(p_pinai);
-	p_vinsum += p_vinarray[avgcount];
-	
-	number = float(p_vinsum >> AVGPOWER) /p_adcbase*5*p_gain;
-	if (number >= 100) case_select = 3;
-	else if (number >= 10) case_select = 2;
-	else case_select = 1;
-	
+	if (p_delayflag == 1) {
+		p_delayflag = 0;
+		p_vinsum -= p_vinarray[p_avgcount];
+		p_vinarray[p_avgcount] = analogRead(p_pinai);
+		p_vinsum += p_vinarray[p_avgcount];
+		p_avgcount++;
+	    if(p_avgcount == AVGTIMES) p_avgcount = 0;
+		number = float(p_vinsum >> AVGPOWER) /p_adcbase*5*p_gain;
+		// calculate init case_select 
+		if (number >= 100) case_select = 3;
+		else if (number >= 10) case_select = 2;
+		else case_select = 1;
+		p_delayStart = millis();
+	}
+		
 	switch (case_select) {
     case 3 :
+      tnow = millis();
       n[3] = int(number)/100;
       number -= n[3]*100;
       SetDisplay(n[3], 3);
-      delay(dt);
+      if ( (tnow - p_delayStart)<dt ) break;
+      else {
+      	case_select-- ;
+      	p_delayStart = tnow;
+	  }
 
     case 2 :
+      tnow = millis();
       n[2] = int(number)/10;
       number -= n[2]*10;
       SetDisplay(n[2], 2);
-      delay(dt);
+      if ( (tnow - p_delayStart)<dt ) break;
+      else {
+      	case_select-- ;
+      	p_delayStart = tnow;
+	  }
 
     case 1 :
-      n[1] = int(number);
+      tnow = millis();
+	  n[1] = int(number);
       number -= n[1];  
       SetDisplay(n[1], 1);
-      delay(dt);
+      if ( (tnow - p_delayStart)<dt ) break;
+      else {
+      	case_select-- ;
+      	p_delayStart = tnow;
+	  }
+	  
+	case 0 :
+	  tnow = millis();
       n[0] = number*10;
       SetDisplay(n[0], 0);
-      delay(dt);
+      if ( (tnow - p_delayStart)>= dt ) p_delayflag = 1;
     break;
-  }
-	avgcount++;
-	if(avgcount == AVGTIMES) avgcount = 0;
+  }	
 }
-
 void led4X7_disp::get_mask() {
 	p_BCD_mask = 255 & (~(1<<p_BCD_pins[0]) & ~(1<<p_BCD_pins[1]) & ~(1<<p_BCD_pins[2]) & ~(1<<p_BCD_pins[3]));
 	p_PORTB_mask = 255 & (~(1<< p_pos_pins[0]) & ~(1<< p_pos_pins[1]) & ~(1<< p_pos_pins[2]) & ~(1<< p_pos_pins[3]) & ~(1<< p_pinh)); 
