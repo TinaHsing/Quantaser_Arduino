@@ -32,6 +32,7 @@ void DTC03SMaster::ParamInit()
 	p_curstatus0flag = 0;
 	g_paramterupdate = 0;
 	p_rateflag = 0;
+	p_rateflag = 0;
 	p_loopcount = 0;
 	p_EngFlag = 0;
 	p_ee_changed = 0;
@@ -546,22 +547,29 @@ void DTC03SMaster::CalculateRate()
 	unsigned int t_temp;
 	
 	t_temp = millis(); 
-	if ( g_en_state && g_scan && (p_EngFlag==0)) {
+	if ( (g_en_state==1) && (g_scan==1) && (p_EngFlag==0)) {
 		
 		if ( (t_temp-p_trate) >= SCANSAMPLERATE ) {			
 			
 			if(g_tend > g_tstart) 
 			{
 				g_tnow += p_rate;
-				if( (g_tnow+g_tfine) > g_tend) g_tnow = g_tend - g_tfine;
+				if( (g_tnow+g_tfine) > g_tend) {
+					g_tnow = g_tend - g_tfine;
+					setKpKiLs(g_tend);
+				}
 			}	
 		else 
 			{
 				g_tnow -= p_rate;
-				if( (g_tnow+g_tfine) < g_tend) g_tnow = g_tend - g_tfine;
+				if( (g_tnow+g_tfine) < g_tend) {
+					g_tnow = g_tend - g_tfine;
+					setKpKiLs(g_tend);
+				}
 			}
 		p_rateflag = 1;	
 	    }
+	    p_enableFlag = 1; // change to 1 only when EN ON && Scan ON && not in ENG mode 
 	}
 					
 	if (p_rateflag == 1) {
@@ -571,7 +579,40 @@ void DTC03SMaster::CalculateRate()
 		g_vset = ReturnVset(g_tnow+g_tfine, 0);
 	    I2CWriteData(I2C_COM_VSET);
 	}
+	
+	if ( (p_enableFlag==1) && (g_en_state==0) ) {
+		p_enableFlag = 0;
+		g_vset = ReturnVset(g_tstart, 0);
+	    I2CWriteData(I2C_COM_VSET);
+	}
 		
+}
+
+void DTC03SMaster::setKpKiLs(float tin) {
+	if ( (tin>6.99) && (tin<=14.99) ) {
+		g_p = 3;
+		I2CWriteData(I2C_COM_CTR);
+		g_kiindex=25; //Time constamt: 3.5s		        
+		I2CWriteData(I2C_COM_KI);
+	}
+	else if( tin < 19.99) {
+		g_p = 6;
+		I2CWriteData(I2C_COM_CTR);
+		g_kiindex=22; //Time constamt: 2s		        
+		I2CWriteData(I2C_COM_KI);		
+	}
+	else if( tin < 24.99) {
+		g_p = 11;
+		I2CWriteData(I2C_COM_CTR);
+		g_kiindex=13; //Time constamt: 1.1s		        
+		I2CWriteData(I2C_COM_KI);		
+	}
+	else {
+		g_p = 13;
+		I2CWriteData(I2C_COM_CTR);
+		g_kiindex=12; //Time constamt: 1s		        
+		I2CWriteData(I2C_COM_KI);
+	}
 }
 
 void DTC03SMaster::UpdateEnable()//20161101
@@ -772,20 +813,22 @@ void DTC03SMaster::UpdateParam()
 		{
 			case 0:
 				g_tstart += g_counter2*0.01;
+				g_tnow = g_tstart;
 				if(g_tstart > 60.00) g_tstart =60.00;
 				if(g_tstart < 7.00) g_tstart = 7.00;
 				if(g_en_state==0 ){ // EN switch OFF
-					g_tnow = g_tstart;
+//					g_tnow = g_tstart;
 					g_vset = ReturnVset(g_tstart, 0);
 					I2CWriteData(I2C_COM_VSET);
 				}
 				else{ // EN switch ON
 					if (g_scan==0 ) { // Scan OFF
-				    	g_tnow += g_counter2*0.01;
+//				    	g_tnow += g_counter2*0.01;
 						g_vset = ReturnVset(g_tnow+g_tfine, 0);
 						I2CWriteData(I2C_COM_VSET);
 					}
 				}
+				setKpKiLs(g_tstart);
 				PrintTstart();
 				g_vstart = ReturnVset(g_tstart, 0);
 				p_ee_change_state = EEADD_VSTART_UPPER;
@@ -810,7 +853,7 @@ void DTC03SMaster::UpdateParam()
 				p_ee_change_state = EEADD_RATE_INDEX;
 			break;
 			case 3:
-				g_tfine += g_counter2*0.01;	
+				g_tfine += g_counter*0.01;	
 				if (g_tfine > FINETUNEAMP) g_tfine = FINETUNEAMP;
 				if (g_tfine < -FINETUNEAMP) g_tfine = -FINETUNEAMP;
 				g_vset = ReturnVset(g_tnow+g_tfine, 0);
