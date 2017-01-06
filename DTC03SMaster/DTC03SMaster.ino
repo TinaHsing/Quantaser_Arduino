@@ -42,7 +42,7 @@ void loop() {
  master.CalculateRate();
  master.SaveEEPROM();
  //
- master.RuntestI2C();
+// master.RuntestI2C();
  
 
 }

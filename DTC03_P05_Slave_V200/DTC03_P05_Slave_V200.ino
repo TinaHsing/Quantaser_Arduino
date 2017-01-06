@@ -90,11 +90,11 @@ void loop() {
   
 
   terr = (long)dtc.g_vact - (long)dtc.g_vset_limitt;
-  if (i%1000==0) {
-    Serial.print(dtc.ReturnTemp(dtc.g_vact,0));
-    Serial.print(", ");
-    Serial.println(dtc.ReturnTemp(dtc.g_vset_limitt,0));
-  }
+//  if (i%1000==0) {
+//    Serial.print(dtc.ReturnTemp(dtc.g_vact,0));
+//    Serial.print(", ");
+//    Serial.println(dtc.ReturnTemp(dtc.g_vset_limitt,0));
+//  }
   if(ierr > -20) 
   {
     ioutput=ipid.Compute(dtc.g_en_state, ierr, 58, 1, 2);//kp=58,ki=1,ls=2, 20161116

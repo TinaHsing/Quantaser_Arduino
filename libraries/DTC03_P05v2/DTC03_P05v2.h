@@ -6,7 +6,7 @@
 // ===================================================
 
 // =====================DEBUGFLAG Table =================================
-//#define DEBUGFLAG01
+#define DEBUGFLAG01
 //#define DEBUGFLAG02 2
 //#define DEBUGFLAG03
 
@@ -186,6 +186,6 @@ private:
 	//int g_vmodoffset;
 	//unsigned int g_vset_limit,g_vbec, g_vbeh, g_b_upper, g_b_lower, g_ilimdacout, g_vmod;
 	//unsigned int g_vbec, g_vbeh,g_vmod;
-	unsigned int g_vbec, g_vbeh;
+	unsigned int g_vbec, g_vbeh, t_master;
     float g_ilimgain;
 };

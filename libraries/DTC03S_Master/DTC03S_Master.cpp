@@ -210,8 +210,8 @@ void DTC03SMaster::I2CWriteData(unsigned char com)
     	break;
     	
     	case I2C_COM_TEST:
-    		temp[0] = g_cursorstate;
-    		temp[1] = g_vend;
+    		temp[0] = p_trate;
+    		temp[1] = p_trate>>8;
     	break;
 
   }
@@ -230,7 +230,7 @@ void DTC03SMaster::I2CReadData(unsigned char com)
   Wire.beginTransmission(DTC03P05);
   Wire.write(com);
   Wire.endTransmission();
-  delay(I2CREADDELAY);
+  delayMicroseconds(I2CREADDELAY);
   Wire.requestFrom(DTC03P05,2);
   while(Wire.available()==2)
   {
@@ -370,7 +370,7 @@ void DTC03SMaster::PrintTend()
 {
 	lcd.SelectFont(SystemFont5x7);
 	lcd.GotoXY(TEND_COORD_X2, TEND_COORD_Y);
-	if(g_tend < 10.00) lcd.print(" ");
+	if(g_tend < 9.991) lcd.print(" ");
 	lcd.print(g_tend,2);
 	 
 }
@@ -389,7 +389,7 @@ void DTC03SMaster::PrintTact(float tact)
 	if(g_errcode2 == 1) lcd.print("error2");
 //	else if (g_errcode1 == 1) lcd.print("error1");
 	else {
-		if(tact< 10.00) lcd.print(" ");
+		if(tact< 9.991) lcd.print(" ");
 		lcd.print(tact, 2); 
 	}	
 }
@@ -503,7 +503,16 @@ void DTC03SMaster::PrintTotp()
   lcd.print(Topt_set,0);
 }
 
-
+unsigned int DTC03SMaster::ReturnVset(float tset, bool type)
+{
+  unsigned int vset;
+  float temp;
+  if(type)
+    vset = (unsigned int)((tset+273.15)*129.8701);
+  else
+    vset = (unsigned int)RTHRatio*exp(-1*(float)BVALUE*(T0INV-1/(tset+273.15)));
+  return vset;
+}
 void DTC03SMaster::checkTnowStatus()
 {
 	// p_en[1] : the most updated enble state  
@@ -531,17 +540,6 @@ void DTC03SMaster::checkTnowStatus()
 	p_tnow_flag[0] = p_tnow_flag[1];
 	p_en[0] = p_en[1];
 	p_scan[0] = p_scan[1];
-}
-
-unsigned int DTC03SMaster::ReturnVset(float tset, bool type)
-{
-  unsigned int vset;
-  float temp;
-  if(type)
-    vset = (unsigned int)((tset+273.15)*129.8701);
-  else
-    vset = (unsigned int)RTHRatio*exp(-1*(float)BVALUE*(T0INV-1/(tset+273.15)));
-  return vset;
 }
 void DTC03SMaster::CalculateRate()
 {
