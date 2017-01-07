@@ -247,63 +247,6 @@ unsigned int DTC03::InitVactArray()
   g_vact = vactavg;
   return vactavg;
 }
-//void DTC03::ReadEEPROMnew()
-//{
-//  unsigned char ee_vset_upper, ee_vset_lower, ee_b_upper,ee_b_lower, ee_fbc_base_upper, ee_fbc_base_lower, ee_i;
-//  unsigned char ee_vmodoffset_upper, ee_vmodoffset_lower, ee_dummy;
-//  ee_dummy = EEPROM.read(EEADD_DUMMY);
-//  if (ee_dummy == NOEE_DUMMY)
-//  {
-//    g_p = EEPROM.read(EEADD_P);
-//    g_kiindex = EEPROM.read(EEADD_KIINDEX);//
-//    g_ki = pgm_read_word_near(kilstable+g_kiindex*2+1);//20161109
-//    g_ls = pgm_read_word_near(kilstable+g_kiindex*2);//
-//    g_currentlim = EEPROM.read(EEADD_currentlim);
-//    ee_vset_upper = EEPROM.read(EEADD_Vset_upper);
-//    ee_vset_lower = EEPROM.read(EEADD_Vset_lower);
-//    g_b_upper = EEPROM.read(EEADD_B_upper);
-//    g_b_lower = EEPROM.read(EEADD_B_lower);
-////    g_sensortype = EEPROM.read(EEADD_Sensor_type);
-//    g_sensortype = 0;
-//    g_vbeh1 = EEPROM.read(EEADD_VBE_H1); // vbeh1*256 - vbeh2*16*g_currentlim = g_vbeh(vbe target when reach currentlimit)
-//    g_vbeh2 = EEPROM.read(EEADD_VBE_H2);
-//    g_vbec1 = EEPROM.read(EEADD_VBE_C1);
-//    g_tpidoffset = g_vbec1;
-//    g_vbec2 = EEPROM.read(EEADD_VBE_C2);
-//    ee_fbc_base_upper = EEPROM.read(EEADD_FBC_base_upper);
-//    ee_fbc_base_lower = EEPROM.read(EEADD_FBC_base_lower);
-//    ee_vmodoffset_upper = EEPROM.read(EEADD_Vmodoffset_upper);
-//    ee_vmodoffset_lower = EEPROM.read(EEADD_Vmodoffset_lower); 
-//    g_vbeh = (g_vbeh1<<8) - (g_vbeh2<<4)*g_currentlim;//20161031 ,add() on g_vbeh1<<8,
-//    g_vbec = (g_vbec1<<8) - (g_vbec2<<4)*g_currentlim;//20161031 ,add() on g_vbeh1<<8,
-//    g_vset_limit = ee_vset_upper<<8 | ee_vset_lower;
-//    g_fbc_base = ee_fbc_base_upper<<8 | ee_fbc_base_lower;
-//    g_vmodoffset = ee_vmodoffset_upper<<8 | ee_vmodoffset_lower;
-//  }
-//  else
-//  {
-//    g_p = NOEE_P;
-//    g_ki = NOEE_KI;
-//    g_ls = NOEE_LS;
-//    g_kiindex = NOEE_KIINDEX;//20161103
-//    g_currentlim = NOEE_ILIM;
-//    g_vset_limit = NOEE_VSET;
-//    g_sensortype = NOEE_SENS;
-//    g_b_upper = NOEE_B>>8;
-//    g_b_lower = NOEE_B;
-//    g_vbeh1 = NOEE_VBEH1; //R1
-//    g_vbeh2 = NOEE_VBEH2; //R2
-//    g_vbec1 = NOEE_VBEC1; //Tpid offset
-//    g_tpidoffset = g_vbec1;
-//    g_vbec2 = NOEE_VBEC2; //no use now
-//    g_vbeh = (g_vbeh1<<8) - (g_vbeh2<<4)*g_currentlim;//20161031 ,add() on g_vbeh1<<8,
-//    g_vbec = (g_vbec1<<8) - (g_vbec2<<4)*g_currentlim;//20161031 ,as ablove
-//    g_fbc_base = NOEE_FBC;
-//    g_vmodoffset =NOEE_OFFSET;
-//    EEPROM.write(EEADD_DUMMY, NOEE_DUMMY);
-//    
-//  }
-//  }
 
 void DTC03::CheckSensorType()
 {
@@ -325,7 +268,6 @@ void DTC03::CheckTemp()
       g_errcode2 = 1;
       g_en_state =0;
     }
-//  else g_errcode2 = 0;
 }
 void DTC03::ReadVoltage()
 {
