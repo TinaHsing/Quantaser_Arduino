@@ -100,42 +100,36 @@ void loop() {
     ioutput=ipid.Compute(dtc.g_en_state, ierr, 58, 1, 2);//kp=58,ki=1,ls=2, 20161116
 //     ioutput=ipid.Compute(1, ierr, 58, 1, 2); // use for check EN wrong trigger
     
-    while(abs(ioutput)<(abs(toutput)+pidoffset)) //current limit
+    while(abs(ioutput)<(abs(toutput)+pidoffset)) //run current limit
     {
+     output = (long)(abs(ioutput)+dtc.g_fbc_base);
 
-     output = (long)(abs(ioutput)+dtc.g_fbc_base);//
-
-     if (output>PIDOUTPUTLIMIT) output= PIDOUTPUTLIMIT;//
+     if (output>PIDOUTPUTLIMIT) output= PIDOUTPUTLIMIT;
      if(toutput<=0) dtc.SetMos(HEATING,output);
      else dtc.SetMos(COOLING,output);
 
-     ioutput=ipid.Compute(dtc.g_en_state, ierr, 58, 1, 2); //20161116
-//     ioutput=ipid.Compute(1, ierr, 58, 1, 2); // use for check EN wrong trigger
-
+     ioutput=ipid.Compute(dtc.g_en_state, ierr, 58, 1, 2); 
      tpid.g_errorsum=0; // 1112@Adam
-     toutput=tpid.Compute(dtc.g_en_state, terr, dtc.g_p, 0, 0); // 1112@Adam, only compare to Pterm
-//     toutput=tpid.Compute(1, terr, dtc.g_p, 0, 0); // use for check EN wrong trigger
-     
-     dtc.CurrentLimit();
+     toutput=tpid.Compute(dtc.g_en_state, terr, dtc.g_p, 0, 0); // 1112@Adam, only compare to Pterm     
+     dtc.CurrentLimit();// read Itec
      isense =abs((int)(dtc.g_itecread)-(int)(dtc.g_isense0));
      ierr = isense - dtc.g_iteclimitset;
-
      dtc.ReadVoltage();
      dtc.VsetSlow();
 
      terr = (long)dtc.g_vact - (long)dtc.g_vset_limitt;      
-    }
-    
+    } 
+  }
+  if (dtc.g_overshoot == 1){
+    dtc.g_overshoot = 0;
+    tpid.g_errorsum=0;
   }
   toutput=tpid.Compute(dtc.g_en_state, terr, dtc.g_p, dtc.g_ki, dtc.g_ls); //20161116
-//  toutput=tpid.Compute(1, terr, dtc.g_p, dtc.g_ki, dtc.g_ls); // use for check EN wrong trigger
 
   output = (long)(abs(toutput)+dtc.g_fbc_base);
   if(output>PIDOUTPUTLIMIT) output=PIDOUTPUTLIMIT;//
   if (toutput<=0) dtc.SetMos(HEATING,output);
-  else if (toutput>0) dtc.SetMos(COOLING,output);
-  
-//  if(dtc.g_ee_changed) dtc.SaveEEPROM();
+  else if (toutput>0) dtc.SetMos(COOLING,output);  
   i++;
 }
 
