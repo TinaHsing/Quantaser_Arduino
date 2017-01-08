@@ -36,8 +36,10 @@ void DTC03SMaster::ParamInit()
 	p_loopcount = 0;
 	p_EngFlag = 0;
 	p_ee_changed = 0;
-	p_overshoot[0] = 0;
-	p_overshoot[1] = 1;
+	p_overshoot_scan = 0;
+	p_overshoot_noscan = 0;
+	p_overshoot_cancel_Flag_scan = 1;
+	p_overshoot_cancel_Flag_noscan = 1;
 }
 void DTC03SMaster::WelcomeScreen()
 {
@@ -209,7 +211,7 @@ void DTC03SMaster::I2CWriteData(unsigned char com)
     	
     	case I2C_COM_WAKEUP:
     		temp[0] = 1;
-    		temp[1] = p_overshoot[0];
+    		temp[1] = ( g_scan==1? p_overshoot_scan : p_overshoot_noscan);
     	break;
     	
     	case I2C_COM_TEST:
@@ -287,6 +289,7 @@ void DTC03SMaster::CheckStatus()
 					I2CReadData(I2C_COM_VACT);
 	  	    		tact = ReturnTemp(g_vact,0);
 	  	    		PrintTact(tact);
+	  	    		Overshoot_Cancelation(tact);
 				}
 			break;						
 		}
@@ -379,8 +382,7 @@ void DTC03SMaster::PrintTend()
 }
 void DTC03SMaster::PrintTact(float tact)
 {
-	
-	
+		
 	if (p_EngFlag == 1) {
 		lcd.SelectFont(SystemFont5x7);
 		lcd.GotoXY(TA_X2, TA_Y);
@@ -393,12 +395,9 @@ void DTC03SMaster::PrintTact(float tact)
 //	else if (g_errcode1 == 1) lcd.print("error1");
 	else {
 		if(tact< 9.991) lcd.print(" ");
-		lcd.print(tact, 2); 
-		if ( (p_overshoot[0]==1) && (p_overshoot[1]==1) && (tact-g_tend > 1.50) ) {
-			p_overshoot[1] = 0;
-			I2CWriteData(I2C_COM_WAKEUP);
-		}
-	}	
+		lcd.print(tact, 2); 		
+	}
+	Overshoot_Cancelation(tact);	
 }
 void DTC03SMaster::PrintRate()
 {
@@ -564,7 +563,7 @@ void DTC03SMaster::CalculateRate()
 				if( (g_tnow+g_tfine) > g_tend) {
 					g_tnow = g_tend - g_tfine;
 					setKpKiLs(g_tend);
-					p_overshoot[0] = 1;
+					p_overshoot_scan = 1;
 				}
 			}	
 		else 
@@ -573,7 +572,7 @@ void DTC03SMaster::CalculateRate()
 				if( (g_tnow+g_tfine) < g_tend) {
 					g_tnow = g_tend - g_tfine;
 					setKpKiLs(g_tend);
-					p_overshoot[0] = 1;
+					p_overshoot_scan = 1;
 				}
 			}
 		p_rateflag = 1;	
@@ -595,6 +594,30 @@ void DTC03SMaster::CalculateRate()
 	    I2CWriteData(I2C_COM_VSET);
 	}
 		
+}
+void DTC03SMaster::Overshoot_Cancelation(float tact){
+		
+	if ( g_en_state==1 ){
+		if ( g_scan==1){
+			if ( p_overshoot_scan==1 && p_overshoot_cancel_Flag_scan==1 &&  abs(tact-g_tend > 1.50) ) {
+				p_overshoot_cancel_Flag_scan = 0;
+			    I2CWriteData(I2C_COM_WAKEUP);			
+		    }
+    	}
+	else {
+		checkNoScanOvershoot(tact);
+		if ( p_overshoot_noscan==1 && p_overshoot_cancel_Flag_noscan==1 &&  abs(tact-g_tstart) > 1.50 ) {
+			p_overshoot_cancel_Flag_noscan = 0;
+			I2CWriteData(I2C_COM_WAKEUP);
+		}
+	}
+	}
+	
+}
+void DTC03SMaster::checkNoScanOvershoot(float tact) {
+	if(g_scan==0 && g_en_state==1) {
+		if ( abs(tact-g_tstart)<0.1 ) p_overshoot_noscan=1 ;
+	}
 }
 
 void DTC03SMaster::setKpKiLs(float tin) {
@@ -635,8 +658,10 @@ void DTC03SMaster::UpdateEnable()//20161101
 	if(analogRead(ENSW)>ANAREADVIH) p_en[1] = 1;
 	else {
 		p_en[1] = 0;
-		p_overshoot[0] = 0;
-		p_overshoot[1] = 1;
+		p_overshoot_scan = 0;
+		p_overshoot_noscan = 0;
+		p_overshoot_cancel_Flag_scan = 1;
+		p_overshoot_cancel_Flag_noscan = 1;
 	}
 	if(g_en_state != p_en[1])
 	{
@@ -836,13 +861,11 @@ void DTC03SMaster::UpdateParam()
 				if(g_tstart > 60.00) g_tstart =60.00;
 				if(g_tstart < 7.00) g_tstart = 7.00;
 				if(g_en_state==0 ){ // EN switch OFF
-//					g_tnow = g_tstart;
 					g_vset = ReturnVset(g_tstart, 0);
 					I2CWriteData(I2C_COM_VSET);
 				}
 				else{ // EN switch ON
 					if (g_scan==0 ) { // Scan OFF
-//				    	g_tnow += g_counter2*0.01;
 						g_vset = ReturnVset(g_tnow+g_tfine, 0);
 						I2CWriteData(I2C_COM_VSET);
 					}
