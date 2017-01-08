@@ -36,6 +36,8 @@ void DTC03SMaster::ParamInit()
 	p_loopcount = 0;
 	p_EngFlag = 0;
 	p_ee_changed = 0;
+	p_overshoot[0] = 0;
+	p_overshoot[1] = 1;
 }
 void DTC03SMaster::WelcomeScreen()
 {
@@ -207,7 +209,7 @@ void DTC03SMaster::I2CWriteData(unsigned char com)
     	
     	case I2C_COM_WAKEUP:
     		temp[0] = 1;
-    		temp[1] = 0;
+    		temp[1] = p_overshoot[0];
     	break;
     	
     	case I2C_COM_TEST:
@@ -392,6 +394,10 @@ void DTC03SMaster::PrintTact(float tact)
 	else {
 		if(tact< 9.991) lcd.print(" ");
 		lcd.print(tact, 2); 
+		if ( (p_overshoot[0]==1) && (p_overshoot[1]==1) && (tact-g_tend > 1.50) ) {
+			p_overshoot[1] = 0;
+			I2CWriteData(I2C_COM_WAKEUP);
+		}
 	}	
 }
 void DTC03SMaster::PrintRate()
@@ -542,6 +548,7 @@ void DTC03SMaster::checkTnowStatus()
 	p_en[0] = p_en[1];
 	p_scan[0] = p_scan[1];
 }
+
 void DTC03SMaster::CalculateRate()
 {
 	unsigned int t_temp;
@@ -557,6 +564,7 @@ void DTC03SMaster::CalculateRate()
 				if( (g_tnow+g_tfine) > g_tend) {
 					g_tnow = g_tend - g_tfine;
 					setKpKiLs(g_tend);
+					p_overshoot[0] = 1;
 				}
 			}	
 		else 
@@ -565,6 +573,7 @@ void DTC03SMaster::CalculateRate()
 				if( (g_tnow+g_tfine) < g_tend) {
 					g_tnow = g_tend - g_tfine;
 					setKpKiLs(g_tend);
+					p_overshoot[0] = 1;
 				}
 			}
 		p_rateflag = 1;	
@@ -595,12 +604,18 @@ void DTC03SMaster::setKpKiLs(float tin) {
 		g_kiindex=25; //Time constamt: 3.5s		        
 		I2CWriteData(I2C_COM_KI);
 	}
-	else if( tin < 19.99) {
+	else if( tin < 22.49) {
 		g_p = 6;
 		I2CWriteData(I2C_COM_CTR);
 		g_kiindex=22; //Time constamt: 2s		        
 		I2CWriteData(I2C_COM_KI);		
 	}
+//	else if( tin < 22.49) {
+//		g_p = 9;
+//		I2CWriteData(I2C_COM_CTR);
+//		g_kiindex=14; //Time constamt: 1.2s		        
+//		I2CWriteData(I2C_COM_KI);		
+//	}
 	else if( tin < 24.99) {
 		g_p = 11;
 		I2CWriteData(I2C_COM_CTR);
@@ -618,7 +633,11 @@ void DTC03SMaster::setKpKiLs(float tin) {
 void DTC03SMaster::UpdateEnable()//20161101
 {
 	if(analogRead(ENSW)>ANAREADVIH) p_en[1] = 1;
-	else p_en[1] = 0;
+	else {
+		p_en[1] = 0;
+		p_overshoot[0] = 0;
+		p_overshoot[1] = 1;
+	}
 	if(g_en_state != p_en[1])
 	{
 		

@@ -6,7 +6,7 @@
 // ===================================================
 
 // =====================DEBUGFLAG Table =================================
-#define DEBUGFLAG01
+//#define DEBUGFLAG01
 //#define DEBUGFLAG02 2
 //#define DEBUGFLAG03
 
@@ -171,7 +171,8 @@ public:
     unsigned char g_r1, g_r2;;
 	unsigned long g_vactavgsum, g_itecavgsum;
 	bool g_en_state, g_heating, g_errcode1, g_errcode2, g_sensortype, g_mod_status, g_ee_changed, g_wakeup;
-    unsigned int g_b_upper, g_b_lower,g_vset_limit, g_ilimdacout,g_vset_limitt,g_vmod, g_otp;
+    bool g_overshoot;
+	unsigned int g_b_upper, g_b_lower,g_vset_limit, g_ilimdacout,g_vset_limitt,g_vmod, g_otp;
     unsigned int g_vmodoffset, g_i2ctest, g_Vtemp;//
     int g_iteclimitset;//
     AD5541 dacformos, dacforilim;

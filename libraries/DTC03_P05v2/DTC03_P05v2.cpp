@@ -150,6 +150,7 @@ void DTC03::ParamInit()
   g_limcounter =0;
   g_tpidoffset = 2;
   g_wakeup = 0;
+  g_overshoot = 0;
   ADCSRA &=~PS_128;
   ADCSRA |=PS_32;
 }
@@ -533,6 +534,7 @@ void DTC03::I2CReceive()
     
     case I2C_COM_WAKEUP:
     	g_wakeup = temp[0];
+		g_overshoot = temp[1];
 //    	Serial.println("wake up:");
 //    	Serial.println(g_wakeup);
     break;

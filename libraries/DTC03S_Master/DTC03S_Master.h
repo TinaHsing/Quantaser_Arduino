@@ -45,7 +45,7 @@
 #define ANAREADVIH 		500
 #define LONGPRESSTIME 	5000
 #define PERIOD			100
-#define MAXRATEINDEX	20 
+#define MAXRATEINDEX	14 
 #define DEBOUNCETIME 	2
 #define COUNTERINCRE	50
 #define COUNTERSPEEDUP	100
@@ -291,7 +291,7 @@ public:
 private:
 	glcd lcd;
 	bool g_scan, g_heater, g_paramterupdate, p_en[2], p_scan[2], p_tnow_flag[2], p_curstatus0flag, p_rateflag, p_EngFlag;
-	bool p_ee_changed, p_enableFlag;
+	bool p_ee_changed, p_enableFlag, p_overshoot[2];
 	char g_counter, g_counter2;
 	unsigned char g_rateindex, g_trate, g_cursorstate,g_oldcursorstate, g_lastencoded, g_kiindex, g_p, p_ee_change_state;
 	unsigned int  g_vstart, g_vset, g_vend, p_loopcount, p_trate;
