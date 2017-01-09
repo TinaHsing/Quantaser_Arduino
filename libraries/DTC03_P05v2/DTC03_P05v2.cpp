@@ -466,7 +466,7 @@ void DTC03::I2CReceive()
     
 //    Serial.println("CTR:");
 //    Serial.print(g_currentlim);
-//    Serial.print(", ");
+//    Serial.print("p: ");
 //    Serial.println(g_p);
     break;
 
@@ -485,7 +485,7 @@ void DTC03::I2CReceive()
     g_ls = temp[0];
     g_ki = temp[1];
     
-//    Serial.println("LSKI:");
+//    Serial.print("LSKI:");
 //    Serial.print(g_ls);
 //    Serial.print(", ");
 //    Serial.println(g_ki);
@@ -535,8 +535,10 @@ void DTC03::I2CReceive()
     case I2C_COM_WAKEUP:
     	g_wakeup = temp[0];
 		g_overshoot = temp[1];
-//    	Serial.println("wake up:");
+//		Serial.print("wu:");
 //    	Serial.println(g_wakeup);
+//    	Serial.print("os:");
+//    	Serial.println(g_overshoot);
     break;
     
     

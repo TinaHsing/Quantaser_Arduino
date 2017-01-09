@@ -50,7 +50,7 @@
 #define COUNTERINCRE	50
 #define COUNTERSPEEDUP	100
 #define FINETUNEAMP 3
-#define SCANSAMPLERATE 50
+#define SCANSAMPLERATE 15
 #define ILIMSTART 0.5
 #define ILIMSTEP 0.05
 
@@ -276,12 +276,11 @@ public:
 	void CursorState();
 	void UpdateParam();
 	void Encoder();
-	void Printloopt(unsigned long);
 	void SaveEEPROM();
 	void RuntestI2C();
 	void setKpKiLs(float tin);
 	void Overshoot_Cancelation(float);
-	void checkNoScanOvershoot(float);
+	void checkOvershoot(float);
 	bool g_en_state;
 	int g_itec;
 	unsigned int g_vact, g_fbcbase, g_tpcb, g_otp;
@@ -296,8 +295,8 @@ private:
 	bool p_ee_changed, p_enableFlag, p_overshoot_scan, p_overshoot_noscan, p_overshoot_cancel_Flag_scan, p_overshoot_cancel_Flag_noscan;
 	char g_counter, g_counter2;
 	unsigned char g_rateindex, g_trate, g_cursorstate,g_oldcursorstate, g_lastencoded, g_kiindex, g_p, p_ee_change_state;
-	unsigned int  g_vstart, g_vset, g_vend, p_loopcount, p_trate;
-	unsigned long loopindex, g_timer, g_tenc[3], g_tscan, g_tpush, p_tlp[5];
+	unsigned int  g_vstart, g_vset, g_vend, p_loopcount, p_trate, p_tlp;
+	unsigned long loopindex, g_timer, g_tenc[3], g_tscan, g_tpush;
 	float g_tstart, g_tend, g_tnow, g_tfine, p_rate;
 
 };

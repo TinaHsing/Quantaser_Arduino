@@ -211,12 +211,12 @@ void DTC03SMaster::I2CWriteData(unsigned char com)
     	
     	case I2C_COM_WAKEUP:
     		temp[0] = 1;
-    		temp[1] = ( g_scan==1? p_overshoot_scan : p_overshoot_noscan);
+    		temp[1] = p_overshoot_noscan | p_overshoot_scan;
     	break;
     	
     	case I2C_COM_TEST:
-    		temp[0] = p_trate;
-    		temp[1] = p_trate>>8;
+    		temp[0] = p_tlp;
+    		temp[1] = p_tlp>>8;
     	break;
 
   }
@@ -272,7 +272,7 @@ void DTC03SMaster::CheckStatus()
 			case 0:
 				I2CReadData(I2C_COM_VACT);
   	    		tact = ReturnTemp(g_vact,0);
-  	    		PrintTact(tact);				
+  	    		PrintTact(tact);								
 			break;
 			case 1:
 				if (loopindex%3==0) {
@@ -289,7 +289,6 @@ void DTC03SMaster::CheckStatus()
 					I2CReadData(I2C_COM_VACT);
 	  	    		tact = ReturnTemp(g_vact,0);
 	  	    		PrintTact(tact);
-	  	    		Overshoot_Cancelation(tact);
 				}
 			break;						
 		}
@@ -347,22 +346,6 @@ void DTC03SMaster::PrintEngBG()
 	lcd.GotoXY(Tpcb_X, Tpcb_Y);
 	lcd.print(Text_Tpcb);
 }
-//void DTC03SMaster::Printloopt(unsigned long tp)
-//{
-//	float loopt_avg;
-//	p_tlp[p_loopcount] = tp;
-//	p_loopcount++;
-//	
-//	if (p_loopcount == 5) {
-//		p_loopcount = 0;
-//		lcd.SelectFont(SystemFont5x7);
-//		lcd.GotoXY(LOOPT_X, LOOPT_Y);
-//		loopt_avg = float(( (p_tlp[1]-p_tlp[0])+(p_tlp[2]-p_tlp[1])+
-//		(p_tlp[3]-p_tlp[2])+(p_tlp[4]-p_tlp[3]) ))/4.0;
-//		if ( loopt_avg<10 ) lcd.print(' ');
-//		lcd.print(loopt_avg);
-//	}	
-//}
 void DTC03SMaster::PrintTstart()
 {
 	lcd.SelectFont(SystemFont5x7);
@@ -560,26 +543,21 @@ void DTC03SMaster::CalculateRate()
 			if(g_tend > g_tstart) 
 			{
 				g_tnow += p_rate;
-				if( (g_tnow+g_tfine) > g_tend) {
-					g_tnow = g_tend - g_tfine;
-					setKpKiLs(g_tend);
-					p_overshoot_scan = 1;
-				}
+				if( (g_tnow+g_tfine) > g_tend) g_tnow = g_tend - g_tfine;								
 			}	
 		else 
 			{
 				g_tnow -= p_rate;
-				if( (g_tnow+g_tfine) < g_tend) {
-					g_tnow = g_tend - g_tfine;
-					setKpKiLs(g_tend);
-					p_overshoot_scan = 1;
-				}
+				if( (g_tnow+g_tfine) < g_tend) g_tnow = g_tend - g_tfine;				
 			}
 		p_rateflag = 1;	
 	    }
-	    p_enableFlag = 1; // change to 1 only when EN ON && Scan ON && not in ENG mode 
+	    p_enableFlag = 1; // change to 1 only when EN ON && Scan ON && ~ENG mode 
 	}
-					
+	//
+//	p_tlp = millis(); // use to check loop time, send p_tlp	
+//	I2CWriteData(I2C_COM_TEST);	
+	//
 	if (p_rateflag == 1) {
 		p_rateflag = 0;
 		p_trate = t_temp; 
@@ -592,31 +570,33 @@ void DTC03SMaster::CalculateRate()
 		p_enableFlag = 0;
 		g_vset = ReturnVset(g_tstart, 0);
 	    I2CWriteData(I2C_COM_VSET);
+	    setKpKiLs(g_tstart);
 	}
 		
 }
 void DTC03SMaster::Overshoot_Cancelation(float tact){
-		
-	if ( g_en_state==1 ){
-		if ( g_scan==1){
-			if ( p_overshoot_scan==1 && p_overshoot_cancel_Flag_scan==1 &&  abs(tact-g_tend > 1.50) ) {
-				p_overshoot_cancel_Flag_scan = 0;
-			    I2CWriteData(I2C_COM_WAKEUP);			
-		    }
-    	}
-	else {
-		checkNoScanOvershoot(tact);
-		if ( p_overshoot_noscan==1 && p_overshoot_cancel_Flag_noscan==1 &&  abs(tact-g_tstart) > 1.50 ) {
-			p_overshoot_cancel_Flag_noscan = 0;
-			I2CWriteData(I2C_COM_WAKEUP);
-		}
+	
+	checkOvershoot(tact);
+	if ( p_overshoot_scan==1 && p_overshoot_cancel_Flag_scan==1 &&  abs(tact-g_tend) > 0.5 ) {
+		p_overshoot_cancel_Flag_scan = 0;
+		setKpKiLs(g_tend);
+	    I2CWriteData(I2C_COM_WAKEUP);			
 	}
-	}
+	if ( p_overshoot_noscan==1 && p_overshoot_cancel_Flag_noscan==1 &&  abs(tact-g_tstart) > 0.5 ) {
+		p_overshoot_cancel_Flag_noscan = 0;		
+		I2CWriteData(I2C_COM_WAKEUP);
+	}	
+
 	
 }
-void DTC03SMaster::checkNoScanOvershoot(float tact) {
-	if(g_scan==0 && g_en_state==1) {
-		if ( abs(tact-g_tstart)<0.1 ) p_overshoot_noscan=1 ;
+void DTC03SMaster::checkOvershoot(float tact) {
+	if(g_en_state==1) {
+		if (g_scan == 1) {
+			if ( abs( tact-g_tend )<0.1 ) p_overshoot_scan=1 ;
+		}
+		else {
+			if ( abs(tact-g_tstart)<0.1 ) p_overshoot_noscan=1 ;
+		}		
 	}
 }
 
@@ -962,7 +942,7 @@ void DTC03SMaster::UpdateParam()
 			break;
 			
 			case 12:
-				g_fbcbase +=(g_counter2*100);
+				g_fbcbase += g_counter2;
 				if(g_fbcbase>44900) g_fbcbase=44900;//
                 if(g_fbcbase<16100) g_fbcbase=16100;//
                 I2CWriteData(I2C_COM_FBC);
@@ -1004,14 +984,14 @@ void DTC03SMaster::Encoder() // use rising edge triger of ENC_B
 	{
 		g_paramterupdate =1;
 		g_counter =-1;
-		if (g_tenc[2] > COUNTERSPEEDUP) g_counter2 =-20;
+		if (g_tenc[2] > COUNTERSPEEDUP) g_counter2 = -50;
 		else g_counter2 =-1;		
 	}
 	else if(encoded == 0b11)
 	{
 		g_paramterupdate =1;
 		g_counter =1;
-		if (g_tenc[2] > COUNTERSPEEDUP) g_counter2 =20;
+		if (g_tenc[2] > COUNTERSPEEDUP) g_counter2 =50;
 		else g_counter2 = 1;	
 	}
 	g_tenc[0] = tenc;	
