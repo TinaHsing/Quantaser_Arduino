@@ -17,128 +17,14 @@
 
 DTC03::DTC03()
 {}
-float DTC03::ReturnTemp(unsigned int vact, bool type)
-{
-  float tact;
-  if(type)
-    tact = (float)(vact/129.8701) - 273.15;
-  else
-    tact = 1/(log((float)vact/RTHRatio)/BVALUE+T0INV)-273.15;
-  return tact;
-}
-void DTC03::DynamicVcc()
-{
-    float restec, g_r1_f, g_r2_f;
-//    unsigned int Rcal_step = 29000 - g_fbc_base ;
-    if(g_sensortype) digitalWrite(SENSOR_TYPE,g_sensortype);
-    SetMosOff();
-    while(g_wakeup == 0) delay(1);
-    g_isense0 = ReadIsense();
-//    g_r1=10;
-//    g_r2=20;
-    g_r1_f = float(g_r1)*0.1;
-    g_r2_f = float(g_r2)*0.1;
-    
-    #ifdef DEBUGFLAG01
-      Serial.begin(9600);
-      Serial.println("g_fbc_base:");
-      Serial.println(g_fbc_base);
-//      Serial.print(",  ");
-//      Serial.println(Rcal_step);
-//      Serial.println("  ");
-      Serial.println("R1, R2 for dynamic Vcc selection: ");
-      Serial.print(g_r1_f);
-      Serial.print(", ");
-      Serial.println(g_r2_f);
-      Serial.println("=====Isense0 parameter====");
-      Serial.print("Avgtime:");
-      Serial.println(IAVGTIME);
-      Serial.print("Isense0:");
-      Serial.println(g_isense0);//20161031
-    #else
-    #endif
-    
-//    if (g_fbc_base > RMEASUREVOUT) restec = CalculateR(RMEASUREVOUT,RMEASUREDELAY,RMEASUREAVGTIME,IAVGTIME);
-//	else restec = CalculateR(g_fbc_base + Rcal_step ,RMEASUREDELAY,RMEASUREAVGTIME,IAVGTIME);
-	restec = CalculateR(RMEASUREVOUT,RMEASUREDELAY,RMEASUREAVGTIME,IAVGTIME);
-    if (restec < g_r1_f ) SetVcc(VCCLOW);
-    else if(restec < g_r2_f ) SetVcc(VCCMEDIUM);
-    else SetVcc(VCCHIGH);
-	
-//	if (restec < VCCRTH_LM) SetVcc(VCCLOW);
-//    else if(restec < VCCRTH_MH) SetVcc(VCCMEDIUM);
-//    else SetVcc(VCCHIGH);
-}
-float DTC03::CalculateR(unsigned int fb_value, unsigned int stabletime, int ravgtime, int vavgtime)
-{
-  
-  int i,vtec0;
-  float rsum=0, rtec, ravg, vtec, itec;
-
-  SetMosOff();
-  g_itecavgsum = 0;
-  Serial.println("Vtec0");
-//  for (int i=5; i--; i>0) {
-//  	Serial.println(i);
-//  	delay(1000);
-//  }
-  vtec0=ReadVtec(vavgtime);
-
-  #ifdef DEBUGFLAG01
-    Serial.println("=====TEC parameter====");
-    Serial.print("Avgtime:");
-    Serial.println(vavgtime);
-    Serial.print("Vtec0:");
-    Serial.println(vtec0);
-    Serial.println("n   vtec  itec   rtec ");//20161031
-  #else
-  #endif
-
-  SetMos(COOLING, fb_value);  // using cooling path and dac output = fb_value;
-  Serial.print("Vgs to R calculate =");
-  Serial.println(fb_value);
-  delay(stabletime);          // delay stabletime in ms
-  for (i=0; i< ravgtime; i++)
-  {
-    vtec = float(ReadVtec(vavgtime)-vtec0);
-//    Serial.println("pass vtec");
-//    delay(1000);
-    itec = float(ReadIsense()-g_isense0);
-//    Serial.println("pass itec");
-//    delay(1000);
-    rtec = (vtec/itec)/RTECRatio;
-    rsum += rtec;
-    #ifdef DEBUGFLAG01
-      Serial.print(i);
-      Serial.print(", ");
-      Serial.print(vtec);
-      Serial.print(", ");
-      Serial.print(itec);
-      Serial.print(", ");
-      Serial.println(rtec);
-    #else
-    #endif
-  }
-  //  Serial.println("end caculate");
-//  delay(1000);
-  ravg = rsum/float(ravgtime);
-  #ifdef DEBUGFLAG01
-    Serial.print("ravg:");
-    Serial.println(ravg);
-  #else
-  #endif
-//  delay(5000);
-  SetMosOff();//20161031 turn off all mos after measuring R
-  return ravg;
-  
-}
 void DTC03::ParamInit()
 {
   dacformos.SetPin(DACC);
-  dacforilim.SetPin(CURRENT_LIM);
+//  dacforilim.SetPin(CURRENT_LIM);
   SetVcc(VCCHIGH);
   SetMosOff();
   dacforilim.ModeWrite(0);
+  ltc1865.init(LTC1865CONV, CHVACT);  // CHVACT: first channel to read of ltc1865.Read
   g_en_state = 0;
   g_errcode1 = 0;
   g_errcode2 = 0;
@@ -146,8 +32,9 @@ void DTC03::ParamInit()
   g_itecavgsum = 0;
   g_currentindex = 0;
   g_vactindex = 0;
+  g_vpcbindex = 0;
   g_ilimdacout = 65535;
-  g_limcounter =0;
+
   g_tpidoffset = 2;
   g_wakeup = 0;
   g_overshoot = 0;
@@ -198,9 +85,9 @@ void DTC03::SetVcc(unsigned char state)
 
 	}
 }
-void DTC03::SetMos(bool heating, unsigned int fb_value)
+void DTC03::SetMos(bool status, unsigned int fb_value)
 {
-	PORTD = (PORTD| MOS_ON_OFF_STATUS_ADD) & ((heating << NMOSC_IN)|(!heating<< NMOSH_IN)|(!heating << FBSEL));
+	PORTD = (PORTD| MOS_ON_OFF_STATUS_ADD) & ((status << NMOSC_IN)|(!status<< NMOSH_IN)|(!status << FBSEL));
 	dacformos.ModeWrite(fb_value);
 }
 void DTC03::SetMosOff()
@@ -208,17 +95,89 @@ void DTC03::SetMosOff()
   PORTD = PORTD | MOS_ON_OFF_STATUS_ADD;
   dacformos.ModeWrite(0);
 }
-int DTC03::ReadIsense()
-{ 
-  int i, currentavg;
-  g_itecavgsum=0;//20161031
-  for (i=0; i< ITECAVGTIME; i++) 
-    {
-      Itecarray[i]= analogRead(ISENSE0);
-      g_itecavgsum += Itecarray[i];
-    }
-  currentavg = g_itecavgsum >> ITECAVGPWR;
-  return currentavg;
+
+void DTC03::DynamicVcc()
+{
+    float restec, g_r1_f, g_r2_f;
+    if(g_sensortype) digitalWrite(SENSOR_TYPE,g_sensortype);
+    SetMosOff();
+    Serial.println("in");
+    BuildUpArray(1,1,1);
+    Serial.println("out");
+    while(g_wakeup == 0) delay(1);
+    Serial.println("out2");
+    ReadIsense();
+    g_isense0 = g_itecavgsum>>AVGPWR;
+    g_r1_f = float(g_r1)*0.1;
+    g_r2_f = float(g_r2)*0.1;
+    
+    #ifdef DEBUGFLAG01
+      Serial.begin(9600);
+      Serial.println("g_fbc_base:");
+      Serial.println(g_fbc_base);
+      Serial.println("R1, R2 for dynamic Vcc selection: ");
+      Serial.print(g_r1_f);
+      Serial.print(", ");
+      Serial.println(g_r2_f);
+      Serial.print("Isense0:");
+      Serial.println(g_isense0);//20161031
+    #else
+    #endif
+    
+	restec = CalculateR(RMEASUREVOUT,RMEASUREDELAY,RMEASUREAVGTIME,AVGTIME);
+    if (restec < g_r1_f ) SetVcc(VCCLOW);
+    else if(restec < g_r2_f ) SetVcc(VCCMEDIUM);
+    else SetVcc(VCCHIGH);
+	
+}
+float DTC03::CalculateR(unsigned int fb_value, unsigned int stabletime, int ravgtime, int vavgtime)
+{
+  
+  int i,vtec0;
+  float rsum=0, rtec, ravg, vtec, itec;
+
+  vtec0 = ReadVtec(vavgtime);
+
+  #ifdef DEBUGFLAG01
+    Serial.println("=====TEC parameter====");
+    Serial.print("Vtec0:");
+    Serial.println(vtec0);
+    Serial.println("n   vtec  itec   rtec ");//20161031
+  #else
+  #endif
+
+  SetMos(COOLING, fb_value);  // using cooling path and dac output = fb_value;
+  BuildUpArray(0,1,0);  
+  Serial.print("Vgs to R calculate =");
+  Serial.println(fb_value);
+  delay(stabletime);          // delay stabletime in ms
+  for (i=0; i< ravgtime; i++)
+  {
+  	ReadIsense();
+    vtec = float(ReadVtec(vavgtime)-vtec0);   
+    itec = float( g_itecavgsum>>AVGPWR - g_isense0 );
+    rtec = (vtec/itec)/RTECRatio;
+    rsum += rtec;
+    #ifdef DEBUGFLAG01
+      Serial.print(i);
+      Serial.print(", ");
+      Serial.print(vtec);
+      Serial.print(", ");
+      Serial.print(itec);
+      Serial.print(", ");
+      Serial.println(rtec);
+    #else
+    #endif
+  }
+  ravg = rsum/float(ravgtime);
+  #ifdef DEBUGFLAG01
+    Serial.print("ravg:");
+    Serial.println(ravg);
+  #else
+  #endif
+  SetMosOff();
+  BuildUpArray(0,1,0); 
+  return ravg;
 }
 int DTC03::ReadVtec(int avgtime)
 {
@@ -232,21 +191,68 @@ int DTC03::ReadVtec(int avgtime)
   return vtec;
 }
 
-
-
-unsigned int DTC03::InitVactArray()
+void DTC03::BuildUpArray(bool build_vact, bool build_itec, bool build_vpcb) {
+	unsigned char i;
+	
+	if (build_vact == 1) g_vactavgsum = 0;
+	if (build_itec == 1) g_itecavgsum = 0;
+	if (build_vpcb == 1) g_vpcbavgsum = 0;
+	
+	for (i=0; i<AVGTIME; i++) {
+		if (build_vact == 1) {
+			Vactarray[i] = ltc1865.Read(CHVACT);
+			g_vactavgsum += Vactarray[i];
+		}		
+		if (build_itec == 1) {
+			Itecarray[i] = analogRead(ISENSE0);
+			g_itecavgsum += Itecarray[i];
+		}
+		if (build_vpcb == 1) {
+			Vpcbarray[i] = analogRead(TEMP_SENSOR);
+			g_vpcbavgsum += Vpcbarray[i];
+		}
+	}	
+}
+void DTC03::ReadVoltage(bool en_vmod)
 {
-  int i;
-  unsigned int vactavg;
-  ltc1865.init(LTC1865CONV, CHVACT);  // CHVACT: next channel to read 
-  for(i=0; i < VACTAVGTIME; i++)
-  {
-    Vactarray[i]=ltc1865.Read(CHVACT);  // CHVACT: next channel to read 
-    g_vactavgsum += Vactarray[i];
-  }
-  vactavg= g_vactavgsum >> VACTAVGPWR;
-  g_vact = vactavg;
-  return vactavg;
+	noInterrupts();
+    g_vactavgsum -= Vactarray[g_vactindex];
+    if (en_vmod == 0) Vactarray[g_vactindex] = ltc1865.Read(CHVACT);
+    else {
+    	Vactarray[g_vactindex] = ltc1865.Read(CHVMOD);
+    	g_vmod = ltc1865.Read(CHVACT);
+	}
+    g_vactavgsum += Vactarray[g_vactindex]; 
+  
+    g_vact = Vactarray[g_vactindex];
+    g_vactindex ++;
+    if(g_vactindex == AVGTIME) g_vactindex = 0;
+    interrupts();
+	
+  
+}
+void DTC03::ReadIsense()
+{ 
+  noInterrupts();
+  g_itecavgsum -= Itecarray[g_currentindex];
+  Itecarray[g_currentindex] = analogRead(ISENSE0);
+  g_itecavgsum += Itecarray[g_currentindex]; 
+  
+  g_itecread = Itecarray[g_currentindex];
+  g_currentindex ++;
+  if(g_currentindex == AVGTIME) g_currentindex = 0;
+  interrupts(); 
+}
+void DTC03::ReadVpcb() 
+{
+  noInterrupts();
+  g_vpcbavgsum -= Vpcbarray[g_vpcbindex];
+  Vpcbarray[g_vpcbindex] = analogRead(TEMP_SENSOR);
+  g_vpcbavgsum += Vpcbarray[g_vpcbindex]; 
+  
+  g_vpcbindex ++;
+  if(g_vpcbindex == AVGTIME) g_vpcbindex = 0;
+  interrupts(); 
 }
 
 void DTC03::CheckSensorType()
@@ -263,81 +269,41 @@ void DTC03::CheckSensorType()
 }
 void DTC03::CheckTemp()
 {
-  g_Vtemp = analogRead(TEMP_SENSOR);
+  g_Vtemp = g_vpcbavgsum>>AVGPWR;
   if(g_Vtemp > g_otp) 
     {
       g_errcode2 = 1;
       g_en_state =0;
     }
 }
-void DTC03::ReadVoltage()
-{
-  long vmod,vset_limit_long;
-  g_vact = ltc1865.Read(CHVMOD);
-  g_vmod = ltc1865.Read(CHVACT);
-  //vmod = g_vmod - g_vmodoffset;
-  vmod = long(g_vmod) - long(g_vmodoffset);//
-  g_vactavgsum -= Vactarray[g_vactindex];
-  Vactarray[g_vactindex] = g_vact;
-  g_vactavgsum += g_vact;
-  g_vactindex++;
-  if(g_vactindex >= VACTAVGTIME) g_vactindex =0;
-  
-//  vset_limit_long=(long)(g_vset_limit)+vmod;//20161113
-  if (g_mod_status) vset_limit_long=(long)(g_vset_limit)+vmod;//20161113
-  else vset_limit_long=(long)(g_vset_limit);//20161113
-  
-  if(vset_limit_long>65535) vset_limit_long=65535;
-  else if (vset_limit_long<0) vset_limit_long=0;
-  g_vset_limitt = (unsigned int)vset_limit_long;
+//void DTC03::ReadVoltage()
+//{
+//  long vmod,vset_limit_long;
+//  g_vact = ltc1865.Read(CHVMOD);
+//  g_vmod = ltc1865.Read(CHVACT);
+//  vmod = long(g_vmod) - long(g_vmodoffset);//
+//  
+//  g_vactavgsum -= Vactarray[g_vactindex];
+//  Vactarray[g_vactindex] = g_vact;
+//  g_vactavgsum += g_vact;
+//  g_vactindex++;
+//  if(g_vactindex >= AVGTIME) g_vactindex =0;
+//  
+//  if (g_mod_status) vset_limit_long=(long)(g_vset_limit)+vmod;// in SDTC case, g_mod_status is alway 0
+//  else vset_limit_long=(long)(g_vset_limit);
+//  
+//  if(vset_limit_long>65535) vset_limit_long=65535;
+//  else if (vset_limit_long<0) vset_limit_long=0;
+//  
+//  g_vset_limitt = (unsigned int)vset_limit_long;
+//
+//}
 
-  //g_vset_limit = (unsigned int)(long(g_vset_limit)+vmod);//
-  #ifdef DEBUGFLAG03
-  #else 
-  //g_vset +=vmod;  //can unsigned int add int?
-  #endif
-}
-void DTC03::VsetSlow()
-{
-  if(g_en_state)
-  {
-    if((g_vset <= g_vset_limit) &&(g_limcounter % LIMCOUNTER ==0))
-    {
-      g_vset += VSETSLOWSTEP;
-      if(g_vset >= g_vset_limit) g_vset = g_vset_limit;
-    }
-    else if((g_vset > g_vset_limit) &&(g_limcounter % LIMCOUNTER ==0))
-    {
-      g_vset -= VSETSLOWSTEP;
-      if(g_vset <= g_vset_limit) g_vset = g_vset_limit;
-    }
-  }
-  else g_vset = g_vact;
-}
-void DTC03::CurrentLimitGain(bool heating)
-{
-  if(heating)
-    g_ilimgain = (float)g_vbeh/(float)(ILIMDACOUTSTART+ILIMDACSTEP*g_currentlim);
-  else
-    g_ilimgain = (float)g_vbec/(float)(ILIMDACOUTSTART+ILIMDACSTEP*g_currentlim);
-}
 void DTC03::CurrentLimit()
 {
-  //unsigned int currentabs;
-  unsigned int dacout;
-  unsigned char i;//
-  noInterrupts();//
-//  analogRead(ISENSE0); //20161129 Adam
-  g_itecavgsum -=Itecarray[g_currentindex];
-  Itecarray[g_currentindex] = analogRead(ISENSE0);
-  g_itecavgsum +=Itecarray[g_currentindex];//20161101 wrong sign
-  g_itecread = Itecarray[g_currentindex];//
-  interrupts();//
-  //g_currentabs = abs(int(g_itecavgsum>>ITECAVGPWR)-int(g_isense0));//
-  g_currentindex ++;
-  if(g_currentindex == ITECAVGTIME) g_currentindex = 0;
-  g_iteclimitset=(int)(500+50*(g_currentlim))/10;//
+  g_iteclimitset = 50+5*g_currentlim;
 }
+
 void DTC03::I2CRequest()
 {
   unsigned char temp[2], com;
@@ -348,76 +314,29 @@ void DTC03::I2CRequest()
   while(Wire.available()==1) com = Wire.read();
 
   switch(com)
-  {
-//    case I2C_COM_INIT:
-//    temp[0] = g_b_lower;
-//    temp[1] = g_b_upper;
-////    if(g_sensortype) temp[1] |=REQMSK_SENSTYPE;//20161113
-//	if(g_mod_status) temp[1] |=REQMSK_SENSTYPE;//20161113
-//    break;
-//
-//    case I2C_COM_CTR:
-//    temp[0] = g_currentlim;
-//    temp[1] = g_p;
-//    break;
-//
-//    case I2C_COM_VSET:
-//    temp[0] = g_vset_limit;
-//    temp[1] = g_vset_limit >>8;
-//    break;
-//
-//    case I2C_COM_KI:
-//    temp[0] = g_ki;
-//    temp[1] = g_ls;
-//    break;
-    
+  { 
     case I2C_COM_VACT:
-    vact=g_vactavgsum >> VACTAVGPWR;
+    vact=g_vactavgsum >> AVGPWR;
     temp[0]=vact;
     temp[1]=vact >> 8;
     break;
 
     case I2C_COM_ITEC_ER:
     
-    itec = (g_itecavgsum >> ITECAVGPWR)-g_isense0;
+    itec = (g_itecavgsum >> AVGPWR)-g_isense0;//g_isense0~612
     if(itec<0) itecsign = 1;
     else itecsign = 0;
     temp[0]=abs(itec);
-    temp[1]=abs(itec) >> 8;//
-    
-    
+    temp[1]=abs(itec) >> 8;
+       
     if(g_errcode1)  temp[1] |= REQMSK_ERR1;
     else temp[1] &= (~REQMSK_ERR1);//20161101 add
     if(g_errcode2)  temp[1] |= REQMSK_ERR2;
     else temp[1] &= (~REQMSK_ERR2);//
     if(itecsign) temp[1]|= REQMSK_ITECSIGN;
     else temp[1] &= (~REQMSK_ITECSIGN);//
-//    Serial.print(", ");
-//    Serial.print(temp[0]);
-//    Serial.print(", ");
-//    Serial.println(g_itecavgsum);
     break;
 
-//    case I2C_COM_VBEH:
-//    temp[0] = g_vbeh1;
-//    temp[1] = g_vbeh2;
-//    break;
-//
-//    case I2C_COM_VBEC:
-//    temp[0] = g_vbec1;
-//    temp[1] = g_vbec2;
-//    break;
-
-//    case I2C_COM_FBC:
-//    temp[0] = g_fbc_base;
-//    temp[1] = g_fbc_base>>8;
-//    break;
-//
-//    case I2C_COM_VMOD:
-//    temp[0] = g_vmodoffset; //20161101 modified
-//    temp[1] = g_vmodoffset>>8; //
-//    break;
-    
     case I2C_COM_PCB:
     temp[0] = g_Vtemp;
     temp[1] = g_Vtemp >> 8;
@@ -440,7 +359,6 @@ void DTC03::I2CReceive()
     t2=micros();
     t_delta=t2-t1;//
   }
-  g_ee_changed = 1;
   
  if(t_delta<500) 
  { 
@@ -452,7 +370,6 @@ void DTC03::I2CReceive()
     g_en_state = REQMSK_ENSTATE & temp[1];
 //    g_sensortype = temp[1] & REQMSK_SENSTYPE; //20161113
 	g_mod_status = temp[1] & REQMSK_SENSTYPE; 
-    g_ee_change_state = EEADD_B_lower;
 //    Serial.println("INTI:");
 //    Serial.print(g_en_state);
 //    Serial.print(", ");
@@ -462,7 +379,6 @@ void DTC03::I2CReceive()
     case I2C_COM_CTR:
     g_currentlim = temp[0];
     g_p = temp[1];
-    g_ee_change_state = EEADD_P;
     
 //    Serial.println("CTR:");
 //    Serial.print(g_currentlim);
@@ -474,7 +390,6 @@ void DTC03::I2CReceive()
     vset_lower =  temp[0];
     vset_upper = temp[1];
     g_vset_limit = vset_upper<<8 | vset_lower;
-    g_ee_change_state = EEADD_Vset_lower;
     
 //    Serial.println("VSET:");
 //    Serial.println( ReturnTemp(g_vset_limit,0) );
@@ -494,7 +409,6 @@ void DTC03::I2CReceive()
     case I2C_COM_R1R2:
     g_r1 = temp[0];
     g_r2 = temp[1];
-    g_ee_change_state = EEADD_VBE_H1;
 //	Serial.println("R1R2:");
 //    Serial.print(g_r1);
 //    Serial.print(", ");
@@ -505,7 +419,6 @@ void DTC03::I2CReceive()
 //    g_vbec1 = temp[0];
 //    g_vbec2 = temp[1];
 //    g_tpidoffset = g_vbec1;
-//    g_ee_change_state = EEADD_VBE_C1;
 //    //Serial.println("BC");
 //    break;
 
@@ -513,7 +426,6 @@ void DTC03::I2CReceive()
     fbc_lower = temp[0];
     fbc_upper = temp[1];
     g_fbc_base =(fbc_upper <<8)|fbc_lower;//20161101
-    g_ee_change_state = EEADD_FBC_base_lower;
 //    Serial.println("FBC:");
 //    Serial.println(g_fbc_base);
     break;
@@ -522,7 +434,6 @@ void DTC03::I2CReceive()
 //    vmodoffset_lower = temp[0];
 //    vmodoffset_upper = temp[1];
 //    g_vmodoffset = (vmodoffset_upper << 8)| vmodoffset_lower;
-//    g_ee_change_state = EEADD_Vmodoffset_lower;
 //    //Serial.println("MOD");
 //    break;
 
@@ -535,8 +446,8 @@ void DTC03::I2CReceive()
     case I2C_COM_WAKEUP:
     	g_wakeup = temp[0];
 		g_overshoot = temp[1];
-//		Serial.print("wu:");
-//    	Serial.println(g_wakeup);
+		Serial.print("wu:");
+    	Serial.println(g_wakeup);
 //    	Serial.print("os:");
 //    	Serial.println(g_overshoot);
     break;
@@ -552,66 +463,13 @@ void DTC03::I2CReceive()
  }
 
 }
-//void DTC03::SaveEEPROM()
-//{
-//  unsigned char vset_lower, vset_upper, fbc_upper, fbc_lower, vmodoffset_upper, vmodoffset_lower;
-//  g_ee_changed = 0;
-//  switch(g_ee_change_state)
-//  {
-//    case EEADD_P:
-//    EEPROM.write(EEADD_P, g_p);
-//    EEPROM.write(EEADD_currentlim, g_currentlim);
-//    break;
-//
-//    //case EEADD_KI:
-//    //EEPROM.write(EEADD_KI, g_ki);
-//    //EEPROM.write(EEADD_LS, g_ls);
-//    //break;
-//    
-//    case EEADD_KIINDEX://20161101 add
-//    EEPROM.write(EEADD_KIINDEX, g_kiindex);//
-//    break;//
-//
-//    case EEADD_Vset_lower:
-//    vset_lower = g_vset_limit;
-//    vset_upper = g_vset_limit>>8;
-//    EEPROM.write(EEADD_Vset_lower, vset_lower);
-//    EEPROM.write(EEADD_Vset_upper, vset_upper);
-//    break;
-//
-//    case EEADD_B_lower:
-//    EEPROM.write(EEADD_B_lower, g_b_lower);
-//    EEPROM.write(EEADD_B_upper, g_b_upper);
-//    EEPROM.write(EEADD_Sensor_type, g_sensortype);
-//    break;
-//
-//    case EEADD_VBE_H1:
-//    EEPROM.write(EEADD_VBE_H1, g_vbeh1);
-//    EEPROM.write(EEADD_VBE_H2, g_vbeh2);
-//    break;
-//
-//    case EEADD_VBE_C1:
-//    EEPROM.write(EEADD_VBE_C1, g_vbec1);
-//    EEPROM.write(EEADD_VBE_C2, g_vbec2);
-//    break;
-//
-//    case EEADD_FBC_base_lower:
-//    fbc_upper = g_fbc_base >>8;
-//    fbc_lower = g_fbc_base;
-//    EEPROM.write(EEADD_FBC_base_lower, fbc_lower);
-//    EEPROM.write(EEADD_FBC_base_upper, fbc_upper);
-//    break;
-//
-//    case EEADD_Vmodoffset_lower:
-//    vmodoffset_lower = g_vmodoffset;
-//    vmodoffset_upper = g_vmodoffset>>8;
-//    EEPROM.write(EEADD_Vmodoffset_lower, vmodoffset_lower);
-//    EEPROM.write(EEADD_Vmodoffset_upper, vmodoffset_upper);
-//    break;
-//
-//  }
-//}
-
-
-
+float DTC03::ReturnTemp(unsigned int vact, bool type)
+{
+  float tact;
+  if(type)
+    tact = (float)(vact/129.8701) - 273.15;
+  else
+    tact = 1/(log((float)vact/RTHRatio)/BVALUE+T0INV)-273.15;
+  return tact;
+}
 
