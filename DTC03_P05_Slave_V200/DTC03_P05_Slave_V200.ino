@@ -25,7 +25,6 @@ void setup() {
   dtc.SetSPI();
   dtc.SetPinMode();
   dtc.ParamInit();
-  
   dtc.InitVactArray();
   dtc.DynamicVcc();
   if(dtc.g_sensortype) digitalWrite(SENSOR_TYPE, HIGH);
