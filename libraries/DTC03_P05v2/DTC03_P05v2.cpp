@@ -17,10 +17,11 @@
 
 DTC03::DTC03()
 {}
+
 void DTC03::ParamInit()
 {
   dacformos.SetPin(DACC);
-//  dacforilim.SetPin(CURRENT_LIM);
+  dacforilim.SetPin(CURRENT_LIM);
   SetVcc(VCCHIGH);
   SetMosOff();
   dacforilim.ModeWrite(0);
@@ -101,11 +102,8 @@ void DTC03::DynamicVcc()
     float restec, g_r1_f, g_r2_f;
     if(g_sensortype) digitalWrite(SENSOR_TYPE,g_sensortype);
     SetMosOff();
-    Serial.println("in");
     BuildUpArray(1,1,1);
-    Serial.println("out");
     while(g_wakeup == 0) delay(1);
-    Serial.println("out2");
     ReadIsense();
     g_isense0 = g_itecavgsum>>AVGPWR;
     g_r1_f = float(g_r1)*0.1;
@@ -119,7 +117,7 @@ void DTC03::DynamicVcc()
       Serial.print(g_r1_f);
       Serial.print(", ");
       Serial.println(g_r2_f);
-      Serial.print("Isense0:");
+      Serial.print("Isense0: ");
       Serial.println(g_isense0);//20161031
     #else
     #endif
@@ -139,23 +137,22 @@ float DTC03::CalculateR(unsigned int fb_value, unsigned int stabletime, int ravg
   vtec0 = ReadVtec(vavgtime);
 
   #ifdef DEBUGFLAG01
-    Serial.println("=====TEC parameter====");
-    Serial.print("Vtec0:");
+    Serial.print("Vtec0: ");
     Serial.println(vtec0);
+    Serial.print("Vgs to R calculate =");
+  Serial.println(fb_value);
     Serial.println("n   vtec  itec   rtec ");//20161031
   #else
   #endif
 
   SetMos(COOLING, fb_value);  // using cooling path and dac output = fb_value;
-  BuildUpArray(0,1,0);  
-  Serial.print("Vgs to R calculate =");
-  Serial.println(fb_value);
+  BuildUpArray(0,1,0);    
   delay(stabletime);          // delay stabletime in ms
   for (i=0; i< ravgtime; i++)
   {
   	ReadIsense();
     vtec = float(ReadVtec(vavgtime)-vtec0);   
-    itec = float( g_itecavgsum>>AVGPWR - g_isense0 );
+    itec = float( (g_itecavgsum>>AVGPWR)- g_isense0 );
     rtec = (vtec/itec)/RTECRatio;
     rsum += rtec;
     #ifdef DEBUGFLAG01
@@ -227,9 +224,7 @@ void DTC03::ReadVoltage(bool en_vmod)
     g_vact = Vactarray[g_vactindex];
     g_vactindex ++;
     if(g_vactindex == AVGTIME) g_vactindex = 0;
-    interrupts();
-	
-  
+    interrupts();  
 }
 void DTC03::ReadIsense()
 { 
@@ -269,35 +264,25 @@ void DTC03::CheckSensorType()
 }
 void DTC03::CheckTemp()
 {
-  g_Vtemp = g_vpcbavgsum>>AVGPWR;
+  g_Vtemp = (g_vpcbavgsum>>AVGPWR);
   if(g_Vtemp > g_otp) 
     {
       g_errcode2 = 1;
       g_en_state =0;
     }
 }
-//void DTC03::ReadVoltage()
-//{
-//  long vmod,vset_limit_long;
-//  g_vact = ltc1865.Read(CHVMOD);
-//  g_vmod = ltc1865.Read(CHVACT);
-//  vmod = long(g_vmod) - long(g_vmodoffset);//
-//  
-//  g_vactavgsum -= Vactarray[g_vactindex];
-//  Vactarray[g_vactindex] = g_vact;
-//  g_vactavgsum += g_vact;
-//  g_vactindex++;
-//  if(g_vactindex >= AVGTIME) g_vactindex =0;
-//  
-//  if (g_mod_status) vset_limit_long=(long)(g_vset_limit)+vmod;// in SDTC case, g_mod_status is alway 0
-//  else vset_limit_long=(long)(g_vset_limit);
-//  
-//  if(vset_limit_long>65535) vset_limit_long=65535;
-//  else if (vset_limit_long<0) vset_limit_long=0;
-//  
-//  g_vset_limitt = (unsigned int)vset_limit_long;
-//
-//}
+void DTC03::setVset() {
+	long vmod, vset_limit_long;
+	
+	vmod = long(g_vmod) - long(g_vmodoffset);
+	if (g_mod_status) vset_limit_long=(long)(g_vset_limit)+vmod;// in SDTC case, g_mod_status is alway 0
+    else vset_limit_long=(long)(g_vset_limit);
+  
+    if(vset_limit_long>65535) vset_limit_long=65535;
+    else if (vset_limit_long<0) vset_limit_long=0;
+  
+    g_vset_limitt = (unsigned int)vset_limit_long;
+}
 
 void DTC03::CurrentLimit()
 {
@@ -379,6 +364,7 @@ void DTC03::I2CReceive()
     case I2C_COM_CTR:
     g_currentlim = temp[0];
     g_p = temp[1];
+    CurrentLimit();
     
 //    Serial.println("CTR:");
 //    Serial.print(g_currentlim);
@@ -390,7 +376,7 @@ void DTC03::I2CReceive()
     vset_lower =  temp[0];
     vset_upper = temp[1];
     g_vset_limit = vset_upper<<8 | vset_lower;
-    
+    setVset();
 //    Serial.println("VSET:");
 //    Serial.println( ReturnTemp(g_vset_limit,0) );
     break;
@@ -446,8 +432,8 @@ void DTC03::I2CReceive()
     case I2C_COM_WAKEUP:
     	g_wakeup = temp[0];
 		g_overshoot = temp[1];
-		Serial.print("wu:");
-    	Serial.println(g_wakeup);
+//		Serial.print("wu:");
+//    	Serial.println(g_wakeup);
 //    	Serial.print("os:");
 //    	Serial.println(g_overshoot);
     break;

@@ -17,7 +17,6 @@ PID ipid, tpid;
 unsigned int i=0;
 unsigned long loop_time[5];
 void setup() {
-  Serial.begin(9600);
   Wire.begin(DTC03P05);
   Wire.onReceive(ReceiveEvent);
   Wire.onRequest(RequestEvent);
@@ -26,23 +25,24 @@ void setup() {
   dtc.SetPinMode();
   dtc.ParamInit();
   dtc.DynamicVcc();
-  
   if(dtc.g_sensortype) digitalWrite(SENSOR_TYPE, HIGH);
   else digitalWrite(SENSOR_TYPE, LOW);
   dtc.CheckSensorType();
   dtc.CheckTemp();
   ipid.Init(32768,32768,0x7FFFFFFF);
   tpid.Init(32768,32768,0x7FFFFFFF);
-//  dtc.dacforilim.ModeWrite(0);
+  dtc.dacforilim.ModeWrite(0);
   dtc.dacformos.ModeWrite(0);
 }
 
 void loop() {
+  
   // put your main code here, to run repeatedly:
   int isense; //
   long ioutput,toutput,output;
   int ierr;
   long terr;
+  
   unsigned int pidoffset = dtc.g_tpidoffset*1000;
   
 //  if (i==5) {
@@ -51,25 +51,24 @@ void loop() {
 //    Serial.println(); 
 //  }
 //  loop_time[i] = micros();
-  
  
   if(dtc.g_sensortype) digitalWrite(SENSOR_TYPE, HIGH);
   else digitalWrite(SENSOR_TYPE,LOW);
   
-  dtc.ReadVoltage(0);
+  dtc.ReadVoltage(1);
   dtc.ReadIsense();
   dtc.ReadVpcb();
   dtc.CheckSensorType();
   dtc.CheckTemp();
 
   isense =abs((int)(dtc.g_itecread)-(int)(dtc.g_isense0));
-  ierr = isense - dtc.g_iteclimitset;
+  ierr = isense - dtc.g_iteclimitset; 
   terr = (long)dtc.g_vact - (long)dtc.g_vset_limitt;
 //  if (i%2000==0) {
 //    Serial.print(dtc.ReturnTemp(dtc.g_vact,0));
 //    Serial.print(", ");
 //    Serial.println(dtc.ReturnTemp(dtc.g_vset_limitt,0));
-//      Serial.println(dtc.g_overshoot);
+//    Serial.println(dtc.g_overshoot);
 //  }
   if(ierr > -20) 
   {
@@ -85,11 +84,11 @@ void loop() {
      ioutput=ipid.Compute(dtc.g_en_state, ierr, 58, 1, 2); 
      tpid.g_errorsum=0; // 1112@Adam
      toutput=tpid.Compute(dtc.g_en_state, terr, dtc.g_p, 0, 0); // 1112@Adam, only compare to Pterm     
-     dtc.CurrentLimit();// get dtc.g_iteclimitset
+//     dtc.CurrentLimit();// get dtc.g_iteclimitset
      
      isense =abs((int)(dtc.g_itecread)-(int)(dtc.g_isense0));
      ierr = isense - dtc.g_iteclimitset;
-     dtc.ReadVoltage(0);
+     dtc.ReadVoltage(1);
      terr = (long)dtc.g_vact - (long)dtc.g_vset_limitt;      
     } 
   }

@@ -138,6 +138,7 @@ class DTC03
 {
 public:
 	DTC03();
+	unsigned int InitVactArray();
     void SetPinMode();
 	void SetSPI();
 	void ParamInit();
@@ -146,7 +147,6 @@ public:
     void SetMos(bool heating, unsigned int fb_value);
     void SetMosOff();
 	float CalculateR(unsigned int fb_value, unsigned int stabletime, int ravgtime, int vavgtime);
-	unsigned int InitVactArray();
 	void ReadEEPROMnew();
 	void ReadEEPROM();
 	void CheckSensorType();
@@ -161,6 +161,7 @@ public:
     void ReadVpcb();
     float ReturnTemp(unsigned int, bool);
     void BuildUpArray(bool, bool, bool);
+    void setVset();
 
 	unsigned int g_vact, g_vmod, g_fbc_base, g_isense0, g_currentabs,g_itecread;//
     unsigned char g_p, g_ki, g_ls, g_currentlim, g_kiindex, g_tpidoffset;
@@ -183,6 +184,6 @@ private:
 	//int g_vmodoffset;
 	//unsigned int g_vset_limit,g_vbec, g_vbeh, g_b_upper, g_b_lower, g_ilimdacout, g_vmod;
 	//unsigned int g_vbec, g_vbeh,g_vmod;
-	unsigned int Vactarray[AVGTIME], Itecarray[AVGTIME], Vpcbarray[], t_master;
+	unsigned int Vactarray[AVGTIME], Itecarray[AVGTIME], Vpcbarray[AVGTIME], t_master;
     float g_ilimgain;
 };
