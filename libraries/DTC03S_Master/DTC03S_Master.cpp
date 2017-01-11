@@ -351,7 +351,7 @@ void DTC03SMaster::PrintTstart()
 	lcd.SelectFont(SystemFont5x7);
 	if (p_EngFlag == 1) lcd.GotoXY(TS_X2, TS_Y);	
 	else lcd.GotoXY(TSTART_COORD_X2, TSTART_COORD_Y);		
-	if(g_tstart < 9.991) lcd.print(" ");
+	if(g_tstart < 9.993) lcd.print(" ");
     lcd.print(g_tstart,2);
 	
 }

@@ -32,18 +32,13 @@
 #define RMEASUREVOUT 29000 //20161031, 55000
 #define RMEASUREDELAY 3000 //20161031
 #define RMEASUREAVGTIME 10
-#define VACTAVGTIME 64 // Note!!!! VACTAVGTIEM = 2 ^ VACTAVGPWR 
-#define VACTAVGPWR 6 	// Note!!!! VACTAVGTIEM = 2 ^ VACTAVGPWR
-#define ITECAVGTIME 64 // Note !!! ITECAVGTIME = 2^ ITECAVGPWR
-#define ITECAVGPWR 6  // Note !!! ITECAVGTIME = 2^ ITECAVGPWR
-#define IAVGTIME 16 	//average time for current sensor and Vtec read
+#define AVGTIME 64 // Note!!!! VACTAVGTIEM = 2 ^ VACTAVGPWR 
+#define AVGPWR 6 	// Note!!!! VACTAVGTIEM = 2 ^ VACTAVGPWR
+
 #define BCONSTOFFSET 3500
-#define VCCRTH_LM 0.6
-#define VCCRTH_MH 1.0
-#define VSETSLOWSTEP 1
+
 #define ILIMDACOUTSTART 500		// define the current limit start current 500mA
 #define ILIMDACSTEP 50  		// define the current limit step current 50mA
-#define LIMCOUNTER 10
 #define BVALUE 3988 
 
 //=================end of Frequently update define======================
@@ -143,6 +138,7 @@ class DTC03
 {
 public:
 	DTC03();
+	unsigned int InitVactArray();
     void SetPinMode();
 	void SetSPI();
 	void ParamInit();
@@ -151,28 +147,29 @@ public:
     void SetMos(bool heating, unsigned int fb_value);
     void SetMosOff();
 	float CalculateR(unsigned int fb_value, unsigned int stabletime, int ravgtime, int vavgtime);
-	unsigned int InitVactArray();
 	void ReadEEPROMnew();
 	void ReadEEPROM();
 	void CheckSensorType();
 	void CheckTemp();
-	void ReadVoltage();
-	void VsetSlow();
-	void CurrentLimitGain(bool heating);
+	
 	void CurrentLimit();
 	void I2CRequest();
 	void I2CReceive();
 	void SaveEEPROM();
-    int ReadIsense();//
-    float ReturnTemp(unsigned int vact, bool type);
+	void ReadVoltage(bool);
+    void ReadIsense();
+    void ReadVpcb();
+    float ReturnTemp(unsigned int, bool);
+    void BuildUpArray(bool, bool, bool);
+    void setVset();
 
-	unsigned int g_vact, g_vset, g_fbc_base, g_isense0,Vactarray[VACTAVGTIME], Itecarray[ITECAVGTIME],g_currentabs,g_itecread;//
-    unsigned char g_p, g_ki, g_ls, g_currentlim, g_ee_change_state,g_kiindex, g_limcounter,g_currentindex, g_vbec1, g_vbec2, g_vbeh1, g_vbeh2, g_tpidoffset;
+	unsigned int g_vact, g_vmod, g_fbc_base, g_isense0, g_currentabs,g_itecread;//
+    unsigned char g_p, g_ki, g_ls, g_currentlim, g_kiindex, g_tpidoffset;
     unsigned char g_r1, g_r2;;
-	unsigned long g_vactavgsum, g_itecavgsum;
-	bool g_en_state, g_heating, g_errcode1, g_errcode2, g_sensortype, g_mod_status, g_ee_changed, g_wakeup;
+	unsigned long g_vactavgsum, g_itecavgsum, g_vpcbavgsum;
+	bool g_en_state, g_heating, g_errcode1, g_errcode2, g_sensortype, g_mod_status, g_wakeup;
     bool g_overshoot;
-	unsigned int g_b_upper, g_b_lower,g_vset_limit, g_ilimdacout,g_vset_limitt,g_vmod, g_otp;
+	unsigned int g_b_upper, g_b_lower,g_vset_limit, g_ilimdacout,g_vset_limitt, g_otp;
     unsigned int g_vmodoffset, g_i2ctest, g_Vtemp;//
     int g_iteclimitset;//
     AD5541 dacformos, dacforilim;
@@ -181,12 +178,12 @@ private:
 	//int ReadIsense();
 	int ReadVtec(int Avgtime);
 	//unsigned char g_currentindex, g_vbeh1, g_vbeh2, g_vbec1, g_vbec2, g_vactindex;
-    unsigned char  g_vactindex;
+    unsigned char  g_vactindex, g_currentindex, g_vpcbindex;
 	LTC1865 ltc1865;
 	//AD5541 dacformos, dacforilim;
 	//int g_vmodoffset;
 	//unsigned int g_vset_limit,g_vbec, g_vbeh, g_b_upper, g_b_lower, g_ilimdacout, g_vmod;
 	//unsigned int g_vbec, g_vbeh,g_vmod;
-	unsigned int g_vbec, g_vbeh, t_master;
+	unsigned int Vactarray[AVGTIME], Itecarray[AVGTIME], Vpcbarray[AVGTIME], t_master;
     float g_ilimgain;
 };
