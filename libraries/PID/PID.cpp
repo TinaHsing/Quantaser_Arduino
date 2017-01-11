@@ -15,7 +15,7 @@ void PID::Init( long long p_limit, long long i_limit,long long error_limit)
 		Serial.println("====================comput print detail=============");
 		Serial.print("loopcount to show:");
 		Serial.println(PIDDEBUGFLAG);
-		Serial.println("kp, errin, errorsum, ki, ls, p_term, i_term, output");
+		Serial.println("errin, kp, ki, ls, p_term, i_term, output");
 	#else
 	#endif
 }

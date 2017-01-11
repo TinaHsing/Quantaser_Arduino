@@ -20,7 +20,6 @@ void setup() {
   Wire.begin(DTC03P05);
   Wire.onReceive(ReceiveEvent);
   Wire.onRequest(RequestEvent);
-  // put your setup code here, to run once:
   dtc.SetSPI();
   dtc.SetPinMode();
   dtc.ParamInit();

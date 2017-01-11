@@ -676,7 +676,7 @@ void DTC03SMaster::CursorState()
 				
 		if(g_cursorstate ==3 || g_cursorstate ==4) g_cursorstate =0;
 		g_oldcursorstate = g_cursorstate;
-		if ( (g_en_state==0) && (g_scan==1) && (g_trate==1) && (p_EngFlag==0) ) {
+		if ( g_tstart<7.01 && g_en_state==0 && g_scan==1 && g_trate==1 && p_EngFlag==0 ) {
 			g_cursorstate = 5;	
 			p_EngFlag = 1;		
 			PrintEngBG();
