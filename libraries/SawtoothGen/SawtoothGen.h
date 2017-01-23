@@ -1,6 +1,8 @@
 #ifndef SAWTOOTHGEN_H
 #define SAWTOOTHGEN_H
 #include <Arduino.h>
+#define AI_MAX 1023
+#define AI_MIN 0
 class SawtoothGen 
 {
 	private :
@@ -9,7 +11,8 @@ class SawtoothGen
 		bool p_compflag;		
 		
 	public :
-		SawtoothGen(uint8_t, uint8_t, uint8_t, float, float) ;
+		SawtoothGen(uint8_t, uint8_t, uint8_t, float, float);
+		SawtoothGen(uint8_t, uint8_t);
 		void Sawtooth_out();
 	
 };
