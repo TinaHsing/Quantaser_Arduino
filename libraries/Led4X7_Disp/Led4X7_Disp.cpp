@@ -36,22 +36,6 @@ led4X7_disp::led4X7_disp(uint8_t pa, uint8_t pb, uint8_t pc, uint8_t pd, uint8_t
 	pinMode(ph, OUTPUT);
 		}
 
-void led4X7_disp::init(uint8_t adc_bit, float gain)
-{
-	switch (adc_bit) {
-		case 10 :
-			p_adcbase = 1023;
-			break;
-		case 12 :
-			p_adcbase = 4095;
-			break;
-		case 16 :
-			p_adcbase = 65535;
-		break;
-	}
-	p_gain = gain;
-	get_mask();
-}
 void led4X7_disp::init(uint8_t ain, uint8_t adc_bit, float gain)
 {
 	switch (adc_bit) {
@@ -71,17 +55,16 @@ void led4X7_disp::init(uint8_t ain, uint8_t adc_bit, float gain)
 	p_avgcount = 0;
 	p_vinsum = 0;
 	p_delayflag = 1;
+	g_test_num = 123.4;
 	for (int i=0; i<AVGTIMES; i++) {
 		p_vinarray[i] = analogRead(p_pinai);
 		p_vinsum += p_vinarray[i];
 	}
 	
 }
-void led4X7_disp::print(unsigned int code) { //original_2
-	float number;
+void led4X7_disp::print(float number) { //use delay
 	uint8_t n[4], case_select, dt=5;
 	
-	number = float(code) /p_adcbase*5*p_gain;
 	if (number >= 100) case_select = 3;
 	else if (number >= 10) case_select = 2;
 	else case_select = 1;
@@ -108,10 +91,10 @@ void led4X7_disp::print(unsigned int code) { //original_2
       SetDisplay(n[0], 0);
       delay(dt);
     break;
-  }
-	
+  }	
 }
-//void led4X7_disp::print() { //original_1
+
+//void led4X7_disp::print() { // use delay
 //	float number;
 //	uint8_t n[4], case_select, dt=5;
 //	
@@ -150,10 +133,66 @@ void led4X7_disp::print(unsigned int code) { //original_2
 //	p_avgcount++;
 //	if(p_avgcount == AVGTIMES) p_avgcount = 0;
 //}
+
+//void led4X7_disp::print() { //new
+//	uint8_t dt=5;	
+//	unsigned long tnow;
+//	
+//	if (p_delayflag == 1) { //p_delayflag initially set to 1
+//		p_delayflag = 0;	// turn off flag when enter this loop
+//		// calculate init case_select 
+//		if (g_test_num >= 100) p_case_select = 3;
+//		else if (g_test_num >= 10) p_case_select = 2;
+//		else p_case_select = 1;
+//		p_delayStart = millis();
+//	}
+//		
+//	switch (p_case_select) {
+//    case 3 :
+//      tnow = millis();
+//      p_n[3] = int(g_test_num)/100;
+//      g_test_num -= p_n[3]*100;
+//      SetDisplay(p_n[3], 3);
+//      if ( (tnow - p_delayStart)<dt ) break;
+//      else {
+//      	p_case_select-- ;
+//      	p_delayStart = tnow;
+//	  }
+//
+//    case 2 :
+//      tnow = millis();
+//      p_n[2] = int(g_test_num)/10;
+//      g_test_num -= p_n[2]*10;
+//      SetDisplay(p_n[2], 2);
+//      if ( (tnow - p_delayStart)<dt ) break;
+//      else {
+//      	p_case_select-- ;
+//      	p_delayStart = tnow;
+//	  }
+//
+//    case 1 :
+//      tnow = millis();
+//	  p_n[1] = int(g_test_num);
+//      g_test_num -= p_n[1];  
+//      SetDisplay(p_n[1], 1);
+//      if ( (tnow - p_delayStart)<dt ) break;
+//      else {
+//      	p_case_select-- ;
+//      	p_delayStart = tnow;
+//	  }
+//	  
+//	case 0 :
+//	  tnow = millis();
+//      p_n[0] = g_test_num*10;
+//      SetDisplay(p_n[0], 0);
+//      if ( (tnow - p_delayStart)>= dt ) p_delayflag = 1;
+//    break;
+//  }		
+//}
 void led4X7_disp::print() { //new
 	
 	uint8_t dt=5;
-	unsigned long tnow;
+	unsigned long tnow; 
 	
 	if (p_delayflag == 1) { //p_delayflag initially set to 1
 		p_delayflag = 0;	// turn off flag when enter this loop
