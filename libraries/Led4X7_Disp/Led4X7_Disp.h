@@ -27,9 +27,6 @@ class led4X7_disp //use PORTD pins for p_pinA~D; PORTB for pin0~3 and pinh
 		void init(uint8_t,uint8_t, float); //arduino AI pin, ADC bit, gain		
 		void print(float);
 		void print();
-		
-		float g_test_num;
-				
 };
 
 
