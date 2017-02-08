@@ -10,7 +10,7 @@
 */
 #include <SPI.h>
 #include <Wire.h>
-#include <LiquidCrystal_I2C.h>
+//#include <LiquidCrystal_I2C.h>
 #include <EEPROM.h>
 #include "LCD200_P06.h"
 
