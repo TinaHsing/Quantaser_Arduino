@@ -145,8 +145,9 @@ public:
 	void PrintTestgo();
 	void PrintVfbc();
 	void PrintVmod();
-	void ShowCursor();
-    void UpdateEnable();//
+	void ShowCursor(unsigned char, unsigned char);
+    void UpdateEnable();
+    void blinkTsetCursor();
 	
 	unsigned int g_vact, g_vset;
 	bool g_sensortype, g_en_state, g_mod_status;
@@ -158,9 +159,10 @@ private:
 	glcd lcd;
 	int g_counter;
     unsigned int g_bconst, g_fbcbase, Varray[VAVGTIMES], Iarray[IAVGTIMES], g_icount ,g_vmodoffset, p_cursorStateCounter[3], p_temp, p_cursorStayTime;
+    unsigned int p_tBlink;
     unsigned char g_p, g_ki,g_ls,g_currentlim, g_tpidoff, g_vbec2, g_r1, g_r2, g_kiindex;
 	unsigned char g_iarrayindex, g_varrayindex, g_lastencoded, g_engmode;
-    bool g_errcode1, g_errcode2, g_flag, g_paramupdate, g_countersensor, g_testgo;
+    bool g_errcode1, g_errcode2, g_flag, g_paramupdate, g_countersensor, g_testgo, p_tBlink_toggle;
     unsigned long g_tenc;
 	float g_tsetstep, g_ttstart;
 

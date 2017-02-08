@@ -38,6 +38,8 @@ void DTC03Master::ParamInit()
   p_cursorStateCounter[1]=0;
   p_cursorStateCounter[2]=0;
   p_cursorStayTime=0;
+  p_tBlink=0;
+  p_tBlink_toggle=0;
 }
 void DTC03Master::WelcomeScreen()
 {
@@ -686,13 +688,13 @@ void DTC03Master::CursorState()
 {
   unsigned long t1, d1;
   unsigned int t_temp;
-  //Curstate = 0 for 1C temp, go to Curstate = 1 when short push
+  unsigned char oldCursorState;
   if(analogRead(PUSHB)>HIGHLOWBOUNDRY)
   {
    g_flag=1;
    g_engmode=0;          
   }
-  if(analogRead(PUSHB)<=HIGHLOWBOUNDRY)
+  if(analogRead(PUSHB)<=HIGHLOWBOUNDRY) //change cursorstate when push encoder switch  
   {
   	t_temp=millis();
   	
@@ -706,8 +708,14 @@ void DTC03Master::CursorState()
   		if (abs(t_temp-p_cursorStayTime) >1000 ){
   			if( g_cursorstate==0 || g_cursorstate==1 ) g_cursorstate=2;
 	  		else g_cursorstate++;
-	  		if( g_cursorstate>6 ) g_cursorstate=2;
-	  		ShowCursor();
+	  		if( g_cursorstate>6 ) g_cursorstate=2;	  		
+	  		ShowCursor(g_cursorstate, 0);//here g_cursorstate from 2~6, the 2nd index is not important
+	  		g_engmode++;
+			if(g_engmode > ENGCOUNTER) 
+	        {
+	        	g_cursorstate = 9;
+	         	PrintFactaryMode();	         
+	        } 
 	  		p_cursorStayTime=t_temp;
 		  } 		
 	  }
@@ -717,8 +725,11 @@ void DTC03Master::CursorState()
   			if(g_tsetstep <= 0.001) g_tsetstep = 1.0;
             else g_tsetstep = g_tsetstep/10.0;
 		  }
-  		else g_cursorstate=0;
-  		ShowCursor();
+  		else {
+  			oldCursorState=g_cursorstate;
+  			g_cursorstate=0;
+		  }
+  		ShowCursor(g_cursorstate, oldCursorState);//here oldCursorState from 2~6, g_cursorstate is 0 or 1
 	  }
 	  
 	p_temp= t_temp-p_cursorStateCounter[0];	
@@ -793,37 +804,58 @@ void DTC03Master::CursorState()
   
   }
 }
-void DTC03Master::ShowCursor()
+void DTC03Master::blinkTsetCursor()
 {
-//	if(p_showCursorEnable==1)
-//	{
-		switch(g_cursorstate)
+	unsigned int t_temp;
+	t_temp=millis();
+	if( abs(t_temp-p_tBlink)>BLINKDELAY )
+	{
+		if(p_tBlink_toggle) {
+			lcd.print(" ");
+			p_tBlink_toggle=!p_tBlink_toggle;
+		}
+		else{
+			PrintTset();
+			p_tBlink_toggle=!p_tBlink_toggle;
+		}
+		p_tBlink=t_temp;
+	}	
+}
+void DTC03Master::ShowCursor(unsigned char state_now, unsigned char state_old)
+{
+
+		switch(state_now)
 		{
-//			p_showCursorEnable=0;
 		    case 0:
 		    lcd.SelectFont(SystemFont5x7);
-		    lcd.GotoXY(ILIM_COORD_X-COLUMNPIXEL0507, ILIM_COORD_Y);
-		    lcd.print(" ");
-		    lcd.GotoXY(P_COORD_X-COLUMNPIXEL0507, P_COORD_Y);
-		    lcd.print(" ");
-		    lcd.GotoXY(I_COORD_X-COLUMNPIXEL0507, I_COORD_Y);
-		    lcd.print(" ");
-		    lcd.GotoXY(BCONST_COORD_X-COLUMNPIXEL0507, BCONST_COORD_Y);
-		    lcd.print(" ");
-		    lcd.GotoXY(VMOD_COORD_X-COLUMNPIXEL0507, VMOD_COORD_Y);
-		    lcd.print(" ");
+		    switch(state_old)
+		    {
+		    	case 2:
+		    		lcd.GotoXY(ILIM_COORD_X-COLUMNPIXEL0507, ILIM_COORD_Y);
+		    	break;
+		    	case 3:
+		    		lcd.GotoXY(P_COORD_X-COLUMNPIXEL0507, P_COORD_Y);
+		    	break;
+		    	case 4:
+		    		lcd.GotoXY(I_COORD_X-COLUMNPIXEL0507, I_COORD_Y);
+		    	break;
+		    	case 5:
+		    		lcd.GotoXY(BCONST_COORD_X-COLUMNPIXEL0507, BCONST_COORD_Y);
+		    	break;
+		    	case 6:
+		    		lcd.GotoXY(VMOD_COORD_X-COLUMNPIXEL0507, VMOD_COORD_Y);		  		    
+		    	break;	
+			}
+			lcd.print(" ");		    
 		    break;
 		
 		    case 1:
 		    lcd.SelectFont(fixed_bold10x15);
 		    if(g_tsetstep == 1.0) lcd.GotoXY(TSET_COORD_X2+2*COLUMNPIXEL1015, TSET_COORD_Y);
-		    else if(g_tsetstep == 0.1) lcd.GotoXY(TSET_COORD_X2+4*COLUMNPIXEL1015, TSET_COORD_Y);//
-		    else if(g_tsetstep == 0.01) lcd.GotoXY(TSET_COORD_X2+5*COLUMNPIXEL1015, TSET_COORD_Y);//
-		    else lcd.GotoXY(TSET_COORD_X2+6*COLUMNPIXEL1015, TSET_COORD_Y);//
-		    lcd.print(" ");
-		    delay(BLINKDELAY);
-		    PrintTset();
-		    delay(BLINKDELAY);//add
+		    else if(g_tsetstep == 0.1) lcd.GotoXY(TSET_COORD_X2+4*COLUMNPIXEL1015, TSET_COORD_Y);
+		    else if(g_tsetstep == 0.01) lcd.GotoXY(TSET_COORD_X2+5*COLUMNPIXEL1015, TSET_COORD_Y);
+		    else lcd.GotoXY(TSET_COORD_X2+6*COLUMNPIXEL1015, TSET_COORD_Y);
+		    blinkTsetCursor();
 		    break;
 		
 		    case 2:
@@ -931,7 +963,6 @@ void DTC03Master::ShowCursor()
 		    lcd.print(" ");
 		    break;
 		}
-//	}
   
 }
 
