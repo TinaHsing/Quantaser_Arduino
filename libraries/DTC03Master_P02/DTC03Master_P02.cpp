@@ -33,7 +33,11 @@ void DTC03Master::ParamInit()
   g_countersensor = 0;
   g_ttstart = 18.00;
   g_testgo =0;
-  
+  g_cursorstate=0;
+  p_cursorStateCounter[0]=0;
+  p_cursorStateCounter[1]=0;
+  p_cursorStateCounter[2]=0;
+  p_cursorStayTime=0;
 }
 void DTC03Master::WelcomeScreen()
 {
@@ -328,87 +332,6 @@ void DTC03Master::Encoder()
   g_tenc = tenc;
   g_icount++;
 }
-void DTC03Master::CursorState()
-{
-  unsigned long t1;//
-  unsigned int d1;
-  //Curstate = 0 for 1C temp, go to Curstate = 1 when short push
-  if(analogRead(PUSHB)>HIGHLOWBOUNDRY)
-  {
-   g_flag=1;
-   g_engmode=0;          
-  }
-  
-  if(analogRead(PUSHB)<=HIGHLOWBOUNDRY)
-  {
-    if((g_cursorstate==0 || g_cursorstate == 1) && g_flag)
-    {
-      t1 = millis();
-      d1 = millis()-t1;
-      while((analogRead(PUSHB)<=HIGHLOWBOUNDRY)&&(d1 < LONGPRESSTIME))
-        d1 = millis()-t1;
-      
-      if(d1 >= LONGPRESSTIME)
-      {
-        g_cursorstate = 2;
-        g_flag = 0; 
-        ShowCursor();//20161031 showcoursor when first into state2
-      }
-    }
-    if((g_cursorstate==0 || g_cursorstate == 1) && g_flag)//
-    {
-      g_cursorstate = 1;
-      g_flag = 0;
-
-      if(g_tsetstep <= 0.001) g_tsetstep = 1.0;
-      else g_tsetstep = g_tsetstep/10.0;
-    }
-    if((g_cursorstate >1) && (g_cursorstate <7)) // g_cursorstate 2~6
-    {
-      t1 = millis();
-      d1 = millis()-t1;
-      while((analogRead(PUSHB)<=HIGHLOWBOUNDRY)&&(d1 < LONGPRESSTIME))
-        d1 = millis()-t1;
-      if(d1 >= LONGPRESSTIME)
-      {
-        g_cursorstate++;
-        g_engmode++;
-        g_flag = 0;
-        if(g_cursorstate >6) g_cursorstate =2;//
-        if(g_engmode > ENGCOUNTER) 
-        {
-         g_cursorstate = 9;
-         PrintFactaryMode();//20161031
-        }
-      }
-     else if(g_flag) g_cursorstate=0;//
-    }
-    
-    if((g_cursorstate >=9) && (g_cursorstate <17) && g_flag)//
-     {
-      while(analogRead(PUSHB)<=HIGHLOWBOUNDRY);
-      //if(g_cursorstate ==15) g_cursorstate = 0;
-      //else g_cursorstate++;
-      
-      g_cursorstate++;//20161102
-      if(g_cursorstate ==17) g_cursorstate = 0;//20161102
-      else if (g_cursorstate ==10)//20161102
-      {     
-       PrintEngBG();
-       PrintR1();
-       PrintR2();
-       PrintTpidoff();
-       PrintVfbc();
-       PrintVmod();
-       PrintTtstart();
-       PrintTestgo();
-      }
-     }
-  
-  }
-}
-
-
 void DTC03Master::I2CWriteData(unsigned char com)
 {
   unsigned char temp[2];
@@ -461,6 +384,16 @@ void DTC03Master::I2CWriteData(unsigned char com)
     case I2C_COM_KI:
     temp[0]=pgm_read_word_near(kilstable+g_kiindex*2);
     temp[1]=pgm_read_word_near(kilstable+g_kiindex*2+1);
+    break;
+    
+    case I2C_COM_TEST1:
+    temp[0]=p_temp;
+    temp[1]=p_temp>>8;
+    break;
+    
+    case I2C_COM_TEST2:
+    temp[0]=g_cursorstate;
+    temp[1]=p_cursorStateCounter[0]>>8;
     break;
 
   }
@@ -749,143 +682,257 @@ void DTC03Master::PrintTestgo()
   lcd.GotoXY(TESTGO_X2, TTSTART_Y);
   lcd.print(g_testgo);
 }
-
+void DTC03Master::CursorState()
+{
+  unsigned long t1, d1;
+  unsigned int t_temp;
+  //Curstate = 0 for 1C temp, go to Curstate = 1 when short push
+  if(analogRead(PUSHB)>HIGHLOWBOUNDRY)
+  {
+   g_flag=1;
+   g_engmode=0;          
+  }
+  if(analogRead(PUSHB)<=HIGHLOWBOUNDRY)
+  {
+  	t_temp=millis();
+  	
+  	if( abs(t_temp-p_cursorStateCounter[0])<700 ) {
+  		p_cursorStateCounter[1]=t_temp-p_cursorStateCounter[0];
+  		p_cursorStateCounter[2]+=p_cursorStateCounter[1]; 		
+	  }
+  	else p_cursorStateCounter[2]=0;
+  	 	
+  	if ( p_cursorStateCounter[2]>LONGPRESSTIME ){
+  		if (abs(t_temp-p_cursorStayTime) >1000 ){
+  			if( g_cursorstate==0 || g_cursorstate==1 ) g_cursorstate=2;
+	  		else g_cursorstate++;
+	  		if( g_cursorstate>6 ) g_cursorstate=2;
+	  		ShowCursor();
+	  		p_cursorStayTime=t_temp;
+		  } 		
+	  }
+  	else {
+  		if( g_cursorstate==0 ) g_cursorstate=1;
+  		if ( g_cursorstate==1 ){
+  			if(g_tsetstep <= 0.001) g_tsetstep = 1.0;
+            else g_tsetstep = g_tsetstep/10.0;
+		  }
+  		else g_cursorstate=0;
+  		ShowCursor();
+	  }
+	  
+	p_temp= t_temp-p_cursorStateCounter[0];	
+	I2CWriteData(I2C_COM_TEST1);
+  	I2CWriteData(I2C_COM_TEST2);
+//    if((g_cursorstate==0 || g_cursorstate == 1) && g_flag)
+//    {
+//      t1 = millis();
+//      d1 = millis()-t1;
+//      while((analogRead(PUSHB)<=HIGHLOWBOUNDRY)&&(d1 < LONGPRESSTIME))
+//        d1 = millis()-t1;
+//      
+//      if(d1 >= LONGPRESSTIME)
+//      {
+//        g_cursorstate = 2;
+//        g_flag = 0; 
+//        ShowCursor();
+//      }
+//    }
+//    if((g_cursorstate==0 || g_cursorstate == 1) && g_flag)//
+//    {
+//      g_cursorstate = 1;
+//      g_flag = 0;
+//
+//      if(g_tsetstep <= 0.001) g_tsetstep = 1.0;
+//      else g_tsetstep = g_tsetstep/10.0;
+//    }
+//    
+//    if((g_cursorstate >1) && (g_cursorstate <7)) // g_cursorstate 2~6
+//    {
+//      t1 = millis();
+//      d1 = millis()-t1;
+//      while((analogRead(PUSHB)<=HIGHLOWBOUNDRY)&&(d1 < LONGPRESSTIME))
+//        d1 = millis()-t1;
+//      if(d1 >= LONGPRESSTIME)
+//      {
+//        g_cursorstate++;
+//        ShowCursor();
+//        g_engmode++;
+//        g_flag = 0;
+//        if(g_cursorstate >6) g_cursorstate =2;//
+//        if(g_engmode > ENGCOUNTER) 
+//        {
+//         g_cursorstate = 9;
+//         PrintFactaryMode();
+//        }
+//      }
+//     else if(g_flag) g_cursorstate=0;
+//    }
+    
+//    if((g_cursorstate >=9) && (g_cursorstate <17) && g_flag)//
+//     {
+//      while(analogRead(PUSHB)<=HIGHLOWBOUNDRY);
+//      //if(g_cursorstate ==15) g_cursorstate = 0;
+//      //else g_cursorstate++;
+//      
+//      g_cursorstate++;//20161102
+//      if(g_cursorstate ==17) g_cursorstate = 0;//20161102
+//      else if (g_cursorstate ==10)//20161102
+//      {     
+//       PrintEngBG();
+//       PrintR1();
+//       PrintR2();
+//       PrintTpidoff();
+//       PrintVfbc();
+//       PrintVmod();
+//       PrintTtstart();
+//       PrintTestgo();
+//      }
+//     }
+     p_cursorStateCounter[0]=t_temp;
+  
+  }
+}
 void DTC03Master::ShowCursor()
 {
-  switch(g_cursorstate)
-  {
-    case 0:
-    lcd.SelectFont(SystemFont5x7);
-    lcd.GotoXY(ILIM_COORD_X-COLUMNPIXEL0507, ILIM_COORD_Y);
-    lcd.print(" ");
-    lcd.GotoXY(P_COORD_X-COLUMNPIXEL0507, P_COORD_Y);
-    lcd.print(" ");
-    lcd.GotoXY(I_COORD_X-COLUMNPIXEL0507, I_COORD_Y);
-    lcd.print(" ");
-    lcd.GotoXY(BCONST_COORD_X-COLUMNPIXEL0507, BCONST_COORD_Y);
-    lcd.print(" ");
-    lcd.GotoXY(VMOD_COORD_X-COLUMNPIXEL0507, VMOD_COORD_Y);
-    lcd.print(" ");
-    break;
-
-    case 1:
-    lcd.SelectFont(fixed_bold10x15);
-    if(g_tsetstep == 1.0) lcd.GotoXY(TSET_COORD_X2+2*COLUMNPIXEL1015, TSET_COORD_Y);
-    else if(g_tsetstep == 0.1) lcd.GotoXY(TSET_COORD_X2+4*COLUMNPIXEL1015, TSET_COORD_Y);//
-    else if(g_tsetstep == 0.01) lcd.GotoXY(TSET_COORD_X2+5*COLUMNPIXEL1015, TSET_COORD_Y);//
-    else lcd.GotoXY(TSET_COORD_X2+6*COLUMNPIXEL1015, TSET_COORD_Y);//
-    lcd.print(" ");
-    delay(BLINKDELAY);
-    PrintTset();
-    delay(BLINKDELAY);//add
-    break;
-
-    case 2:
-    lcd.SelectFont(SystemFont5x7, WHITE);
-    lcd.GotoXY(ILIM_COORD_X-COLUMNPIXEL0507, ILIM_COORD_Y);
-    lcd.print(" ");
-    lcd.SelectFont(SystemFont5x7);
-    lcd.GotoXY(VMOD_COORD_X-COLUMNPIXEL0507, VMOD_COORD_Y);//
-    lcd.print(" ");
-    break;
-    
-    case 3:
-    lcd.SelectFont(SystemFont5x7, WHITE);
-    lcd.GotoXY(P_COORD_X-COLUMNPIXEL0507, P_COORD_Y);
-    lcd.print(" ");
-    lcd.SelectFont(SystemFont5x7);
-    lcd.GotoXY(ILIM_COORD_X-COLUMNPIXEL0507, ILIM_COORD_Y);
-    lcd.print(" ");
-    break;
-    
-    case 4:
-    lcd.SelectFont(SystemFont5x7, WHITE);
-    lcd.GotoXY(I_COORD_X-COLUMNPIXEL0507, I_COORD_Y);
-    lcd.print(" ");
-    lcd.SelectFont(SystemFont5x7);
-    lcd.GotoXY(P_COORD_X-COLUMNPIXEL0507, P_COORD_Y);
-    lcd.print(" ");
-    break;
-
-    case 5:
-    lcd.SelectFont(SystemFont5x7, WHITE);
-    lcd.GotoXY(BCONST_COORD_X-COLUMNPIXEL0507, BCONST_COORD_Y);
-    lcd.print(" ");
-    lcd.SelectFont(SystemFont5x7);
-    lcd.GotoXY(I_COORD_X-COLUMNPIXEL0507, I_COORD_Y);
-    lcd.print(" ");
-    break;
-
-    case 6:
-    lcd.SelectFont(SystemFont5x7, WHITE);
-    lcd.GotoXY(VMOD_COORD_X-COLUMNPIXEL0507, VMOD_COORD_Y);
-    lcd.print(" ");
-    lcd.SelectFont(SystemFont5x7);
-    lcd.GotoXY(BCONST_COORD_X-COLUMNPIXEL0507, BCONST_COORD_Y);
-    lcd.print(" ");
-    break;
-
-    case 10:
-    lcd.SelectFont(SystemFont5x7, WHITE);
-    lcd.GotoXY(VR1_X, VR1_Y);
-    lcd.print(" ");
-    break;
-
-    case 11:
-    lcd.SelectFont(SystemFont5x7, WHITE);
-    lcd.GotoXY(VR2_X, VR2_Y);
-    lcd.print(" ");
-    lcd.SelectFont(SystemFont5x7);
-    lcd.GotoXY(VR1_X, VR1_Y);
-    lcd.print(" ");
-    break;
-
-    case 12:
-    lcd.SelectFont(SystemFont5x7, WHITE);
-    lcd.GotoXY(TPIDOFF_X, TPIDOFF_Y);
-    lcd.print(" ");
-    lcd.SelectFont(SystemFont5x7);
-    lcd.GotoXY(VR2_X, VR2_Y);
-    lcd.print(" ");
-    break;
-    
-    case 13:
-    lcd.SelectFont(SystemFont5x7, WHITE);
-    lcd.GotoXY(VFBC_X, VFBC_Y);
-    lcd.print(" ");
-    lcd.SelectFont(SystemFont5x7);
-    lcd.GotoXY(TPIDOFF_X, TPIDOFF_Y);
-    lcd.print(" ");
-    break;
-
-    case 14:
-    lcd.SelectFont(SystemFont5x7, WHITE);
-    lcd.GotoXY(VMOD_X, VMOD_Y);
-    lcd.print(" ");
-    lcd.SelectFont(SystemFont5x7);
-    lcd.GotoXY(VFBC_X, VFBC_Y);
-    lcd.print(" ");
-    break;
-
-    case 15:
-    lcd.SelectFont(SystemFont5x7, WHITE);
-    lcd.GotoXY(TTSTART_X, TTSTART_Y);
-    lcd.print(" ");
-    lcd.SelectFont(SystemFont5x7);
-    lcd.GotoXY(VMOD_X, VMOD_Y);
-    lcd.print(" ");
-    break;
-
-    case 16:
-    lcd.SelectFont(SystemFont5x7, WHITE);
-    lcd.GotoXY(TESTGO_X, TESTGO_Y);
-    lcd.print(" ");
-    lcd.SelectFont(SystemFont5x7);
-    lcd.GotoXY(TTSTART_X, TTSTART_Y);
-    lcd.print(" ");
-    break;
-  }
-
+//	if(p_showCursorEnable==1)
+//	{
+		switch(g_cursorstate)
+		{
+//			p_showCursorEnable=0;
+		    case 0:
+		    lcd.SelectFont(SystemFont5x7);
+		    lcd.GotoXY(ILIM_COORD_X-COLUMNPIXEL0507, ILIM_COORD_Y);
+		    lcd.print(" ");
+		    lcd.GotoXY(P_COORD_X-COLUMNPIXEL0507, P_COORD_Y);
+		    lcd.print(" ");
+		    lcd.GotoXY(I_COORD_X-COLUMNPIXEL0507, I_COORD_Y);
+		    lcd.print(" ");
+		    lcd.GotoXY(BCONST_COORD_X-COLUMNPIXEL0507, BCONST_COORD_Y);
+		    lcd.print(" ");
+		    lcd.GotoXY(VMOD_COORD_X-COLUMNPIXEL0507, VMOD_COORD_Y);
+		    lcd.print(" ");
+		    break;
+		
+		    case 1:
+		    lcd.SelectFont(fixed_bold10x15);
+		    if(g_tsetstep == 1.0) lcd.GotoXY(TSET_COORD_X2+2*COLUMNPIXEL1015, TSET_COORD_Y);
+		    else if(g_tsetstep == 0.1) lcd.GotoXY(TSET_COORD_X2+4*COLUMNPIXEL1015, TSET_COORD_Y);//
+		    else if(g_tsetstep == 0.01) lcd.GotoXY(TSET_COORD_X2+5*COLUMNPIXEL1015, TSET_COORD_Y);//
+		    else lcd.GotoXY(TSET_COORD_X2+6*COLUMNPIXEL1015, TSET_COORD_Y);//
+		    lcd.print(" ");
+		    delay(BLINKDELAY);
+		    PrintTset();
+		    delay(BLINKDELAY);//add
+		    break;
+		
+		    case 2:
+		    lcd.SelectFont(SystemFont5x7, WHITE);
+		    lcd.GotoXY(ILIM_COORD_X-COLUMNPIXEL0507, ILIM_COORD_Y);
+		    lcd.print(" ");
+		    lcd.SelectFont(SystemFont5x7);
+		    lcd.GotoXY(VMOD_COORD_X-COLUMNPIXEL0507, VMOD_COORD_Y);//
+		    lcd.print(" ");
+		    break;
+		    
+		    case 3:
+		    lcd.SelectFont(SystemFont5x7, WHITE);
+		    lcd.GotoXY(P_COORD_X-COLUMNPIXEL0507, P_COORD_Y);
+		    lcd.print(" ");
+		    lcd.SelectFont(SystemFont5x7);
+		    lcd.GotoXY(ILIM_COORD_X-COLUMNPIXEL0507, ILIM_COORD_Y);
+		    lcd.print(" ");
+		    break;
+		    
+		    case 4:
+		    lcd.SelectFont(SystemFont5x7, WHITE);
+		    lcd.GotoXY(I_COORD_X-COLUMNPIXEL0507, I_COORD_Y);
+		    lcd.print(" ");
+		    lcd.SelectFont(SystemFont5x7);
+		    lcd.GotoXY(P_COORD_X-COLUMNPIXEL0507, P_COORD_Y);
+		    lcd.print(" ");
+		    break;
+		
+		    case 5:
+		    lcd.SelectFont(SystemFont5x7, WHITE);
+		    lcd.GotoXY(BCONST_COORD_X-COLUMNPIXEL0507, BCONST_COORD_Y);
+		    lcd.print(" ");
+		    lcd.SelectFont(SystemFont5x7);
+		    lcd.GotoXY(I_COORD_X-COLUMNPIXEL0507, I_COORD_Y);
+		    lcd.print(" ");
+		    break;
+		
+		    case 6:
+		    lcd.SelectFont(SystemFont5x7, WHITE);
+		    lcd.GotoXY(VMOD_COORD_X-COLUMNPIXEL0507, VMOD_COORD_Y);
+		    lcd.print(" ");
+		    lcd.SelectFont(SystemFont5x7);
+		    lcd.GotoXY(BCONST_COORD_X-COLUMNPIXEL0507, BCONST_COORD_Y);
+		    lcd.print(" ");
+		    break;
+		
+		    case 10:
+		    lcd.SelectFont(SystemFont5x7, WHITE);
+		    lcd.GotoXY(VR1_X, VR1_Y);
+		    lcd.print(" ");
+		    break;
+		
+		    case 11:
+		    lcd.SelectFont(SystemFont5x7, WHITE);
+		    lcd.GotoXY(VR2_X, VR2_Y);
+		    lcd.print(" ");
+		    lcd.SelectFont(SystemFont5x7);
+		    lcd.GotoXY(VR1_X, VR1_Y);
+		    lcd.print(" ");
+		    break;
+		
+		    case 12:
+		    lcd.SelectFont(SystemFont5x7, WHITE);
+		    lcd.GotoXY(TPIDOFF_X, TPIDOFF_Y);
+		    lcd.print(" ");
+		    lcd.SelectFont(SystemFont5x7);
+		    lcd.GotoXY(VR2_X, VR2_Y);
+		    lcd.print(" ");
+		    break;
+		    
+		    case 13:
+		    lcd.SelectFont(SystemFont5x7, WHITE);
+		    lcd.GotoXY(VFBC_X, VFBC_Y);
+		    lcd.print(" ");
+		    lcd.SelectFont(SystemFont5x7);
+		    lcd.GotoXY(TPIDOFF_X, TPIDOFF_Y);
+		    lcd.print(" ");
+		    break;
+		
+		    case 14:
+		    lcd.SelectFont(SystemFont5x7, WHITE);
+		    lcd.GotoXY(VMOD_X, VMOD_Y);
+		    lcd.print(" ");
+		    lcd.SelectFont(SystemFont5x7);
+		    lcd.GotoXY(VFBC_X, VFBC_Y);
+		    lcd.print(" ");
+		    break;
+		
+		    case 15:
+		    lcd.SelectFont(SystemFont5x7, WHITE);
+		    lcd.GotoXY(TTSTART_X, TTSTART_Y);
+		    lcd.print(" ");
+		    lcd.SelectFont(SystemFont5x7);
+		    lcd.GotoXY(VMOD_X, VMOD_Y);
+		    lcd.print(" ");
+		    break;
+		
+		    case 16:
+		    lcd.SelectFont(SystemFont5x7, WHITE);
+		    lcd.GotoXY(TESTGO_X, TESTGO_Y);
+		    lcd.print(" ");
+		    lcd.SelectFont(SystemFont5x7);
+		    lcd.GotoXY(TTSTART_X, TTSTART_Y);
+		    lcd.print(" ");
+		    break;
+		}
+//	}
+  
 }
 
 

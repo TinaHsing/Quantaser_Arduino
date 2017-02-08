@@ -49,7 +49,7 @@ void loop() {
     //delay(400);//20161103
   }
   master.CursorState();
-  master.ShowCursor();
+//  master.ShowCursor();
   master.UpdateParam();
   master.UpdateEnable();//
 
