@@ -43,6 +43,7 @@ void DTC03Master::ParamInit()
   p_engModeFlag=0;
   p_blinkTsetCursorFlag=0;
   p_loopindex=0;
+  p_ee_changed=0;
 }
 void DTC03Master::WelcomeScreen()
 {
@@ -58,6 +59,125 @@ void DTC03Master::WelcomeScreen()
 //    delay(1000);
 //  }
   lcd.ClearScreen(0);//0~255 means ratio of black  
+}
+void DTC03SMaster::ReadEEPROM()
+{
+	unsigned char noeedummy, temp_upper, temp_lower;
+	noeedummy = EEPROM.read(EEADD_DUMMY);
+	if(noeedummy == NOEE_DUMMY)
+	{
+		g_vstart = EEPROM.read(EEADD_VSTART_UPPER)<<8 | EEPROM.read(EEADD_VSTART_LOWER);
+		g_vend = EEPROM.read(EEADD_VEND_UPPER)<<8 | EEPROM.read(EEADD_VEND_LOWER);
+		g_rateindex = EEPROM.read(EEADD_RATE_INDEX);
+		g_p = EEPROM.read(EEADD_P);
+		g_kiindex = EEPROM.read(EEADD_KIINDEX);
+		g_fbcbase = EEPROM.read(EEADD_FBC_UPPER)<<8 | EEPROM.read(EEADD_FBC_LOWER);
+        g_currentlim = EEPROM.read(EEADD_currentlim);
+        g_r1 = EEPROM.read(EEADD_R1);
+        g_r2 = EEPROM.read(EEADD_R2);
+        g_otp = EEPROM.read(EEADD_TOTP_UPPER)<<8 | EEPROM.read(EEADD_TOTP_LOWER);
+        
+	}
+	else
+	{
+		EEPROM.write(EEADD_DUMMY, NOEE_DUMMY);
+		EEPROM.write(EEADD_VSTART_UPPER, NOEE_VSTART>>8);
+		EEPROM.write(EEADD_VSTART_LOWER, NOEE_VSTART);
+		EEPROM.write(EEADD_VEND_UPPER, NOEE_VEND>>8);
+		EEPROM.write(EEADD_VEND_LOWER, NOEE_DUMMY);
+		EEPROM.write(EEADD_RATE_INDEX, NOEE_RATE);
+		EEPROM.write(EEADD_FBC_UPPER, NOEE_FBC>>8);
+		EEPROM.write(EEADD_FBC_LOWER, NOEE_FBC);
+		EEPROM.write(EEADD_P, NOEE_P);
+		EEPROM.write(EEADD_KIINDEX, NOEE_kiindex);
+		EEPROM.write(EEADD_currentlim, NOEE_ILIM);
+		EEPROM.write(EEADD_R1, NOEE_R1);
+		EEPROM.write(EEADD_R2, NOEE_R2);
+		EEPROM.write(EEADD_TOTP_UPPER, NOEE_TOTP>>8);
+		EEPROM.write(EEADD_TOTP_LOWER, NOEE_TOTP);
+
+		g_vstart = NOEE_VSTART;
+		g_vend = NOEE_VEND;
+		g_rateindex = NOEE_RATE;
+		g_p = NOEE_P;
+		g_kiindex = NOEE_kiindex;
+		g_r1 = NOEE_R1;
+		g_r2 = NOEE_R2;
+		g_fbcbase = NOEE_FBC;
+		g_otp = NOEE_TOTP; 
+		g_currentlim = NOEE_ILIM;
+	}
+	g_vset = g_vstart;
+    g_tstart = ReturnTemp(g_vstart, 0);
+    g_tnow = g_tstart;
+    g_tend = ReturnTemp(g_vend, 0);
+	g_trate = pgm_read_word_near(RateTable+g_rateindex);
+	p_rate = float(g_trate)*SCANSAMPLERATE/100000.0;
+}
+void DTC03SMaster::SaveEEPROM() {
+	
+	if (p_ee_changed==1) {
+		p_ee_changed = 0;
+		switch(p_ee_change_state){
+			
+            case EEADD_VSET_UPPER:
+                EEPROM.write(EEADD_VSET_UPPER, g_vset>>8 );
+                EEPROM.write(EEADD_VSET_LOWER, g_vset);
+                break;
+    
+            case EEADD_BCONST_UPPER:
+                EEPROM.write(EEADD_BCONST_UPPER, g_bconst>>8 );
+                EEPROM.write(EEADD_BCONST_LOWER, g_bconst );
+                break;
+
+            case EEADD_MODSTATUS:
+                EEPROM.write(EEADD_MODSTATUS, g_mod_status);
+                break;
+                
+            case EEADD_currentlim:
+                EEPROM.write(EEADD_currentlim, g_currentlim);
+                break;
+                
+            case EEADD_FBC_UPPER:
+                EEPROM.write(EEADD_FBC_UPPER, g_fbcbase>>8);
+                EEPROM.write(EEADD_FBC_LOWER, g_fbcbase);
+                break;
+                
+            case EEADD_P:
+                EEPROM.write(EEADD_P, g_p);
+                break;
+                
+            case EEADD_KIINDEX:
+                EEPROM.write(EEADD_KIINDEX, g_kiindex );
+                break;
+             
+			case EEADD_TOTP_UPPER:
+                EEPROM.write(EEADD_TOTP_UPPER, (g_otp>>8);
+                EEPROM.write(EEADD_TOTP_LOWER, g_otp);
+                break;
+               
+			case EEADD_R1:
+                EEPROM.write(EEADD_R1, g_r1);
+                break;
+               
+			case EEADD_R2:
+                EEPROM.write(EEADD_R2, g_r2);
+                break;  
+                
+			case EEADD_TPIDOFF:
+                EEPROM.write(EEADD_TPIDOFF, g_tpidoff);
+                break;
+			case EEADD_MODOFF_UPPER:
+                EEPROM.write(EEADD_MODOFF_UPPER, g_vmodoffset >>8);
+                EEPROM.write(EEADD_MODOFF_LOWER, g_vmodoffset );
+                break;
+                
+			case EEADD_RMEAS_UPPER:
+                EEPROM.write(EEADD_RMEAS_UPPER, g_Rmeas >>8);
+                EEPROM.write(EEADD_RMEAS_LOWER, g_Rmeas );
+                break;           
+        }
+	}
 }
 void DTC03Master::I2CWriteData(unsigned char com)
 {
@@ -108,8 +228,8 @@ void DTC03Master::I2CWriteData(unsigned char com)
         break;
     
     case I2C_COM_RMEAS:
-    	temp[0]=p_Rmeas;
-    	temp[1]=p_Rmeas>>8;
+    	temp[0]=g_Rmeas;
+    	temp[1]=g_Rmeas>>8;
     	break;
     	
     case I2C_COM_OTP:
@@ -403,6 +523,7 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
   if(g_paramupdate)
   {
     g_paramupdate = 0;
+    p_ee_changed = 1;
     switch(g_cursorstate)
     {
       case 0:
@@ -416,6 +537,7 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
         I2CWriteData(I2C_COM_VSET);
         PrintTset();
         p_blinkTsetCursorFlag=0;
+        p_ee_change_state=EEADD_VSET_UPPER;	
       break; 
       
       case 2:
@@ -424,6 +546,7 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
         if(g_currentlim<1) g_currentlim=1;        
         I2CWriteData(I2C_COM_CTR);
         PrintIlim();
+        p_ee_change_state=EEADD_currentlim; 
       break;
 
       case 3:
@@ -432,6 +555,7 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
         if(g_p<1) g_p=1;    
         I2CWriteData(I2C_COM_CTR);
         PrintP();
+        p_ee_change_state=EEADD_P;
       break;
 
       case 4:
@@ -440,6 +564,7 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
         if(g_kiindex<1) g_kiindex=1;      
         I2CWriteData(I2C_COM_KI);
         PrintKi();
+        p_ee_change_state=EEADD_KIINDEX;
       break;
 
       case 5:
@@ -449,12 +574,14 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
   	    g_vset = ReturnVset(g_tset, g_sensortype);
 	    I2CWriteData(I2C_COM_VSET);//only send Vset, Bconst is not important for slave
 	    PrintB();
+	    p_ee_change_state=EEADD_BCONST_UPPER;
 	    break;
 
       case 6:
         g_mod_status = g_countersensor;
         I2CWriteData(I2C_COM_INIT);
         PrintModStatus(); 
+        p_ee_change_state=EEADD_MODSTATUS;
         break;
 
       case 9:
@@ -467,6 +594,7 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
 	    if(g_r1<1) g_r1=1;//
       	I2CWriteData(I2C_COM_R1R2);
         PrintR1();
+        p_ee_change_state=EEADD_R1;
         break;
 
       case 11:
@@ -475,6 +603,7 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
         if(g_r2<1) g_r2=1;//R2, 1~30 for 1.0~3.0 ohm set 
         I2CWriteData(I2C_COM_R1R2);
         PrintR2();
+        p_ee_change_state=EEADD_R2;
         break;
 
       case 12:
@@ -484,6 +613,7 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
       
         I2CWriteData (I2C_COM_TPIDOFF);
         PrintTpidoff();
+        p_ee_change_state=EEADD_TPIDOFF;
         break;
 
 
@@ -493,6 +623,7 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
         if(g_fbcbase<16100) g_fbcbase=16100;
         I2CWriteData(I2C_COM_FBC);
         PrintVfbc();
+        p_ee_change_state=EEADD_FBC_UPPER;
         break;
 
       case 14:
@@ -501,14 +632,16 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
         if(g_vmodoffset<32199) g_vmodoffset=32199;
         I2CWriteData(I2C_COM_VMOD);
         PrintVmod();
+        p_ee_change_state=EEADD_MODOFF_UPPER;
         break;
 
       case 15:
-      	p_Rmeas += (g_counter*100);
+      	g_Rmeas += (g_counter*100);
       	if(g_fbcbase>45000) g_fbcbase=45000;
         if(g_fbcbase<20000) g_fbcbase=20000;
         I2CWriteData(I2C_COM_RMEAS);
         PrintRmeas();
+        p_ee_change_state=EEADD_RMEAS_UPPER;
         break;
 
       case 16:
@@ -517,6 +650,7 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
 		if (g_otp > 561) g_otp = 561; //120C
 		I2CWriteData(I2C_COM_OTP);
         PrintTotp();  
+        p_ee_change_state=EEADD_TOTP_UPPER;
     }
   }
 }

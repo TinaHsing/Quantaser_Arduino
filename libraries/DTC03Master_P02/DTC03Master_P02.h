@@ -35,6 +35,46 @@
 #define PUSHB A7
 #define ENSW A6 
 
+//-----------EEPROM ADDRESS---------
+#define EEADD_VSET_UPPER	0
+#define EEADD_VSET_LOWER	1
+#define EEADD_BCONST_UPPER	2
+#define EEADD_BCONST_LOWER	3
+#define EEADD_MODSTATUS		4
+#define EEADD_currentlim 	5
+#define EEADD_FBC_UPPER		6
+#define EEADD_FBC_LOWER		7
+#define EEADD_P             8
+#define EEADD_KIINDEX	    9
+#define EEADD_TOTP_UPPER    10
+#define EEADD_TOTP_LOWER    11
+#define EEADD_R1            12
+#define EEADD_R2            13
+#define EEADD_TPIDOFF		14
+#define EEADD_MODOFF_UPPER	15
+#define EEADD_MODOFF_LOWER	16
+#define EEADD_RMEAS_UPPER	17
+#define EEADD_RMEAS_LOWER	18
+#define EEADD_DUMMY			100
+
+//----------NOEE Default value------
+#define NOEE_VSTART		32932
+#define NOEE_VEND		9313
+#define NOEE_RATE		1
+#define NOEE_ILIM       50 // currntlimit,3A=50
+#define NOEE_FBC		22400
+#define NOEE_P          10
+#define NOEE_KI			0
+#define NOEE_LS			0
+#define NOEE_kiindex    1
+#define NOEE_TOTP       561 //120C
+#define NOEE_R1         10
+#define NOEE_R2         30
+#define NOEE_DUMMY		104
+
+#define TEMP_RISING 	1
+#define TEMP_FALLING 	0
+
 //=====================BG print coordinate definition=========
 #define TSET_COORD_X	0 
 #define TSET_COORD_Y	0
@@ -165,8 +205,10 @@ public:
 	void ShowCursor(unsigned char);
     void UpdateEnable();
     void blinkTsetCursor();
+    void SaveEEPROM();
+    void ReadEEPROM();
 	
-	unsigned int g_vact, g_vset, g_tpcb, g_otp, g_itec;
+	unsigned int g_vact, g_vset, g_tpcb, g_otp, g_itec, g_Rmeas;
 	bool g_sensortype, g_en_state, g_mod_status;
     unsigned long g_vactsum; 
 	int g_itecsum;//
@@ -176,10 +218,11 @@ private:
 	glcd lcd;
 	int g_counter;
     unsigned int g_bconst, g_fbcbase, Varray[VAVGTIMES], Iarray[IAVGTIMES], g_icount ,g_vmodoffset, p_cursorStateCounter[3], p_temp, p_cursorStayTime;
-    unsigned int p_tBlink, p_tcursorStateBounce, p_Rmeas;
+    unsigned int p_tBlink, p_tcursorStateBounce;
     unsigned char g_p, g_ki,g_ls,g_currentlim, g_tpidoff, g_vbec2, g_r1, g_r2, g_kiindex;
-	unsigned char g_iarrayindex, g_varrayindex, g_lastencoded, p_engmodeCounter;
+	unsigned char g_iarrayindex, g_varrayindex, g_lastencoded, p_engmodeCounter, p_ee_change_state;
     bool g_errcode1, g_errcode2, g_flag, g_paramupdate, g_countersensor, g_testgo, p_tBlink_toggle, p_engModeFlag,p_blinkTsetCursorFlag;
+    bool p_ee_changed;
     unsigned long g_tenc, p_loopindex;
 	float g_tsetstep, g_ttstart;
 
