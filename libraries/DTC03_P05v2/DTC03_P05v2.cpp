@@ -632,8 +632,10 @@ void DTC03::I2CReceive()
     
     case I2C_COM_TEST2:
     
-    Serial.print("cursor state:");
+    Serial.print("g_cursorstate:");
 	Serial.println(temp[0]);
+//	Serial.print("p_tBlink_toggle:");
+//	Serial.println(temp[1]);
     break;
   }
  }

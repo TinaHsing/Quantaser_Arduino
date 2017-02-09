@@ -40,6 +40,9 @@ void DTC03Master::ParamInit()
   p_cursorStayTime=0;
   p_tBlink=0;
   p_tBlink_toggle=0;
+  p_engModeFlag=0;
+  p_blinkTsetCursorFlag=0;
+  p_loopindex=0;
 }
 void DTC03Master::WelcomeScreen()
 {
@@ -56,16 +59,91 @@ void DTC03Master::WelcomeScreen()
 //  }
   lcd.ClearScreen(0);//0~255 means ratio of black  
 }
+void DTC03Master::I2CWriteData(unsigned char com)
+{
+  unsigned char temp[2];
+  switch(com)
+  {
+    case I2C_COM_INIT:
+        temp[0]= g_bconst - BCONSTOFFSET;
+        temp[1]= (g_bconst - BCONSTOFFSET) >> 8;
+        if(g_en_state) temp[1] |= REQMSK_ENSTATE;
+//    if(g_sensortype) temp[1]|= REQMSK_SENSTYPE; //20161113 mark
+	    if(g_mod_status) temp[1]|= REQMSK_SENSTYPE; //20161113   
+        break;
+
+    case I2C_COM_CTR:
+        temp[0]= g_currentlim;
+        temp[1]= g_p;
+        break;
+
+    case I2C_COM_VSET:
+        temp[0]=g_vset;
+        temp[1]=g_vset>>8;
+        break;
+
+    case I2C_COM_R1R2:
+        temp[0] = g_r1;
+        temp[1] = g_r2;
+        break;
+
+    case I2C_COM_TPIDOFF:
+        temp[0] = g_tpidoff;
+        temp[1] = 0;
+        break;
+
+    case I2C_COM_FBC:
+        temp[0] = g_fbcbase;
+        temp[1] = g_fbcbase>>8;
+        break;
+
+    case I2C_COM_VMOD:
+        temp[0] = g_vmodoffset;
+        temp[1] = g_vmodoffset >>8;
+        break;
+    
+    case I2C_COM_KI:
+        temp[0]=pgm_read_word_near(kilstable+g_kiindex*2);
+        temp[1]=pgm_read_word_near(kilstable+g_kiindex*2+1);
+        break;
+    
+    case I2C_COM_RMEAS:
+    	temp[0]=p_Rmeas;
+    	temp[1]=p_Rmeas>>8;
+    	break;
+    	
+    case I2C_COM_OTP:
+    		temp[0] = g_otp;
+    		temp[1] = g_otp>>8;
+    	break;
+    
+    case I2C_COM_TEST1:
+        temp[0]=p_temp;
+        temp[1]=p_temp>>8;
+        break;
+    
+    case I2C_COM_TEST2:
+        temp[0]=g_cursorstate;
+        temp[1]=p_tBlink_toggle;
+        break;
+
+  }
+  Wire.beginTransmission(DTC03P05);//
+  Wire.write(com);//
+  Wire.write(temp, 2);//
+  Wire.endTransmission();//
+  delayMicroseconds(I2CSENDDELAY);//
+}
 void DTC03Master::I2CReadData(unsigned char com)
 {
   unsigned char temp[2], b_upper, b_lower;
   unsigned int itectemp;
-  int itec;
   bool itecsign;
+  
   Wire.beginTransmission(DTC03P05);
   Wire.write(com);
   Wire.endTransmission();
-  delay(I2CREADDELAY);
+  delayMicroseconds(I2CREADDELAY);
   Wire.requestFrom(DTC03P05,2);
   while(Wire.available()==2)
   {
@@ -74,89 +152,44 @@ void DTC03Master::I2CReadData(unsigned char com)
   }
   switch(com)
   {
-    case I2C_COM_INIT:
-    b_lower = temp[0];
-    b_upper = temp[1] & REQMSK_BUPPER;
-//    g_sensortype = temp[1] & REQMSK_SENSTYPE; 20161113
-	g_mod_status = temp[1] & REQMSK_SENSTYPE;//20161113
-    g_bconst = (b_upper << 8) | b_lower + BCONSTOFFSET;//
-    g_sensortype = 0;//20161113
-    break;
-
-    case I2C_COM_CTR:
-    g_currentlim = temp[0];
-    g_p = temp[1];
-    break;
-
-    case I2C_COM_VSET:
-    g_vset = (temp[1]<<8) | temp[0];
-    break;
-
     case I2C_COM_VACT:
-    g_vact =(temp[1] <<8) | temp[0];
-    break;
+        g_vact =(temp[1] <<8) | temp[0];
+        break;
 
     case I2C_COM_ITEC_ER:
-    itectemp = ((temp[1] & REQMSK_ITECU) << 8)| temp[0];
-    itecsign = temp[1] & REQMSK_ITECSIGN;
-    g_errcode1 = temp[1] & REQMSK_ERR1;
-    g_errcode2 = temp[1] & REQMSK_ERR2;
-    if(itecsign) itec = (-1)*(int)itectemp;//
-    else itec = (int)itectemp;//
-    g_itecsum -=Iarray[g_iarrayindex];
-    Iarray[g_iarrayindex]=itec;//
-    //g_itecsum += itec;
-    g_itecsum +=Iarray[g_iarrayindex];//20161101
-    g_iarrayindex ++;
-    if(g_iarrayindex == IAVGTIMES) g_iarrayindex =0;
-    break;
-
-    case I2C_COM_VBEH:
-    g_r1 = temp[0];
-    g_r2 = temp[1];
-    break;
-
-    case I2C_COM_VBEC:
-    g_tpidoff = temp[0];
-    g_vbec2 = temp[1];
-    break;
-
-    case I2C_COM_FBC:
-    g_fbcbase = (temp[1]<<8)|temp[0];
-    break;
-
-    case I2C_COM_VMOD:
-    g_vmodoffset = (temp[1]<<8)|temp[0];
-    break ;
-
-    case I2C_COM_KIINDEX:
-    g_kiindex = temp[0];
-    break ;
-  }
- delayMicroseconds(I2CSENDDELAY);//20161031
-}
-void DTC03Master::I2CReadAll()
-{
-  unsigned char i;
-  for(i=I2C_COM_INIT; i <= I2C_COM_VMOD; i++)
-  {
-    I2CReadData(i);
-  }
-  
-}
-void DTC03Master::VarrayInit()
-{
-  
-  for(unsigned char i=0; i<VAVGTIMES;i++)
-  {
-    if (i% IAVGTIMES ==0) I2CReadData(I2C_COM_VACT); //20161031 I2CRead every 8
-    Varray[i]=g_vact;
-    g_vactsum += g_vact;
+    	
+        itectemp = ((temp[1] & REQMSK_ITECU) << 8)| temp[0];
+        itecsign = temp[1] & REQMSK_ITECSIGN;
+        g_errcode1 = temp[1] & REQMSK_ERR1;
+        g_errcode2 = temp[1] & REQMSK_ERR2;
+        if(itecsign) g_itec = (-1)*(int)itectemp;
+        else g_itec = (int)itectemp;
+        break;
+        
+    case I2C_COM_PCB:
+        g_tpcb = (temp[1]<<8)|temp[0];
+        break;
   }
 }
-void DTC03Master::IarrayInit()
+void DTC03SMaster::CheckStatus()
 {
-  for(unsigned char i=0; i<IAVGTIMES;i++) Iarray[i]=0;
+		float tact, itec_f, tpcb_f;
+				if (p_loopindex%3==0) {
+					I2CReadData(I2C_COM_ITEC_ER);
+		            itec_f = float(g_itec)*CURRENTRatio;
+		            PrintItec(itec_f);
+				}				
+				if (p_loopindex%3==1) {
+					I2CReadData(I2C_COM_PCB);
+		            tpcb_f = float(g_tpcb)/4.0-20.5;
+		            PrintTpcb(tpcb_f);
+				}
+				if (p_loopindex%3==2) {
+					I2CReadData(I2C_COM_VACT);
+	  	    		tact = ReturnTemp(g_vact,0);
+	  	    		PrintTact(tact);
+				}		
+	    p_loopindex++;		       
 }
 float DTC03Master::ReturnTemp(unsigned int vact, bool type)
 {
@@ -166,6 +199,16 @@ float DTC03Master::ReturnTemp(unsigned int vact, bool type)
   else
     tact = 1/(log((float)vact/RTHRatio)/(float)g_bconst+T0INV)-273.15;
   return tact;
+}
+unsigned int DTC03Master::ReturnVset(float tset, bool type)
+{
+  unsigned int vset;
+  float temp;
+  if(type)
+    vset = (unsigned int)((tset+273.15)*129.8701);
+  else
+    vset = (unsigned int)RTHRatio*exp(-1*(float)g_bconst*(T0INV-1/(tset+273.15)));
+  return vset;
 }
 void DTC03Master::BackGroundPrint()
 {
@@ -187,6 +230,16 @@ void DTC03Master::BackGroundPrint()
   lcd.print(Text_B);
   lcd.GotoXY(VMOD_COORD_X, VMOD_COORD_Y);
   lcd.print(Text_MS);
+}
+void DTC03Master::PrintNormalAll()
+{
+	PrintTset();
+	PrintIlim();
+	PrintP();
+	PrintKi();
+	PrintB();
+	PrintModStatus();
+	//No need to add print Itec and Vact here, checkstatus() will do this
 }
 
 void DTC03Master::PrintTset()
@@ -249,6 +302,13 @@ void DTC03Master::PrintItec(float itec)
      //lcd.print(itec,3);
    } 
   //lcd.print(" "); 
+}
+void DTC03SMaster::PrintTpcb(float tpcb)
+{
+  lcd.SelectFont(SystemFont5x7);
+  lcd.GotoXY(TOTP_COORD_X2, TOTP_COORD_Y);
+  if (tpcb < 100.0 ) lcd.print(" ");
+  lcd.print(tpcb,0);
 }
 void DTC03Master::PrintIlim()
 {
@@ -334,88 +394,8 @@ void DTC03Master::Encoder()
   g_tenc = tenc;
   g_icount++;
 }
-void DTC03Master::I2CWriteData(unsigned char com)
-{
-  unsigned char temp[2];
-  switch(com)
-  {
-    case I2C_COM_INIT:
-    temp[0]= g_bconst - BCONSTOFFSET;
-    temp[1]= (g_bconst - BCONSTOFFSET) >> 8;
-    if(g_en_state) temp[1] |= REQMSK_ENSTATE;
-//    if(g_sensortype) temp[1]|= REQMSK_SENSTYPE; //20161113 mark
-	if(g_mod_status) temp[1]|= REQMSK_SENSTYPE; //20161113
-    
-    break;
 
-    case I2C_COM_CTR:
-    temp[0]= g_currentlim;
-    temp[1]= g_p;
-    break;
 
-    case I2C_COM_VSET:
-    temp[0]=g_vset;
-    temp[1]=g_vset>>8;
-    break;
-
-    case I2C_COM_KIINDEX:
-    temp[0]=g_kiindex;
-    temp[1]=0;
-    break;
-
-    case I2C_COM_VBEH:
-    temp[0] = g_r1;
-    temp[1] = g_r2;
-    break;
-
-    case I2C_COM_VBEC:
-    temp[0] = g_tpidoff;
-    temp[1] = g_vbec2;
-    break;
-
-    case I2C_COM_FBC:
-    temp[0] = g_fbcbase;
-    temp[1] = g_fbcbase>>8;//
-    break;
-
-    case I2C_COM_VMOD:
-    temp[0] = g_vmodoffset;
-    temp[1] = g_vmodoffset >>8;
-    break;
-    
-    case I2C_COM_KI:
-    temp[0]=pgm_read_word_near(kilstable+g_kiindex*2);
-    temp[1]=pgm_read_word_near(kilstable+g_kiindex*2+1);
-    break;
-    
-    case I2C_COM_TEST1:
-    temp[0]=p_temp;
-    temp[1]=p_temp>>8;
-    break;
-    
-    case I2C_COM_TEST2:
-    temp[0]=g_cursorstate;
-    temp[1]=p_cursorStateCounter[0]>>8;
-    break;
-
-  }
-  Wire.beginTransmission(DTC03P05);//20161031 add
-  Wire.write(com);//
-  Wire.write(temp, 2);//
-  Wire.endTransmission();//
-  delayMicroseconds(I2CSENDDELAY);//
-
-}
-unsigned int DTC03Master::ReturnVset(float tset, bool type)
-{
-  unsigned int vset;
-  float temp;
-  if(type)
-    vset = (unsigned int)((tset+273.15)*129.8701);
-  else
-    vset = (unsigned int)RTHRatio*exp(-1*(float)g_bconst*(T0INV-1/(tset+273.15)));
-  return vset;
-}
 void DTC03Master::UpdateParam() // Still need to add the upper and lower limit of each variable
 {
   unsigned char ki, ls;
@@ -426,152 +406,122 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
     switch(g_cursorstate)
     {
       case 0:
-        g_tset += g_tsetstep*g_counter;
-        if(g_tset>100) g_tset=100;//20161031 limit
-        if(g_tset<7) g_tset=7;//
-        g_vset = ReturnVset(g_tset, g_sensortype);
-        I2CWriteData(I2C_COM_VSET);
-        PrintTset();
       break;
 
       case 1:
         g_tset += g_tsetstep*g_counter;
+        if(g_tset>100) g_tset=100;
+        if(g_tset<7) g_tset=7;
         g_vset = ReturnVset(g_tset, g_sensortype);
         I2CWriteData(I2C_COM_VSET);
         PrintTset();
-        g_cursorstate=0;//20161031 return to state0 when update tset
+        p_blinkTsetCursorFlag=0;
       break; 
       
       case 2:
-        if(g_currentlim>49) g_currentlim=49; //20161031
-        if(g_currentlim<1) g_currentlim=1;//
-        g_currentlim += g_counter;
+      	g_currentlim += g_counter;
+        if(g_currentlim>50) g_currentlim=50;
+        if(g_currentlim<1) g_currentlim=1;        
         I2CWriteData(I2C_COM_CTR);
         PrintIlim();
       break;
 
       case 3:
-        if(g_p>254) g_p=254;//20161031
-        if(g_p<1) g_p=1;//
-        g_p += g_counter;
+      	g_p += g_counter;
+        if(g_p>99) g_p=99;
+        if(g_p<1) g_p=1;    
         I2CWriteData(I2C_COM_CTR);
         PrintP();
       break;
 
       case 4:
-        if(g_kiindex>48) g_kiindex=48;//20161103
-        if(g_kiindex<1) g_kiindex=1;//
-        g_kiindex += g_counter;//
-        I2CWriteData(I2C_COM_KIINDEX);//20161031
-        delayMicroseconds(I2CSENDDELAY);//
-        I2CWriteData(I2C_COM_KI);//20161101 ki,ls change when kiindex change
+      	g_kiindex += g_counter;
+        if(g_kiindex>50) g_kiindex=50;
+        if(g_kiindex<1) g_kiindex=1;      
+        I2CWriteData(I2C_COM_KI);
         PrintKi();
       break;
 
       case 5:
-      if(g_bconst>4499) g_bconst=4499;//20161031
-      if(g_bconst<3501) g_bconst=3501;//
-      g_bconst += g_counter;
-      I2CWriteData(I2C_COM_INIT);
-      g_vset = ReturnVset(g_tset, g_sensortype);//20161101 vset change when bconst change
-      I2CWriteData(I2C_COM_VSET);//
-      PrintB();
-      break;
+      	g_bconst += g_counter;
+	    if(g_bconst>4499) g_bconst=4499;
+	    if(g_bconst<3501) g_bconst=3501;
+  	    g_vset = ReturnVset(g_tset, g_sensortype);
+	    I2CWriteData(I2C_COM_VSET);//only send Vset, Bconst is not important for slave
+	    PrintB();
+	    break;
 
       case 6:
-
-      g_mod_status = g_countersensor;//20161113
-      I2CWriteData(I2C_COM_INIT);
-      PrintModStatus(); //20161113
-
-      break;
+        g_mod_status = g_countersensor;
+        I2CWriteData(I2C_COM_INIT);
+        PrintModStatus(); 
+        break;
 
       case 9:
-      PrintFactaryMode();
-      break;
-
+        PrintFactaryMode();
+        break;
+        
       case 10:
-      if(g_r1>30) g_r1=30; // R1, 1~30 for 0.1~3.0 ohm set 
-      if(g_r1<1) g_r1=1;//
-      g_r1 += g_counter;
-      I2CWriteData(I2C_COM_VBEH);
-      PrintR1();
-      break;
+      	g_r1 += g_counter;
+	    if(g_r1>30) g_r1=30; // R1, 1~30 for 0.1~3.0 ohm set 
+	    if(g_r1<1) g_r1=1;//
+      	I2CWriteData(I2C_COM_R1R2);
+        PrintR1();
+        break;
 
       case 11:
-      if(g_r2>30) g_r2=30;
-      if(g_r2<1) g_r2=1;//R2, 1~30 for 1.0~3.0 ohm set 
-      g_r2 += g_counter;
-      I2CWriteData(I2C_COM_VBEH);
-      PrintR2();
-      break;
+      	g_r2 += g_counter;
+        if(g_r2>30) g_r2=30;
+        if(g_r2<1) g_r2=1;//R2, 1~30 for 1.0~3.0 ohm set 
+        I2CWriteData(I2C_COM_R1R2);
+        PrintR2();
+        break;
 
       case 12:
-
-      if(g_tpidoff>10) g_tpidoff=10; //Tpid offset, 0~10 for 1~10000 @1000 step
-      if(g_tpidoff<1) g_tpidoff=1;//
-      g_tpidoff += g_counter;
-      I2CWriteData (I2C_COM_VBEC);
-      PrintTpidoff();
-      break;
+      	g_tpidoff += g_counter;
+        if(g_tpidoff>10) g_tpidoff=10; //Tpid offset, 0~10 for 1~10000 @1000 step
+        if(g_tpidoff<1) g_tpidoff=1;
+      
+        I2CWriteData (I2C_COM_TPIDOFF);
+        PrintTpidoff();
+        break;
 
 
       case 13:
-      if(g_fbcbase>44900) g_fbcbase=44900;//
-      if(g_fbcbase<16100) g_fbcbase=16100;//
-      g_fbcbase +=(g_counter*100);
-      I2CWriteData(I2C_COM_FBC);
-      PrintVfbc();
-      break;
+      	g_fbcbase +=(g_counter*100);
+        if(g_fbcbase>44900) g_fbcbase=44900;
+        if(g_fbcbase<16100) g_fbcbase=16100;
+        I2CWriteData(I2C_COM_FBC);
+        PrintVfbc();
+        break;
 
       case 14:
-      if(g_vmodoffset>33199) g_vmodoffset=33199;//
-      if(g_vmodoffset<32199) g_vmodoffset=32199;//
-      g_vmodoffset +=g_counter;
-      I2CWriteData(I2C_COM_VMOD);
-      PrintVmod();
-      break;
+      	g_vmodoffset +=g_counter;
+        if(g_vmodoffset>33199) g_vmodoffset=33199;
+        if(g_vmodoffset<32199) g_vmodoffset=32199;
+        I2CWriteData(I2C_COM_VMOD);
+        PrintVmod();
+        break;
 
       case 15:
-      g_ttstart += float(g_counter);
-      PrintTtstart();
-      break;
+      	p_Rmeas += (g_counter*100);
+      	if(g_fbcbase>45000) g_fbcbase=45000;
+        if(g_fbcbase<20000) g_fbcbase=20000;
+        I2CWriteData(I2C_COM_RMEAS);
+        PrintRmeas();
+        break;
 
       case 16:
-      if(g_counter >=0) g_testgo =1;
-      else g_testgo =0;
-      PrintTestgo();
-      if(g_testgo = 1)
-      {
-
-        timer1 = millis()+TESTGOPERIOD;
-        timer2 =millis();
-        g_vset = ReturnVset(g_ttstart, g_sensortype);
-        I2CWriteData(I2C_COM_VSET);
-        g_en_state =1;
-        I2CWriteData(I2C_COM_INIT);
-        while(timer2 < timer1) 
-          {
-            timer2=millis();
-            CheckStatus();
-          }
-        g_vset = ReturnVset(g_ttstart+TESTGOSTEP, g_sensortype);
-        I2CWriteData(I2C_COM_VSET);
-        timer1 = millis()+TESTGOPERIOD;
-        timer2 =millis();
-        while(timer2 < timer1) 
-          {
-            timer2=millis();
-            CheckStatus();
-          }
-        g_en_state =0;
-        I2CWriteData(I2C_COM_INIT);
-      }
+      	g_otp += (g_counter*4);
+		if (g_otp < 281) g_otp = 281; // 50C
+		if (g_otp > 561) g_otp = 561; //120C
+		I2CWriteData(I2C_COM_OTP);
+        PrintTotp();  
     }
   }
 }
 
-void DTC03Master::UpdateEnable()//20161101
+void DTC03Master::UpdateEnable()
 {
  bool en_state;
  if(analogRead(ENSW)>500) en_state=1;
@@ -597,93 +547,89 @@ void DTC03Master::PrintFactaryMode() //show error message to avoid entering Eng.
    lcd.print("PLEASE"); 
    lcd.GotoXY(36,42);   
    lcd.print("TO RE_START THE SYSTEM"); 
-
-}
-void DTC03Master::CheckStatus()
-{
-  float tact, itec;
-  I2CReadData(I2C_COM_ITEC_ER);
-  itec = float(g_itecsum)/IAVGTIMES*CURRENTRatio;//
-  PrintItec(itec);
-  
-  I2CReadData(I2C_COM_VACT);
-  tact = ReturnTemp(g_vact,g_sensortype);
-  PrintTact(tact);
+   delay(1000);
 }
 
 void DTC03Master::PrintEngBG()
 {
   lcd.ClearScreen(0);
   lcd.SelectFont(SystemFont5x7);
-  lcd.GotoXY(VR1_X,VR1_Y);
-  lcd.print("    R1:");
-  lcd.GotoXY(VR2_X,VR2_Y);
-  lcd.print("    R2:");
-  lcd.GotoXY(TPIDOFF_X,TPIDOFF_Y);
-  lcd.print(" pidOS:");
-  lcd.GotoXY(VFBC_X,VFBC_Y);
-  lcd.print("  Vfbc:");
-  lcd.GotoXY(VMOD_X,VMOD_Y);
-  lcd.print("  Vmod:");
-  lcd.GotoXY(TTSTART_X,TTSTART_Y);
-  lcd.print("Tstart:");
-  lcd.GotoXY(TESTGO_X, TESTGO_Y);
-  lcd.print("TestGo:");
+  lcd.GotoXY(R1_COORD_X,R1_COORD_Y);
+  lcd.print(Text_R1);
+  lcd.GotoXY(R2_COORD_X,R2_COORD_Y);
+  lcd.print(Text_R2);
+  lcd.GotoXY(TPIDOFF_COORD_X,TPIDOFF_COORD_Y);
+  lcd.print(Text_pidOS);
+  lcd.GotoXY(VFBC_COORD_X,VFBC_COORD_Y);
+  lcd.print(Text_Vfbc);
+  lcd.GotoXY(VMOD_COOED_X,VMOD_COOED_Y);
+  lcd.print(Text_Vmod);
+  lcd.GotoXY(RMEAS_COORD_X,RMEAS_COORD_Y);
+  lcd.print(Text_Rmeas);
+  lcd.GotoXY(TOTP_COORD_X, TOTP_COORD_Y);
+  lcd.print(Text_Totp);
+  lcd.GotoXY(TPCB_COORD_X, TPCB_COORD_Y);
+  lcd.print(Text_Tpcb);
 }
-void DTC03Master::PrintR1() //change to print R1 20161114
+void DTC03Master::PrintEngAll()
+{
+	PrintR1();
+	PrintR2();
+	PrintTpidoff();
+	PrintVfbc();
+	PrintVmod();
+	PrintRmeas();
+	PrintTotp();
+	PrintTpcb();
+}
+void DTC03Master::PrintR1() //g_cursorstate=10
 {
   lcd.SelectFont(SystemFont5x7);
-  lcd.GotoXY(VR1_X2, VR1_Y);
+  lcd.GotoXY(R1_COORD_X2, R1_COORD_Y);
   lcd.print(g_r1);
   lcd.print("  ");//
 }
-void DTC03Master::PrintR2() //change to print R2 20161114
+void DTC03Master::PrintR2() //g_cursorstate=11
 {
   lcd.SelectFont(SystemFont5x7);
-  lcd.GotoXY(VR2_X2, VR2_Y);
+  lcd.GotoXY(R2_COORD_X2, R2_COORD_Y);
   lcd.print(g_r2);
   lcd.print("  ");//
 }
-void DTC03Master::PrintTpidoff() //change to print Tpid offset 20161114
+void DTC03Master::PrintTpidoff() //g_cursorstate=12
 {
   lcd.SelectFont(SystemFont5x7);
-  lcd.GotoXY(TPIDOFF_X2, TPIDOFF_Y);
+  lcd.GotoXY(TPIDOFF_COORD_X2, TPIDOFF_COORD_Y);
   lcd.print(g_tpidoff);
   lcd.print("  ");//
 }
-// void DTC03Master::PrintVbec2() //no print
-// {
-//   lcd.SelectFont(SystemFont5x7);
-//   lcd.GotoXY(VBEC2_X2, VBEC2_Y);
-//   lcd.print(g_vbec2);
-//   lcd.print("  ");//
-// }
-void DTC03Master::PrintVfbc()
+void DTC03Master::PrintVfbc()//g_cursorstate=13
 {
   lcd.SelectFont(SystemFont5x7);
-  lcd.GotoXY(VFBC_X2, VFBC_Y);
+  lcd.GotoXY(VFBC_COORD_X2, VFBC_COORD_Y);
   lcd.print(g_fbcbase);
 }
-void DTC03Master::PrintVmod()
+void DTC03Master::PrintVmod()//g_cursorstate=14
 {
   lcd.SelectFont(SystemFont5x7);
-  lcd.GotoXY(VMOD_X2, VMOD_Y);
+  lcd.GotoXY(VMOD_COOED_X2, VMOD_COOED_Y);
   lcd.print(g_vmodoffset);
   lcd.print("  ");//
 }
-void DTC03Master::PrintTtstart()
+void DTC03Master::PrintRmeas()//g_cursorstate=15
 {
   lcd.SelectFont(SystemFont5x7);
-  lcd.GotoXY(TTSTART_X2, TTSTART_Y);
+  lcd.GotoXY(RMEAS_COORD_X2, RMEAS_COORD_Y);
   lcd.print(g_ttstart);
   lcd.print("  ");//
 }
-void DTC03Master::PrintTestgo()
+void DTC03Master::PrintTotp()//g_cursorstate=16
 {
   lcd.SelectFont(SystemFont5x7);
-  lcd.GotoXY(TESTGO_X2, TTSTART_Y);
+  lcd.GotoXY(TOTP_COORD_X2, TOTP_COORD_Y);
   lcd.print(g_testgo);
 }
+
 void DTC03Master::CursorState()
 {
   unsigned long t1, d1;
@@ -691,140 +637,124 @@ void DTC03Master::CursorState()
   unsigned char oldCursorState;
   if(analogRead(PUSHB)>HIGHLOWBOUNDRY)
   {
-   g_flag=1;
-   g_engmode=0;          
-  }
+  	p_engmodeCounter=0;
+  }           
+  
   if(analogRead(PUSHB)<=HIGHLOWBOUNDRY) //change cursorstate when push encoder switch  
   {
   	t_temp=millis();
   	
-  	if( abs(t_temp-p_cursorStateCounter[0])<700 ) {
+  	if( abs(t_temp-p_cursorStateCounter[0])<50 ) 
+	{
   		p_cursorStateCounter[1]=t_temp-p_cursorStateCounter[0];
   		p_cursorStateCounter[2]+=p_cursorStateCounter[1]; 		
-	  }
+	}
   	else p_cursorStateCounter[2]=0;
-  	 	
-  	if ( p_cursorStateCounter[2]>LONGPRESSTIME ){
-  		if (abs(t_temp-p_cursorStayTime) >1000 ){
-  			if( g_cursorstate==0 || g_cursorstate==1 ) g_cursorstate=2;
-	  		else g_cursorstate++;
-	  		if( g_cursorstate>6 ) g_cursorstate=2;	  		
-	  		ShowCursor(g_cursorstate, 0);//here g_cursorstate from 2~6, the 2nd index is not important
-	  		g_engmode++;
-			if(g_engmode > ENGCOUNTER) 
-	        {
-	        	g_cursorstate = 9;
-	         	PrintFactaryMode();	         
-	        } 
-	  		p_cursorStayTime=t_temp;
-		  } 		
-	  }
-  	else {
-  		if( g_cursorstate==0 ) g_cursorstate=1;
-  		if ( g_cursorstate==1 ){
-  			if(g_tsetstep <= 0.001) g_tsetstep = 1.0;
-            else g_tsetstep = g_tsetstep/10.0;
-		  }
-  		else {
-  			oldCursorState=g_cursorstate;
-  			g_cursorstate=0;
-		  }
-  		ShowCursor(g_cursorstate, oldCursorState);//here oldCursorState from 2~6, g_cursorstate is 0 or 1
-	  }
-	  
-	p_temp= t_temp-p_cursorStateCounter[0];	
-	I2CWriteData(I2C_COM_TEST1);
+  	
+  	if(!p_engModeFlag) //normal mode
+  	{
+  		if ( p_cursorStateCounter[2]>LONGPRESSTIME ) //long press case:
+		{
+	  		if (abs(t_temp-p_cursorStayTime) > CURSORSTATE_STAYTIME && p_tBlink_toggle ){
+	  			if( g_cursorstate==0 || g_cursorstate==1 ) g_cursorstate=2;
+		  		else g_cursorstate++;
+		  		if( g_cursorstate>6 ) g_cursorstate=2;	  		
+		  		ShowCursor(0);//the index is not important
+		  		p_engmodeCounter++;
+				if(p_engmodeCounter > ENGCOUNTER) 
+		        {
+		        	g_cursorstate = 8;
+		        	p_engModeFlag=1;
+		        	p_cursorStateCounter[2]=0; 
+		         	PrintFactaryMode();						        
+		        } 
+		  		p_cursorStayTime=t_temp;
+			  } 		
+		}
+	  	else //short press case:
+		{
+			if( abs(t_temp-p_tcursorStateBounce)> 200 )
+			{
+				if( g_cursorstate==0 ) g_cursorstate=1;
+		  		if ( g_cursorstate==1 )
+				{
+		  			if(g_tsetstep <= 0.001) g_tsetstep = 1.0;
+		            else g_tsetstep = g_tsetstep/10.0;
+				}
+		  		else //g_cursorstate=2~6
+				{
+		  			oldCursorState=g_cursorstate;
+		  			g_cursorstate=0;
+				}				
+				ShowCursor(oldCursorState);//here oldCursorState from 2~6, g_cursorstate is 0 or 1
+				p_tcursorStateBounce=t_temp;
+			} 	  		
+		}
+	}
+  	
+  	else //eng mode
+	{		
+		if( abs(t_temp-p_tcursorStateBounce)> 200 )
+		{		    			
+			g_cursorstate++;
+        	I2CWriteData(I2C_COM_TEST2);
+		    if( p_cursorStateCounter[2]>LONGPRESSTIME ) 
+		    {
+			    g_cursorstate=0;
+			    p_engModeFlag=0;
+			    lcd.ClearScreen(0);
+			    BackGroundPrint();
+			    PrintNormalAll();			
+		    }
+		    if( g_cursorstate==9 ) 
+		    {
+			    PrintEngBG();
+			    PrintEngAll();
+			    g_cursorstate=10;
+		    }
+		    if( g_cursorstate>16 ) g_cursorstate=10;
+	  	    ShowCursor(0);
+	  	    p_tcursorStateBounce=t_temp;
+		}
+		
+	}	
   	I2CWriteData(I2C_COM_TEST2);
-//    if((g_cursorstate==0 || g_cursorstate == 1) && g_flag)
-//    {
-//      t1 = millis();
-//      d1 = millis()-t1;
-//      while((analogRead(PUSHB)<=HIGHLOWBOUNDRY)&&(d1 < LONGPRESSTIME))
-//        d1 = millis()-t1;
-//      
-//      if(d1 >= LONGPRESSTIME)
-//      {
-//        g_cursorstate = 2;
-//        g_flag = 0; 
-//        ShowCursor();
-//      }
-//    }
-//    if((g_cursorstate==0 || g_cursorstate == 1) && g_flag)//
-//    {
-//      g_cursorstate = 1;
-//      g_flag = 0;
-//
-//      if(g_tsetstep <= 0.001) g_tsetstep = 1.0;
-//      else g_tsetstep = g_tsetstep/10.0;
-//    }
-//    
-//    if((g_cursorstate >1) && (g_cursorstate <7)) // g_cursorstate 2~6
-//    {
-//      t1 = millis();
-//      d1 = millis()-t1;
-//      while((analogRead(PUSHB)<=HIGHLOWBOUNDRY)&&(d1 < LONGPRESSTIME))
-//        d1 = millis()-t1;
-//      if(d1 >= LONGPRESSTIME)
-//      {
-//        g_cursorstate++;
-//        ShowCursor();
-//        g_engmode++;
-//        g_flag = 0;
-//        if(g_cursorstate >6) g_cursorstate =2;//
-//        if(g_engmode > ENGCOUNTER) 
-//        {
-//         g_cursorstate = 9;
-//         PrintFactaryMode();
-//        }
-//      }
-//     else if(g_flag) g_cursorstate=0;
-//    }
-    
-//    if((g_cursorstate >=9) && (g_cursorstate <17) && g_flag)//
-//     {
-//      while(analogRead(PUSHB)<=HIGHLOWBOUNDRY);
-//      //if(g_cursorstate ==15) g_cursorstate = 0;
-//      //else g_cursorstate++;
-//      
-//      g_cursorstate++;//20161102
-//      if(g_cursorstate ==17) g_cursorstate = 0;//20161102
-//      else if (g_cursorstate ==10)//20161102
-//      {     
-//       PrintEngBG();
-//       PrintR1();
-//       PrintR2();
-//       PrintTpidoff();
-//       PrintVfbc();
-//       PrintVmod();
-//       PrintTtstart();
-//       PrintTestgo();
-//      }
-//     }
-     p_cursorStateCounter[0]=t_temp;
-  
+    p_cursorStateCounter[0]=t_temp; 
   }
 }
 void DTC03Master::blinkTsetCursor()
 {
 	unsigned int t_temp;
-	t_temp=millis();
-	if( abs(t_temp-p_tBlink)>BLINKDELAY )
+	if( p_blinkTsetCursorFlag==1 )
 	{
-		if(p_tBlink_toggle) {
-			lcd.print(" ");
-			p_tBlink_toggle=!p_tBlink_toggle;
+		t_temp=millis();
+		
+		lcd.SelectFont(fixed_bold10x15);
+		if(g_tsetstep == 1.0) lcd.GotoXY(TSET_COORD_X2+2*COLUMNPIXEL1015, TSET_COORD_Y);
+	    else if(g_tsetstep == 0.1) lcd.GotoXY(TSET_COORD_X2+4*COLUMNPIXEL1015, TSET_COORD_Y);
+	    else if(g_tsetstep == 0.01) lcd.GotoXY(TSET_COORD_X2+5*COLUMNPIXEL1015, TSET_COORD_Y);
+	    else lcd.GotoXY(TSET_COORD_X2+6*COLUMNPIXEL1015, TSET_COORD_Y);
+	    
+		if( abs(t_temp-p_tBlink)>BLINKDELAY )
+		{		  	
+			if(p_tBlink_toggle) {
+				lcd.print(" ");
+				p_tBlink_toggle=!p_tBlink_toggle;
+			}
+			else{
+				PrintTset();
+				p_tBlink_toggle=!p_tBlink_toggle;
+			}
+			p_tBlink=t_temp;		
 		}
-		else{
-			PrintTset();
-			p_tBlink_toggle=!p_tBlink_toggle;
-		}
-		p_tBlink=t_temp;
-	}	
+	}
+			
 }
-void DTC03Master::ShowCursor(unsigned char state_now, unsigned char state_old)
+void DTC03Master::ShowCursor(unsigned char state_old)
 {
+		if( g_cursorstate!=1) p_blinkTsetCursorFlag=0;
 
-		switch(state_now)
+		switch(g_cursorstate)
 		{
 		    case 0:
 		    lcd.SelectFont(SystemFont5x7);
@@ -850,12 +780,7 @@ void DTC03Master::ShowCursor(unsigned char state_now, unsigned char state_old)
 		    break;
 		
 		    case 1:
-		    lcd.SelectFont(fixed_bold10x15);
-		    if(g_tsetstep == 1.0) lcd.GotoXY(TSET_COORD_X2+2*COLUMNPIXEL1015, TSET_COORD_Y);
-		    else if(g_tsetstep == 0.1) lcd.GotoXY(TSET_COORD_X2+4*COLUMNPIXEL1015, TSET_COORD_Y);
-		    else if(g_tsetstep == 0.01) lcd.GotoXY(TSET_COORD_X2+5*COLUMNPIXEL1015, TSET_COORD_Y);
-		    else lcd.GotoXY(TSET_COORD_X2+6*COLUMNPIXEL1015, TSET_COORD_Y);
-		    blinkTsetCursor();
+		    p_blinkTsetCursorFlag=1;
 		    break;
 		
 		    case 2:
@@ -905,61 +830,64 @@ void DTC03Master::ShowCursor(unsigned char state_now, unsigned char state_old)
 		
 		    case 10:
 		    lcd.SelectFont(SystemFont5x7, WHITE);
-		    lcd.GotoXY(VR1_X, VR1_Y);
+		    lcd.GotoXY(R1_COORD_X-COLUMNPIXEL0507, R1_COORD_Y);
+		    lcd.print(" ");
+		    lcd.SelectFont(SystemFont5x7);
+		    lcd.GotoXY(TOTP_COORD_X-COLUMNPIXEL0507, TOTP_COORD_Y);
 		    lcd.print(" ");
 		    break;
 		
 		    case 11:
 		    lcd.SelectFont(SystemFont5x7, WHITE);
-		    lcd.GotoXY(VR2_X, VR2_Y);
+		    lcd.GotoXY(R2_COORD_X-COLUMNPIXEL0507, R2_COORD_Y);
 		    lcd.print(" ");
 		    lcd.SelectFont(SystemFont5x7);
-		    lcd.GotoXY(VR1_X, VR1_Y);
+		    lcd.GotoXY(R1_COORD_X-COLUMNPIXEL0507, R1_COORD_Y);
 		    lcd.print(" ");
 		    break;
 		
 		    case 12:
 		    lcd.SelectFont(SystemFont5x7, WHITE);
-		    lcd.GotoXY(TPIDOFF_X, TPIDOFF_Y);
+		    lcd.GotoXY(TPIDOFF_COORD_X-COLUMNPIXEL0507, TPIDOFF_COORD_Y);
 		    lcd.print(" ");
 		    lcd.SelectFont(SystemFont5x7);
-		    lcd.GotoXY(VR2_X, VR2_Y);
+		    lcd.GotoXY(R2_COORD_X-COLUMNPIXEL0507, R2_COORD_Y);
 		    lcd.print(" ");
 		    break;
 		    
 		    case 13:
 		    lcd.SelectFont(SystemFont5x7, WHITE);
-		    lcd.GotoXY(VFBC_X, VFBC_Y);
+		    lcd.GotoXY(VFBC_COORD_X-COLUMNPIXEL0507, VFBC_COORD_Y);
 		    lcd.print(" ");
 		    lcd.SelectFont(SystemFont5x7);
-		    lcd.GotoXY(TPIDOFF_X, TPIDOFF_Y);
+		    lcd.GotoXY(TPIDOFF_COORD_X-COLUMNPIXEL0507, TPIDOFF_COORD_Y);
 		    lcd.print(" ");
 		    break;
 		
 		    case 14:
 		    lcd.SelectFont(SystemFont5x7, WHITE);
-		    lcd.GotoXY(VMOD_X, VMOD_Y);
+		    lcd.GotoXY(VMOD_COOED_X-COLUMNPIXEL0507, VMOD_COOED_Y);
 		    lcd.print(" ");
 		    lcd.SelectFont(SystemFont5x7);
-		    lcd.GotoXY(VFBC_X, VFBC_Y);
+		    lcd.GotoXY(VFBC_COORD_X-COLUMNPIXEL0507, VFBC_COORD_Y);
 		    lcd.print(" ");
 		    break;
 		
 		    case 15:
 		    lcd.SelectFont(SystemFont5x7, WHITE);
-		    lcd.GotoXY(TTSTART_X, TTSTART_Y);
+		    lcd.GotoXY(RMEAS_COORD_X-COLUMNPIXEL0507, RMEAS_COORD_Y);
 		    lcd.print(" ");
 		    lcd.SelectFont(SystemFont5x7);
-		    lcd.GotoXY(VMOD_X, VMOD_Y);
+		    lcd.GotoXY(VMOD_COOED_X-COLUMNPIXEL0507, VMOD_COOED_Y);
 		    lcd.print(" ");
 		    break;
 		
 		    case 16:
 		    lcd.SelectFont(SystemFont5x7, WHITE);
-		    lcd.GotoXY(TESTGO_X, TESTGO_Y);
+		    lcd.GotoXY(TOTP_COORD_X-COLUMNPIXEL0507, TOTP_COORD_Y);
 		    lcd.print(" ");
 		    lcd.SelectFont(SystemFont5x7);
-		    lcd.GotoXY(TTSTART_X, TTSTART_Y);
+		    lcd.GotoXY(RMEAS_COORD_X-COLUMNPIXEL0507, RMEAS_COORD_Y);
 		    lcd.print(" ");
 		    break;
 		}

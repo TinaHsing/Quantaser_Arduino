@@ -8,18 +8,22 @@
 // =========receive Events Command and Address======
 #define I2C_COM_INIT 	0x11
 #define I2C_COM_CTR 	0x12
-#define I2C_COM_VSET 	0x13
-#define I2C_COM_KIINDEX	0x14
-#define I2C_COM_VACT	0x15
-#define I2C_COM_ITEC_ER	0x16
-#define I2C_COM_VBEH	0x17 //use for DVCC R1 R2
-#define I2C_COM_VBEC	0x18 //use for t.pid offset 
-#define I2C_COM_FBC		0x19
-#define	I2C_COM_VMOD	0x1A
-#define I2C_COM_KI 		0x1B
-#define I2C_COM_TEST1 	0x1C
-#define I2C_COM_TEST2 	0x1D
+#define I2C_COM_KI	    0x13
+#define I2C_COM_VSET 	0x14
+#define I2C_COM_R1R2	0x15
+#define I2C_COM_FBC		0x16
+#define I2C_COM_OTP  	0x17
+#define I2C_COM_WAKEUP  0x18 
 
+#define I2C_COM_ITEC_ER	0x19
+#define I2C_COM_VACT	0x1A
+#define I2C_COM_PCB		0X1B
+#define	I2C_COM_VMOD	0x1C
+#define	I2C_COM_TPIDOFF 0x1D
+#define	I2C_COM_RMEAS   0x1E
+
+#define I2C_COM_TEST1	0x1F
+#define I2C_COM_TEST2 	0x1G
 
 //=========request Events Mask ============
 #define REQMSK_ENSTATE 		0x80

@@ -20,15 +20,15 @@
 #define COUNTRESETTIME 80
 #define LONGPRESSTIME 1000
 #define FACTORYMODETIME 20000
-#define ENGCOUNTER 12
-#define BLINKDELAY 200
+#define ENGCOUNTER 10
+#define BLINKDELAY 350
 #define CURRENTLIMMAX 50 //maximun of g_currentlim
 #define BCONSTMAX 4500//maximun of bconst
 #define HIGHLOWBOUNDRY 500 //
 #define TESTGOPERIOD 18000000 // testing period for one temperature in the unit of ms (18,000,000 = 5hrs)
 //#define TESTGOPERIOD 60000 //testing period for one tempeature in the unit of ms (600,000 = 10 mins) used for functional test should be remove after function varification 
 #define TESTGOSTEP 22.00 // testgo temperature step, usually ttstart = Tamb -12 so the second step will be ttstart + 24 = Tamb +12
-
+#define CURSORSTATE_STAYTIME 700
 //=================pin definition=========================
 #define ENC_B 3
 #define ENC_A 2
@@ -71,27 +71,40 @@
 
 
 //==================ENG BG print coordinate definition=========
-#define VR1_X 0
-#define VR1_X2 42//
-#define VR1_Y 0
-#define VR2_X 0
-#define VR2_X2 42//
-#define VR2_Y 8
-#define TPIDOFF_X 0
-#define TPIDOFF_X2 42//
-#define TPIDOFF_Y 16
-#define VFBC_X 0
-#define VFBC_X2 42
-#define VFBC_Y 24
-#define VMOD_X 0
-#define VMOD_X2 42
-#define VMOD_Y 32
-#define TTSTART_X 0
-#define TTSTART_X2 49
-#define TTSTART_Y 40
-#define TESTGO_X 0
-#define TESTGO_X2 49
-#define TESTGO_Y 48
+#define R1_COORD_X       COLUMNPIXEL0507
+#define R1_COORD_X2      COLUMNPIXEL0507*7  
+#define R1_COORD_Y       0
+#define Text_R1 		 "R1   :"
+#define R2_COORD_X 		 COLUMNPIXEL0507
+#define R2_COORD_X2 	 COLUMNPIXEL0507*7
+#define R2_COORD_Y 		 ROWPIXEL0507
+#define Text_R2 		 "R2   :"
+#define TPIDOFF_COORD_X  COLUMNPIXEL0507
+#define TPIDOFF_COORD_X2 COLUMNPIXEL0507*7
+#define TPIDOFF_COORD_Y  ROWPIXEL0507*2
+#define Text_pidOS 		 "pidOS:"
+#define VFBC_COORD_X 	 COLUMNPIXEL0507
+#define VFBC_COORD_X2 	 COLUMNPIXEL0507*7
+#define VFBC_COORD_Y 	 ROWPIXEL0507*3
+#define Text_Vfbc 		 "Vfbc :"
+#define VMOD_COOED_X 	 COLUMNPIXEL0507
+#define VMOD_COOED_X2 	 COLUMNPIXEL0507*7
+#define VMOD_COOED_Y 	 ROWPIXEL0507*4
+#define Text_Vmod 		 "Vmod  :"
+#define RMEAS_COORD_X 	 COLUMNPIXEL0507
+#define RMEAS_COORD_X2 	 COLUMNPIXEL0507*7
+#define RMEAS_COORD_Y 	 ROWPIXEL0507*5
+#define Text_Rmeas 		 "Rmeas:"
+#define TOTP_COORD_X 	 COLUMNPIXEL0507
+#define TOTP_COORD_X2 	 COLUMNPIXEL0507*9
+#define TOTP_COORD_Y 	 ROWPIXEL0507*6
+#define Text_Totp 		 "Totp :"
+#define TPCB_COORD_X 	 COLUMNPIXEL0507
+#define TPCB_COORD_X2 	 COLUMNPIXEL0507*9
+#define TPCB_COORD_Y 	 ROWPIXEL0507*7
+#define Text_Tpcb 		 "Tpcb :"
+
+
 
 // define GLCD parameter
 #define COLUMNPIXEL1015 11 //column pixels of fixed_bold10x15
@@ -100,7 +113,7 @@
 
 
 // define I2C parameter
-#define I2CSENDDELAY 100 //delay100ms
+#define I2CSENDDELAY 100 //delay100us
 #define I2CREADDELAY 100 //delay100us
 
 //define calculation parameter
@@ -138,18 +151,22 @@ public:
 	void PrintFactaryMode();
 	void CheckStatus();
 	void PrintEngBG();
+	void PrintNormalAll();
+	void PrintEngAll();
 	void PrintR1();
 	void PrintR2();
 	void PrintTpidoff();
-	void PrintTtstart();
-	void PrintTestgo();
 	void PrintVfbc();
 	void PrintVmod();
-	void ShowCursor(unsigned char, unsigned char);
+	void PrintRmeas();
+	void PrintTotp();
+	void PrintTpcb(float);
+	
+	void ShowCursor(unsigned char);
     void UpdateEnable();
     void blinkTsetCursor();
 	
-	unsigned int g_vact, g_vset;
+	unsigned int g_vact, g_vset, g_tpcb, g_otp, g_itec;
 	bool g_sensortype, g_en_state, g_mod_status;
     unsigned long g_vactsum; 
 	int g_itecsum;//
@@ -159,11 +176,11 @@ private:
 	glcd lcd;
 	int g_counter;
     unsigned int g_bconst, g_fbcbase, Varray[VAVGTIMES], Iarray[IAVGTIMES], g_icount ,g_vmodoffset, p_cursorStateCounter[3], p_temp, p_cursorStayTime;
-    unsigned int p_tBlink;
+    unsigned int p_tBlink, p_tcursorStateBounce, p_Rmeas;
     unsigned char g_p, g_ki,g_ls,g_currentlim, g_tpidoff, g_vbec2, g_r1, g_r2, g_kiindex;
-	unsigned char g_iarrayindex, g_varrayindex, g_lastencoded, g_engmode;
-    bool g_errcode1, g_errcode2, g_flag, g_paramupdate, g_countersensor, g_testgo, p_tBlink_toggle;
-    unsigned long g_tenc;
+	unsigned char g_iarrayindex, g_varrayindex, g_lastencoded, p_engmodeCounter;
+    bool g_errcode1, g_errcode2, g_flag, g_paramupdate, g_countersensor, g_testgo, p_tBlink_toggle, p_engModeFlag,p_blinkTsetCursorFlag;
+    unsigned long g_tenc, p_loopindex;
 	float g_tsetstep, g_ttstart;
 
 
