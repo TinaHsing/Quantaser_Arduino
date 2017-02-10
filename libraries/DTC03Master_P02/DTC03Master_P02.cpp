@@ -66,46 +66,58 @@ void DTC03SMaster::ReadEEPROM()
 	noeedummy = EEPROM.read(EEADD_DUMMY);
 	if(noeedummy == NOEE_DUMMY)
 	{
-		g_vstart = EEPROM.read(EEADD_VSTART_UPPER)<<8 | EEPROM.read(EEADD_VSTART_LOWER);
-		g_vend = EEPROM.read(EEADD_VEND_UPPER)<<8 | EEPROM.read(EEADD_VEND_LOWER);
-		g_rateindex = EEPROM.read(EEADD_RATE_INDEX);
+		g_vset = EEPROM.read(EEADD_VSET_UPPER)<<8 | EEPROM.read(EEADD_VSET_LOWER);
+		g_currentlim = EEPROM.read(EEADD_currentlim);
 		g_p = EEPROM.read(EEADD_P);
 		g_kiindex = EEPROM.read(EEADD_KIINDEX);
-		g_fbcbase = EEPROM.read(EEADD_FBC_UPPER)<<8 | EEPROM.read(EEADD_FBC_LOWER);
-        g_currentlim = EEPROM.read(EEADD_currentlim);
+		g_bconst = EEPROM.read(EEADD_BCONST_UPPER<<8) | EPROM.read(EEADD_BCONST_LOWER<<8);
+		g_mod_status = EEPROM.read(EEADD_MODSTATUS);
         g_r1 = EEPROM.read(EEADD_R1);
         g_r2 = EEPROM.read(EEADD_R2);
+        g_tpidoff = EEPROM.read(EEADD_TPIDOFF);
+        g_fbcbase = EEPROM.read(EEADD_FBC_UPPER)<<8 | EEPROM.read(EEADD_FBC_LOWER);
+        g_vmodoffset = EEPROM.read(EEADD_MODOFF_UPPER)<<8 |  EEPROM.read(EEADD_MODOFF_LOWER);
+        g_Rmeas = EEPROM.read(EEADD_RMEAS_UPPER)<<8 | EEPROM.read(EEADD_RMEAS_LOWER); 
         g_otp = EEPROM.read(EEADD_TOTP_UPPER)<<8 | EEPROM.read(EEADD_TOTP_LOWER);
         
 	}
 	else
 	{
 		EEPROM.write(EEADD_DUMMY, NOEE_DUMMY);
-		EEPROM.write(EEADD_VSTART_UPPER, NOEE_VSTART>>8);
-		EEPROM.write(EEADD_VSTART_LOWER, NOEE_VSTART);
-		EEPROM.write(EEADD_VEND_UPPER, NOEE_VEND>>8);
-		EEPROM.write(EEADD_VEND_LOWER, NOEE_DUMMY);
-		EEPROM.write(EEADD_RATE_INDEX, NOEE_RATE);
+		EEPROM.write(EEADD_VSET_UPPER, NOEE_VSET>>8);
+		EEPROM.write(EEADD_VSET_LOWER, NOEE_VSET);
+		EEPROM.write(EEADD_currentlim, NOEE_ILIM);		
+		EEPROM.write(EEADD_P, NOEE_P);		
+		EEPROM.write(EEADD_KIINDEX, NOEE_kiindex);
+		EEPROM.write(EEADD_BCONST_UPPER, NOEE_BCONST>>8);
+		EEPROM.write(EEADD_BCONST_LOWER, NOEE_BCONST);
+		EEPROM.write(EEADD_MODSTATUS, NOEE_MODSTATUS);
+		EEPROM.write(EEADD_R1, NOEE_R1);
+		EEPROM.write(EEADD_R2, NOEE_R2);		
+		EEPROM.write(EEADD_TPIDOFF, NOEE_TPIDOFF);
 		EEPROM.write(EEADD_FBC_UPPER, NOEE_FBC>>8);
 		EEPROM.write(EEADD_FBC_LOWER, NOEE_FBC);
-		EEPROM.write(EEADD_P, NOEE_P);
-		EEPROM.write(EEADD_KIINDEX, NOEE_kiindex);
-		EEPROM.write(EEADD_currentlim, NOEE_ILIM);
-		EEPROM.write(EEADD_R1, NOEE_R1);
-		EEPROM.write(EEADD_R2, NOEE_R2);
+		EEPROM.write(EEADD_MODOFF_UPPER, NOEE_MODOFF>>8);
+		EEPROM.write(EEADD_MODOFF_LOWER, NOEE_MODOFF);		
+		EEPROM.write(EEADD_RMEAS_UPPER, NOEE_RMEAS>>8);
+		EEPROM.write(EEADD_RMEAS_LOWER, NOEE_RMEAS);
 		EEPROM.write(EEADD_TOTP_UPPER, NOEE_TOTP>>8);
 		EEPROM.write(EEADD_TOTP_LOWER, NOEE_TOTP);
 
-		g_vstart = NOEE_VSTART;
-		g_vend = NOEE_VEND;
-		g_rateindex = NOEE_RATE;
+		g_vset = NOEE_VSET;
+		g_currentlim = NOEE_ILIM;
 		g_p = NOEE_P;
 		g_kiindex = NOEE_kiindex;
+		g_bconst = NOEE_BCONST;
+		g_mod_status = NOEE_MODSTATUS;
 		g_r1 = NOEE_R1;
 		g_r2 = NOEE_R2;
+		g_tpidoff = NOEE_TPIDOFF;		
 		g_fbcbase = NOEE_FBC;
+		g_vmodoffset = NOEE_MODOFF;
+		g_Rmeas = NOEE_RMEAS;
 		g_otp = NOEE_TOTP; 
-		g_currentlim = NOEE_ILIM;
+		
 	}
 	g_vset = g_vstart;
     g_tstart = ReturnTemp(g_vstart, 0);

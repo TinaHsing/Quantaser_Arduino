@@ -95,7 +95,7 @@ const PROGMEM unsigned char kilstable[] =
 
 
 const PROGMEM unsigned int timeconst[] =
-{
+{	
   0,
   5,
   10, 

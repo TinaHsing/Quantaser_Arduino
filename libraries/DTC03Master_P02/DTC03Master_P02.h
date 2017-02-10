@@ -58,22 +58,20 @@
 #define EEADD_DUMMY			100
 
 //----------NOEE Default value------
-#define NOEE_VSTART		32932
-#define NOEE_VEND		9313
-#define NOEE_RATE		1
-#define NOEE_ILIM       50 // currntlimit,3A=50
-#define NOEE_FBC		22400
-#define NOEE_P          10
-#define NOEE_KI			0
-#define NOEE_LS			0
-#define NOEE_kiindex    1
-#define NOEE_TOTP       561 //120C
-#define NOEE_R1         10
-#define NOEE_R2         30
-#define NOEE_DUMMY		104
+#define NOEE_VSET		30000
+#define NOEE_ILIM		50 // currntlimit,3A=50
+#define NOEE_P			10
+#define NOEE_kiindex    0 
+#define NOEE_BCONST		3988
+#define NOEE_MODSTATUS  0
+#define NOEE_R1			20
+#define NOEE_R2			30
+#define NOEE_TPIDOFF    2
+#define NOEE_FBC       	22400
+#define NOEE_MODOFF     32168
+#define NOEE_RMEAS      29800
+#define NOEE_TOTP		561 //120C
 
-#define TEMP_RISING 	1
-#define TEMP_FALLING 	0
 
 //=====================BG print coordinate definition=========
 #define TSET_COORD_X	0 
