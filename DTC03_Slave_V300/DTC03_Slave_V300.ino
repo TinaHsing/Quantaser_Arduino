@@ -4,7 +4,7 @@
 #include <Wire.h>
 #include <AD5541.h>
 #include <LTC1865.h>
-#include <DTC03_P05v2.h>
+#include <DTC03_Slave_V300.h>
 #include <PID.h>
 #include <EEPROM.h>
 #include <DTC03_MS.h>

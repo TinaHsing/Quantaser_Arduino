@@ -1,6 +1,7 @@
 #include <Wire.h>
 #include <openGLCD.h>
 #include <DTC03_MS.h>
+#include <EEPROM.h>
 #include <Wire.h>
 #include <fonts/SystemFont5x7.h>
 #include <fonts/Iain5x7.h>
@@ -14,7 +15,7 @@
 #define VAVGPWR 6		// Note!!!! VAVGTIMEs = 2 ^ VAVGPWR
 #define IAVGTIMES 8
 #define IAVGPWR 3
-#define ILIMSTART 0.5
+#define ILIMSTART 0.45
 #define ILIMSTEP 0.05
 #define DEBOUNCETIME 2 //debounceing time(ms) for ENC
 #define COUNTRESETTIME 80
@@ -38,8 +39,8 @@
 //-----------EEPROM ADDRESS---------
 #define EEADD_VSET_UPPER	0
 #define EEADD_VSET_LOWER	1
-#define EEADD_BCONST_UPPER	2
-#define EEADD_BCONST_LOWER	3
+#define EEADD_BCONST_UPPER	19
+#define EEADD_BCONST_LOWER	20
 #define EEADD_MODSTATUS		4
 #define EEADD_currentlim 	5
 #define EEADD_FBC_UPPER		6
@@ -58,10 +59,11 @@
 #define EEADD_DUMMY			100
 
 //----------NOEE Default value------
+#define NOEE_DUMMY 		104
 #define NOEE_VSET		30000
-#define NOEE_ILIM		50 // currntlimit,3A=50
+#define NOEE_ILIM		11 // currntlimit=0.45+0.05*11=1A
 #define NOEE_P			10
-#define NOEE_kiindex    0 
+#define NOEE_kiindex    1 
 #define NOEE_BCONST		3988
 #define NOEE_MODSTATUS  0
 #define NOEE_R1			20
@@ -142,6 +144,12 @@
 #define TPCB_COORD_Y 	 ROWPIXEL0507*7
 #define Text_Tpcb 		 "Tpcb :"
 
+#define Test1_COORD_X    0
+#define Test1_COORD_Y    ROWPIXEL0507*2
+#define Test2_COORD_X    COLUMNPIXEL0507*9
+#define Test2_COORD_Y    ROWPIXEL0507*2
+#define Test3_COORD_X    0
+#define Test3_COORD_Y    ROWPIXEL0507*5
 
 
 // define GLCD parameter
@@ -205,19 +213,23 @@ public:
     void blinkTsetCursor();
     void SaveEEPROM();
     void ReadEEPROM();
+    void I2CWriteAll();
 	
-	unsigned int g_vact, g_vset, g_tpcb, g_otp, g_itec, g_Rmeas;
-	bool g_sensortype, g_en_state, g_mod_status;
-    unsigned long g_vactsum; 
-	int g_itecsum;//
+	//working variable-------------------
+	unsigned int g_vact, g_vset, g_tpcb, g_otp, g_Rmeas, g_bconst, g_fbcbase, g_vmodoffset;
+	unsigned char g_p, g_ki,g_ls,g_currentlim, g_tpidoff, g_r1, g_r2, g_kiindex, g_cursorstate;
+	int g_itec;
+	bool g_mod_status;	
     float g_tset;
-    unsigned char g_cursorstate;
+    //------------------------------------
+    bool g_sensortype, g_en_state;
+    
 private:
 	glcd lcd;
 	int g_counter;
-    unsigned int g_bconst, g_fbcbase, Varray[VAVGTIMES], Iarray[IAVGTIMES], g_icount ,g_vmodoffset, p_cursorStateCounter[3], p_temp, p_cursorStayTime;
+    unsigned int  g_icount , p_cursorStateCounter[3], p_temp, p_cursorStayTime;
     unsigned int p_tBlink, p_tcursorStateBounce;
-    unsigned char g_p, g_ki,g_ls,g_currentlim, g_tpidoff, g_vbec2, g_r1, g_r2, g_kiindex;
+    
 	unsigned char g_iarrayindex, g_varrayindex, g_lastencoded, p_engmodeCounter, p_ee_change_state;
     bool g_errcode1, g_errcode2, g_flag, g_paramupdate, g_countersensor, g_testgo, p_tBlink_toggle, p_engModeFlag,p_blinkTsetCursorFlag;
     bool p_ee_changed;

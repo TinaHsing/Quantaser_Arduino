@@ -23,16 +23,10 @@ void DTC03Master::ParamInit()
   
   Wire.begin();
   lcd.Init();
-  g_iarrayindex = 0;
-  g_varrayindex = 0;
-  g_itecsum = 0;
-  g_vactsum = 0;
   g_paramupdate = 0;
   g_tsetstep = 1.00;
   g_en_state = 0;
   g_countersensor = 0;
-  g_ttstart = 18.00;
-  g_testgo =0;
   g_cursorstate=0;
   p_cursorStateCounter[0]=0;
   p_cursorStateCounter[1]=0;
@@ -49,7 +43,7 @@ void DTC03Master::WelcomeScreen()
 {
   lcd.SelectFont(SystemFont5x7);
   lcd.GotoXY(0,0);
-  lcd.print("DTC03 Ver.2.01");
+  lcd.print("DTC03 Ver.3.01");
   lcd.GotoXY(0,ROWPIXEL0507*1);
   lcd.print("Initializing");
 //  for (byte i=9; i>0; i--)
@@ -60,7 +54,7 @@ void DTC03Master::WelcomeScreen()
 //  }
   lcd.ClearScreen(0);//0~255 means ratio of black  
 }
-void DTC03SMaster::ReadEEPROM()
+void DTC03Master::ReadEEPROM()
 {
 	unsigned char noeedummy, temp_upper, temp_lower;
 	noeedummy = EEPROM.read(EEADD_DUMMY);
@@ -69,8 +63,8 @@ void DTC03SMaster::ReadEEPROM()
 		g_vset = EEPROM.read(EEADD_VSET_UPPER)<<8 | EEPROM.read(EEADD_VSET_LOWER);
 		g_currentlim = EEPROM.read(EEADD_currentlim);
 		g_p = EEPROM.read(EEADD_P);
-		g_kiindex = EEPROM.read(EEADD_KIINDEX);
-		g_bconst = EEPROM.read(EEADD_BCONST_UPPER<<8) | EPROM.read(EEADD_BCONST_LOWER<<8);
+		g_kiindex = EEPROM.read(EEADD_KIINDEX);		
+		g_bconst=EEPROM.read(EEADD_BCONST_UPPER)<<8 | EEPROM.read(EEADD_BCONST_LOWER);		
 		g_mod_status = EEPROM.read(EEADD_MODSTATUS);
         g_r1 = EEPROM.read(EEADD_R1);
         g_r2 = EEPROM.read(EEADD_R2);
@@ -79,7 +73,6 @@ void DTC03SMaster::ReadEEPROM()
         g_vmodoffset = EEPROM.read(EEADD_MODOFF_UPPER)<<8 |  EEPROM.read(EEADD_MODOFF_LOWER);
         g_Rmeas = EEPROM.read(EEADD_RMEAS_UPPER)<<8 | EEPROM.read(EEADD_RMEAS_LOWER); 
         g_otp = EEPROM.read(EEADD_TOTP_UPPER)<<8 | EEPROM.read(EEADD_TOTP_LOWER);
-        
 	}
 	else
 	{
@@ -118,16 +111,11 @@ void DTC03SMaster::ReadEEPROM()
 		g_Rmeas = NOEE_RMEAS;
 		g_otp = NOEE_TOTP; 
 		
-	}
-	g_vset = g_vstart;
-    g_tstart = ReturnTemp(g_vstart, 0);
-    g_tnow = g_tstart;
-    g_tend = ReturnTemp(g_vend, 0);
-	g_trate = pgm_read_word_near(RateTable+g_rateindex);
-	p_rate = float(g_trate)*SCANSAMPLERATE/100000.0;
+	}	
+    g_tset = ReturnTemp(g_vset, 0); 
+   
 }
-void DTC03SMaster::SaveEEPROM() {
-	
+void DTC03Master::SaveEEPROM() {	
 	if (p_ee_changed==1) {
 		p_ee_changed = 0;
 		switch(p_ee_change_state){
@@ -139,7 +127,7 @@ void DTC03SMaster::SaveEEPROM() {
     
             case EEADD_BCONST_UPPER:
                 EEPROM.write(EEADD_BCONST_UPPER, g_bconst>>8 );
-                EEPROM.write(EEADD_BCONST_LOWER, g_bconst );
+                EEPROM.write(EEADD_BCONST_LOWER, g_bconst); 
                 break;
 
             case EEADD_MODSTATUS:
@@ -164,7 +152,7 @@ void DTC03SMaster::SaveEEPROM() {
                 break;
              
 			case EEADD_TOTP_UPPER:
-                EEPROM.write(EEADD_TOTP_UPPER, (g_otp>>8);
+                EEPROM.write(EEADD_TOTP_UPPER, (g_otp>>8));
                 EEPROM.write(EEADD_TOTP_LOWER, g_otp);
                 break;
                
@@ -190,6 +178,30 @@ void DTC03SMaster::SaveEEPROM() {
                 break;           
         }
 	}
+}
+void DTC03Master::CheckStatus()
+{
+		float tact, itec_f, tpcb_f;
+				if (p_loopindex%3==0) {
+					I2CReadData(I2C_COM_ITEC_ER);
+		            itec_f = float(g_itec)*CURRENTRatio;
+		            if(!p_engModeFlag) PrintItec(itec_f);
+				}								
+				if (p_loopindex%3==1) {
+					I2CReadData(I2C_COM_VACT);
+	  	    		tact = ReturnTemp(g_vact,0);
+	  	    		if(!p_engModeFlag) PrintTact(tact);
+				}	
+				if (p_loopindex%3==2) {
+					I2CReadData(I2C_COM_PCB);
+		            tpcb_f = float(g_tpcb)/4.0-20.5;
+		            if(p_engModeFlag) PrintTpcb(tpcb_f);
+				}	
+	    p_loopindex++;		       
+}
+void DTC03Master::I2CWriteAll()
+{
+	for (int i=I2C_COM_INIT; i<=I2C_COM_WAKEUP; i++) I2CWriteData(i);
 }
 void DTC03Master::I2CWriteData(unsigned char com)
 {
@@ -248,6 +260,11 @@ void DTC03Master::I2CWriteData(unsigned char com)
     		temp[0] = g_otp;
     		temp[1] = g_otp>>8;
     	break;
+    	
+    case I2C_COM_WAKEUP:
+    		temp[0] = 1;
+    		temp[1] = 0; // overshoot cancelation, set 0 in DTC03
+    	break;
     
     case I2C_COM_TEST1:
         temp[0]=p_temp;
@@ -303,26 +320,7 @@ void DTC03Master::I2CReadData(unsigned char com)
         break;
   }
 }
-void DTC03SMaster::CheckStatus()
-{
-		float tact, itec_f, tpcb_f;
-				if (p_loopindex%3==0) {
-					I2CReadData(I2C_COM_ITEC_ER);
-		            itec_f = float(g_itec)*CURRENTRatio;
-		            PrintItec(itec_f);
-				}				
-				if (p_loopindex%3==1) {
-					I2CReadData(I2C_COM_PCB);
-		            tpcb_f = float(g_tpcb)/4.0-20.5;
-		            PrintTpcb(tpcb_f);
-				}
-				if (p_loopindex%3==2) {
-					I2CReadData(I2C_COM_VACT);
-	  	    		tact = ReturnTemp(g_vact,0);
-	  	    		PrintTact(tact);
-				}		
-	    p_loopindex++;		       
-}
+
 float DTC03Master::ReturnTemp(unsigned int vact, bool type)
 {
   float tact;
@@ -431,11 +429,9 @@ void DTC03Master::PrintItec(float itec)
    {
      lcd.print(" ");
      lcd.print(itec,2);
-     //lcd.print(itec,3);
    } 
-  //lcd.print(" "); 
 }
-void DTC03SMaster::PrintTpcb(float tpcb)
+void DTC03Master::PrintTpcb(float tpcb)
 {
   lcd.SelectFont(SystemFont5x7);
   lcd.GotoXY(TOTP_COORD_X2, TOTP_COORD_Y);
@@ -468,12 +464,13 @@ void DTC03Master::PrintKi()
   lcd.SelectFont(SystemFont5x7);
   tconst = float(pgm_read_word_near(timeconst+g_kiindex))/100.0;
   lcd.GotoXY(I_COORD_X2, I_COORD_Y);
-  if (g_kiindex==1) lcd.print(tconst);
-  else if (g_kiindex<32)
-  {
+  if (g_kiindex < 3) {
+  	if (g_kiindex==1) lcd.print(" OFF");
+  	else lcd.print(tconst,2);
+  }   
+  else if (g_kiindex < 33){
    lcd.print(" ");
-   if (g_kiindex==0) lcd.print("OFF");
-   else lcd.print(tconst,1);
+   lcd.print(tconst,1);
   }
   else{
   lcd.print("  ");
@@ -493,41 +490,6 @@ void DTC03Master::PrintModStatus()
   if(g_mod_status == 0) lcd.print("OFF");
   else lcd.print(" ON"); 
 }
-void DTC03Master::Encoder()
-{
-  unsigned char encoded, sum, dt;
-  unsigned long tenc;
-  bool MSB, LSB;
-  tenc= millis();
-  dt = tenc - g_tenc;
-  if(dt < DEBOUNCETIME) return;
-  if(dt > COUNTRESETTIME) g_icount =0;
-  MSB = digitalRead(ENC_B);
-  LSB = digitalRead(ENC_A);
-  encoded = (MSB << 1)|LSB;
-  sum = (g_lastencoded << 2)| encoded;
-  if(g_icount%4==0)
-  {
-    g_paramupdate=1;// 20161031 when ineterrupt=4times g_paramupdate=1
-    if (sum == 0b1101 || sum == 0b0100 || sum == 0b0010 || sum == 0b1011) 
-    {
-
-      g_counter = -1;
-      g_countersensor =1;
-    }
-    if (sum == 0b1110 || sum == 0b0111 || sum == 0b0001 || sum == 0b1000) 
-    {
-
-      g_counter = 1;
-      g_countersensor =0;
-    }
-  }
-  g_lastencoded = encoded;
-  g_tenc = tenc;
-  g_icount++;
-}
-
-
 void DTC03Master::UpdateParam() // Still need to add the upper and lower limit of each variable
 {
   unsigned char ki, ls;
@@ -554,7 +516,7 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
       
       case 2:
       	g_currentlim += g_counter;
-        if(g_currentlim>50) g_currentlim=50;
+        if(g_currentlim>51) g_currentlim=51;
         if(g_currentlim<1) g_currentlim=1;        
         I2CWriteData(I2C_COM_CTR);
         PrintIlim();
@@ -583,6 +545,7 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
       	g_bconst += g_counter;
 	    if(g_bconst>4499) g_bconst=4499;
 	    if(g_bconst<3501) g_bconst=3501;
+	    I2CWriteData(I2C_COM_INIT);
   	    g_vset = ReturnVset(g_tset, g_sensortype);
 	    I2CWriteData(I2C_COM_VSET);//only send Vset, Bconst is not important for slave
 	    PrintB();
@@ -726,7 +689,7 @@ void DTC03Master::PrintEngAll()
 	PrintVmod();
 	PrintRmeas();
 	PrintTotp();
-	PrintTpcb();
+	CheckStatus();
 }
 void DTC03Master::PrintR1() //g_cursorstate=10
 {
@@ -771,9 +734,12 @@ void DTC03Master::PrintRmeas()//g_cursorstate=15
 }
 void DTC03Master::PrintTotp()//g_cursorstate=16
 {
+  float Topt_set;
   lcd.SelectFont(SystemFont5x7);
   lcd.GotoXY(TOTP_COORD_X2, TOTP_COORD_Y);
-  lcd.print(g_testgo);
+  Topt_set = float(g_otp)/4.0-20.5;
+  if (Topt_set < 99.5 ) lcd.print(" ");
+  lcd.print(Topt_set,0);
 }
 
 void DTC03Master::CursorState()
@@ -1039,7 +1005,39 @@ void DTC03Master::ShowCursor(unsigned char state_old)
 		}
   
 }
+void DTC03Master::Encoder()
+{
+  unsigned char encoded, sum, dt;
+  unsigned long tenc;
+  bool MSB, LSB;
+  tenc= millis();
+  dt = tenc - g_tenc;
+  if(dt < DEBOUNCETIME) return;
+  if(dt > COUNTRESETTIME) g_icount =0;
+  MSB = digitalRead(ENC_B);
+  LSB = digitalRead(ENC_A);
+  encoded = (MSB << 1)|LSB;
+  sum = (g_lastencoded << 2)| encoded;
+  if(g_icount%4==0)
+  {
+    g_paramupdate=1;// 20161031 when ineterrupt=4times g_paramupdate=1
+    if (sum == 0b1101 || sum == 0b0100 || sum == 0b0010 || sum == 0b1011) 
+    {
 
+      g_counter = -1;
+      g_countersensor =1;
+    }
+    if (sum == 0b1110 || sum == 0b0111 || sum == 0b0001 || sum == 0b1000) 
+    {
+
+      g_counter = 1;
+      g_countersensor =0;
+    }
+  }
+  g_lastencoded = encoded;
+  g_tenc = tenc;
+  g_icount++;
+}
 
 
 

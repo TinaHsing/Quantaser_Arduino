@@ -6,6 +6,7 @@
 // ==========DTC03_P05 I2C slave address ======
 #define DTC03P05 		0x07
 // =========receive Events Command and Address======
+//Write
 #define I2C_COM_INIT 	0x11
 #define I2C_COM_CTR 	0x12
 #define I2C_COM_KI	    0x13
@@ -13,17 +14,19 @@
 #define I2C_COM_R1R2	0x15
 #define I2C_COM_FBC		0x16
 #define I2C_COM_OTP  	0x17
-#define I2C_COM_WAKEUP  0x18 
+#define	I2C_COM_VMOD	0x18
+#define	I2C_COM_TPIDOFF 0x19
+#define	I2C_COM_RMEAS   0x1A
+#define I2C_COM_WAKEUP  0x1B 
 
-#define I2C_COM_ITEC_ER	0x19
-#define I2C_COM_VACT	0x1A
-#define I2C_COM_PCB		0X1B
-#define	I2C_COM_VMOD	0x1C
-#define	I2C_COM_TPIDOFF 0x1D
-#define	I2C_COM_RMEAS   0x1E
+//Read
+#define I2C_COM_ITEC_ER	0x1C
+#define I2C_COM_VACT	0x1D
+#define I2C_COM_PCB		0X1E
+
 
 #define I2C_COM_TEST1	0x1F
-#define I2C_COM_TEST2 	0x1G
+#define I2C_COM_TEST2 	0x20
 
 //=========request Events Mask ============
 #define REQMSK_ENSTATE 		0x80
@@ -39,7 +42,8 @@
 // first colume ki, second colume ls
 /*matrix modified on 168us 20161103*/
 const PROGMEM unsigned char kilstable[] =
-{ 
+{
+0,   0,//dummy 
 0,   0, //0
 16,	220, //0.05
 17,	220,//0.1
@@ -95,11 +99,12 @@ const PROGMEM unsigned char kilstable[] =
 
 
 const PROGMEM unsigned int timeconst[] =
-{	
-  0,
-  5,
-  10, 
-  20,
+{
+  0, //index 0, dummy index
+  0, //index 1, time const=0, OFF
+  5, //index 2, time const=0.05
+  10, //index 3, time const=0.1
+  20,//index 4
   30,
   40,
   50,
@@ -127,7 +132,7 @@ const PROGMEM unsigned int timeconst[] =
   600,
   700,
   800,
-  900,
+  900, //index 32, time const=9.0
   1000,
   1200,
   1400,
@@ -145,7 +150,7 @@ const PROGMEM unsigned int timeconst[] =
   6500,
   7000,
   7500,
-  8000,
+  8000, //index 50, time const=80
 };
 
 #endif
