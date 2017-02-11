@@ -11,13 +11,13 @@ void PID::Init( long long p_limit, long long i_limit,long long error_limit)
 	g_p_limit = p_limit;
     g_i_limit = i_limit;//20171107
     g_errorlimit = error_limit;
-    #ifdef DEBUGFLAG01
-		Serial.println("====================comput print detail=============");
-		Serial.print("loopcount to show:");
-		Serial.println(PIDDEBUGFLAG);
-		Serial.println("kp, errin, errorsum, ki, ls, p_term, i_term, output");
-	#else
-	#endif
+//    #ifdef DEBUGFLAG01
+//		Serial.println("====================comput print detail=============");
+//		Serial.print("loopcount to show:");
+//		Serial.println(PIDDEBUGFLAG);
+//		Serial.println("kp, errin, errorsum, ki, ls, p_term, i_term, output");
+//	#else
+//	#endif
 }
 
 long PID::Compute(bool en, long errin, unsigned char kp, unsigned char ki, unsigned char ls)
@@ -45,46 +45,46 @@ long PID::Compute(bool en, long errin, unsigned char kp, unsigned char ki, unsig
 		else if(g_i_term < (-1)*g_i_limit) g_i_term = (-1)*g_i_limit ;//
         
         output = -(p_term+g_i_term);//20161027
+    
 
-
-        #ifdef DEBUGFLAG01
-		unsigned long t1;
-		g_index++;
-		t1= micros();
-		if(g_index == PIDDEBUGFLAG )
-		{
-			g_index = 0;
-		    Serial.print(kp);
-			Serial.print(",");
-			Serial.print(errin);
-			Serial.print(",");
-            //Serial.print(g_errorsum);
-            //Serial.print(",");
-            
-            Serial.print(long(g_errorsum>>32),HEX);
-            Serial.print(",");
-            Serial.print(long(g_errorsum),HEX);
-            Serial.print(",");
-            
-            //Serial.print(long(esumki),HEX);//
-            //Serial.print(",");//
-            //Serial.print(long(esumki>>32),HEX);//
-            //Serial.print(",");//
-            
-            Serial.print(ki);
-			Serial.print(",");
-			Serial.print(ls);
-			Serial.print(",");
-			Serial.print(p_term);
-			Serial.print(",");
-			Serial.print(g_i_term);
-			Serial.print(",");
-			Serial.println(output);
+//        #ifdef DEBUGFLAG01
+//		unsigned long t1;
+//		g_index++;
+//		t1= micros();
+//		if(g_index == PIDDEBUGFLAG )
+//		{
+//			g_index = 0;
+//		    Serial.print(kp);
 //			Serial.print(",");
-//			Serial.println(t1);
-		}
-		#else
-		#endif
+//			Serial.print(errin);
+//			Serial.print(",");
+//            //Serial.print(g_errorsum);
+//            //Serial.print(",");
+//            
+//            Serial.print(long(g_errorsum>>32),HEX);
+//            Serial.print(",");
+//            Serial.print(long(g_errorsum),HEX);
+//            Serial.print(",");
+//            
+//            //Serial.print(long(esumki),HEX);//
+//            //Serial.print(",");//
+//            //Serial.print(long(esumki>>32),HEX);//
+//            //Serial.print(",");//
+//            
+//            Serial.print(ki);
+//			Serial.print(",");
+//			Serial.print(ls);
+//			Serial.print(",");
+//			Serial.print(p_term);
+//			Serial.print(",");
+//			Serial.print(g_i_term);
+//			Serial.print(",");
+//			Serial.println(output);
+////			Serial.print(",");
+////			Serial.println(t1);
+//		}
+//		#else
+//		#endif
 
 	}
 	else
@@ -93,9 +93,47 @@ long PID::Compute(bool en, long errin, unsigned char kp, unsigned char ki, unsig
 		output =0;
 
 	}
+	////////add to show parameters////////
+        g_en=en;
+        g_errin=errin;
+        g_kp=kp;
+        g_ki=ki;
+        g_ls=ls;
+        g_p_term=p_term;
+        g_out=output;
 	return output;
 }
-
+void PID::showParameter()
+{
+	#ifdef DEBUGFLAG01
+		unsigned long t1;
+		g_index++;
+		t1= micros();
+		if(g_index == PIDDEBUGFLAG )
+		{
+			g_index = 0;
+			Serial.print(g_en);
+			Serial.print(",");
+		    Serial.print(g_kp);
+			Serial.print(",");
+			Serial.print(g_errin);
+			Serial.print(",");
+            Serial.print(g_ki);
+			Serial.print(",");
+			Serial.print(g_ls);
+			Serial.print(",");
+			Serial.print(g_p_term);
+			Serial.print(",");
+			Serial.print(g_i_term);
+			Serial.print(",");
+			Serial.println(g_out);
+//			Serial.print(",");
+//			Serial.println(t1);
+		}
+		#else
+		#endif
+	
+} 
 //long PID::Computedtc(bool en, long errin, unsigned char kp, unsigned char ki, unsigned char ls, long u_limit)
 //{
 //	int derr, es;

@@ -13,10 +13,16 @@ class PID
 		//long long g_errorsum;
         unsigned int g_index; 
 	public:
-		PID();
-		long long g_errorsum; //Adam@1112, change to public
-		long g_i_term;
+		PID();		
 		void Init(long long p_limit,long long i_limit,long long error_limit);
 		long Compute(bool en, long errin, unsigned char kp, unsigned char ki, unsigned char ls);
 		long Computedtc(bool en, long errin, unsigned char kp, unsigned char ki, unsigned char ls, long u_limit);
+		void showParameter();
+		
+		long long g_errorsum; //Adam@1112, change to public
+		long g_i_term, g_p_term;
+		///////add to show parameters////////
+		bool g_en;
+		long g_errin, g_out;
+		unsigned char g_kp, g_ki, g_ls;
 };

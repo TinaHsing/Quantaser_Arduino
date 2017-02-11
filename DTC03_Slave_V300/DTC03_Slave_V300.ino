@@ -59,7 +59,7 @@ void loop() {
   dtc.ReadVpcb();
   dtc.CheckSensorType();
   dtc.CheckTemp();
-
+  dtc.CurrentLimit();
   isense =abs((int)(dtc.g_itecread)-(int)(dtc.g_isense0));
   ierr = isense - dtc.g_iteclimitset; 
   terr = (long)dtc.g_vact - (long)dtc.g_vset_limitt;
@@ -88,7 +88,8 @@ void loop() {
      isense =abs((int)(dtc.g_itecread)-(int)(dtc.g_isense0));
      ierr = isense - dtc.g_iteclimitset;
      dtc.ReadVoltage(1);
-     terr = (long)dtc.g_vact - (long)dtc.g_vset_limitt;      
+     terr = (long)dtc.g_vact - (long)dtc.g_vset_limitt;    
+     ipid.showParameter();  
     } 
   }
   if (dtc.g_overshoot == 1){
