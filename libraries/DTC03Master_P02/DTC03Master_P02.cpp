@@ -27,7 +27,7 @@ void DTC03Master::ParamInit()
   g_tsetstep = 1.00;
   g_en_state = 0;
   g_countersensor = 0;
-  g_cursorstate=0;
+  g_cursorstate=1;
   p_cursorStateCounter[0]=0;
   p_cursorStateCounter[1]=0;
   p_cursorStateCounter[2]=0;
@@ -38,6 +38,8 @@ void DTC03Master::ParamInit()
   p_blinkTsetCursorFlag=0;
   p_loopindex=0;
   p_ee_changed=0;
+  p_holdCursorTimer=0;
+  p_HoldCursortateFlag=0;
 }
 void DTC03Master::WelcomeScreen()
 {
@@ -490,145 +492,6 @@ void DTC03Master::PrintModStatus()
   if(g_mod_status == 0) lcd.print("OFF");
   else lcd.print(" ON"); 
 }
-void DTC03Master::UpdateParam() // Still need to add the upper and lower limit of each variable
-{
-  unsigned char ki, ls;
-  unsigned long timer1, timer2;
-  if(g_paramupdate)
-  {
-    g_paramupdate = 0;
-    p_ee_changed = 1;
-    switch(g_cursorstate)
-    {
-      case 0:
-      break;
-
-      case 1:
-        g_tset += g_tsetstep*g_counter;
-        if(g_tset>100) g_tset=100;
-        if(g_tset<7) g_tset=7;
-        g_vset = ReturnVset(g_tset, g_sensortype);
-        I2CWriteData(I2C_COM_VSET);
-        PrintTset();
-        p_blinkTsetCursorFlag=0;
-        p_ee_change_state=EEADD_VSET_UPPER;	
-      break; 
-      
-      case 2:
-      	g_currentlim += g_counter;
-        if(g_currentlim>51) g_currentlim=51;
-        if(g_currentlim<1) g_currentlim=1;        
-        I2CWriteData(I2C_COM_CTR);
-        PrintIlim();
-        p_ee_change_state=EEADD_currentlim; 
-      break;
-
-      case 3:
-      	g_p += g_counter;
-        if(g_p>99) g_p=99;
-        if(g_p<1) g_p=1;    
-        I2CWriteData(I2C_COM_CTR);
-        PrintP();
-        p_ee_change_state=EEADD_P;
-      break;
-
-      case 4:
-      	g_kiindex += g_counter;
-        if(g_kiindex>50) g_kiindex=50;
-        if(g_kiindex<1) g_kiindex=1;      
-        I2CWriteData(I2C_COM_KI);
-        PrintKi();
-        p_ee_change_state=EEADD_KIINDEX;
-      break;
-
-      case 5:
-      	g_bconst += g_counter;
-	    if(g_bconst>4499) g_bconst=4499;
-	    if(g_bconst<3501) g_bconst=3501;
-	    I2CWriteData(I2C_COM_INIT);
-  	    g_vset = ReturnVset(g_tset, g_sensortype);
-	    I2CWriteData(I2C_COM_VSET);//only send Vset, Bconst is not important for slave
-	    PrintB();
-	    p_ee_change_state=EEADD_BCONST_UPPER;
-	    break;
-
-      case 6:
-        g_mod_status = g_countersensor;
-        I2CWriteData(I2C_COM_INIT);
-        PrintModStatus(); 
-        p_ee_change_state=EEADD_MODSTATUS;
-        break;
-
-      case 9:
-        PrintFactaryMode();
-        break;
-        
-      case 10:
-      	g_r1 += g_counter;
-	    if(g_r1>30) g_r1=30; // R1, 1~30 for 0.1~3.0 ohm set 
-	    if(g_r1<1) g_r1=1;//
-      	I2CWriteData(I2C_COM_R1R2);
-        PrintR1();
-        p_ee_change_state=EEADD_R1;
-        break;
-
-      case 11:
-      	g_r2 += g_counter;
-        if(g_r2>30) g_r2=30;
-        if(g_r2<1) g_r2=1;//R2, 1~30 for 1.0~3.0 ohm set 
-        I2CWriteData(I2C_COM_R1R2);
-        PrintR2();
-        p_ee_change_state=EEADD_R2;
-        break;
-
-      case 12:
-      	g_tpidoff += g_counter;
-        if(g_tpidoff>10) g_tpidoff=10; //Tpid offset, 0~10 for 1~10000 @1000 step
-        if(g_tpidoff<1) g_tpidoff=1;
-      
-        I2CWriteData (I2C_COM_TPIDOFF);
-        PrintTpidoff();
-        p_ee_change_state=EEADD_TPIDOFF;
-        break;
-
-
-      case 13:
-      	g_fbcbase +=(g_counter*100);
-        if(g_fbcbase>44900) g_fbcbase=44900;
-        if(g_fbcbase<16100) g_fbcbase=16100;
-        I2CWriteData(I2C_COM_FBC);
-        PrintVfbc();
-        p_ee_change_state=EEADD_FBC_UPPER;
-        break;
-
-      case 14:
-      	g_vmodoffset +=g_counter;
-        if(g_vmodoffset>33199) g_vmodoffset=33199;
-        if(g_vmodoffset<32199) g_vmodoffset=32199;
-        I2CWriteData(I2C_COM_VMOD);
-        PrintVmod();
-        p_ee_change_state=EEADD_MODOFF_UPPER;
-        break;
-
-      case 15:
-      	g_Rmeas += (g_counter*100);
-      	if(g_fbcbase>45000) g_fbcbase=45000;
-        if(g_fbcbase<20000) g_fbcbase=20000;
-        I2CWriteData(I2C_COM_RMEAS);
-        PrintRmeas();
-        p_ee_change_state=EEADD_RMEAS_UPPER;
-        break;
-
-      case 16:
-      	g_otp += (g_counter*4);
-		if (g_otp < 281) g_otp = 281; // 50C
-		if (g_otp > 561) g_otp = 561; //120C
-		I2CWriteData(I2C_COM_OTP);
-        PrintTotp();  
-        p_ee_change_state=EEADD_TOTP_UPPER;
-    }
-  }
-}
 
 void DTC03Master::UpdateEnable()
 {
@@ -729,8 +592,7 @@ void DTC03Master::PrintRmeas()//g_cursorstate=15
 {
   lcd.SelectFont(SystemFont5x7);
   lcd.GotoXY(RMEAS_COORD_X2, RMEAS_COORD_Y);
-  lcd.print(g_ttstart);
-  lcd.print("  ");//
+  lcd.print(g_Rmeas);
 }
 void DTC03Master::PrintTotp()//g_cursorstate=16
 {
@@ -746,7 +608,6 @@ void DTC03Master::CursorState()
 {
   unsigned long t1, d1;
   unsigned int t_temp;
-  unsigned char oldCursorState;
   if(analogRead(PUSHB)>HIGHLOWBOUNDRY)
   {
   	p_engmodeCounter=0;
@@ -756,7 +617,7 @@ void DTC03Master::CursorState()
   {
   	t_temp=millis();
   	
-  	if( abs(t_temp-p_cursorStateCounter[0])<50 ) 
+  	if( abs(t_temp-p_cursorStateCounter[0])<ACCUMULATE_TH ) //ACCUMULATE_TH=50
 	{
   		p_cursorStateCounter[1]=t_temp-p_cursorStateCounter[0];
   		p_cursorStateCounter[2]+=p_cursorStateCounter[1]; 		
@@ -767,9 +628,11 @@ void DTC03Master::CursorState()
   	{
   		if ( p_cursorStateCounter[2]>LONGPRESSTIME ) //long press case:
 		{
-	  		if (abs(t_temp-p_cursorStayTime) > CURSORSTATE_STAYTIME && p_tBlink_toggle ){
+	  		if (abs(t_temp-p_cursorStayTime) > CURSORSTATE_STAYTIME && p_tBlink_toggle )
+			{	  			
 	  			if( g_cursorstate==0 || g_cursorstate==1 ) g_cursorstate=2;
 		  		else g_cursorstate++;
+		  		
 		  		if( g_cursorstate>6 ) g_cursorstate=2;	  		
 		  		ShowCursor(0);//the index is not important
 		  		p_engmodeCounter++;
@@ -781,32 +644,31 @@ void DTC03Master::CursorState()
 		         	PrintFactaryMode();						        
 		        } 
 		  		p_cursorStayTime=t_temp;
-			  } 		
+			} 		
 		}
 	  	else //short press case:
 		{
-			if( abs(t_temp-p_tcursorStateBounce)> 200 )
+			if( abs(t_temp-p_tcursorStateBounce)> DEBOUNCE_WAIT ) //DEBOUNCE_WAIT=ACCUMULATE_TH*2
 			{
 				if( g_cursorstate==0 ) g_cursorstate=1;
 		  		if ( g_cursorstate==1 )
 				{
 		  			if(g_tsetstep <= 0.001) g_tsetstep = 1.0;
 		            else g_tsetstep = g_tsetstep/10.0;
+		            ShowCursor(0);
 				}
 		  		else //g_cursorstate=2~6
 				{
-		  			oldCursorState=g_cursorstate;
-		  			g_cursorstate=0;
-				}				
-				ShowCursor(oldCursorState);//here oldCursorState from 2~6, g_cursorstate is 0 or 1
+					p_HoldCursortateFlag=1;
+					p_timerResetFlag=1;
+				}								
 				p_tcursorStateBounce=t_temp;
 			} 	  		
 		}
-	}
-  	
+	} 	
   	else //eng mode
 	{		
-		if( abs(t_temp-p_tcursorStateBounce)> 200 )
+		if( abs(t_temp-p_tcursorStateBounce)> DEBOUNCE_WAIT )
 		{		    			
 			g_cursorstate++;
         	I2CWriteData(I2C_COM_TEST2);
@@ -827,12 +689,36 @@ void DTC03Master::CursorState()
 		    if( g_cursorstate>16 ) g_cursorstate=10;
 	  	    ShowCursor(0);
 	  	    p_tcursorStateBounce=t_temp;
-		}
-		
-	}	
-  	I2CWriteData(I2C_COM_TEST2);
-    p_cursorStateCounter[0]=t_temp; 
+		}		
+	}
+	p_cursorStateCounter[0]	= t_temp;
   }
+}
+
+void DTC03Master::HoldCursortate() //put this method in loop
+{
+	unsigned int t_temp, timer;
+	unsigned char oldCursorState;
+	if(p_HoldCursortateFlag==1)
+	{
+		//start timer when enter this section-----
+		t_temp=millis();
+		if(p_timerResetFlag==1) 
+		{
+			p_timerResetFlag=0;
+			p_holdCursorTimer=t_temp;
+		}
+		timer=t_temp-p_holdCursorTimer; //alway reset the timer when g_cursorstate=2~6 @ short press case
+		
+		if( timer < DEBOUNCE_WAIT*2 ) {} // do nothing if reset the timer			
+		else //wait too long! g_imer > 2*DEBOUNCE_WAIT
+		{
+			p_HoldCursortateFlag=0;
+			oldCursorState=g_cursorstate;
+			g_cursorstate=0;
+			ShowCursor(oldCursorState);//here oldCursorState from 2~6
+		}		
+	}
 }
 void DTC03Master::blinkTsetCursor()
 {
@@ -1004,6 +890,145 @@ void DTC03Master::ShowCursor(unsigned char state_old)
 		    break;
 		}
   
+}
+void DTC03Master::UpdateParam() // Still need to add the upper and lower limit of each variable
+{
+  unsigned char ki, ls;
+  unsigned long timer1, timer2;
+  if(g_paramupdate)
+  {
+    g_paramupdate = 0;
+    p_ee_changed = 1;
+    switch(g_cursorstate)
+    {
+      case 0:
+      break;
+
+      case 1:
+        g_tset += g_tsetstep*g_counter;
+        if(g_tset>100) g_tset=100;
+        if(g_tset<7) g_tset=7;
+        g_vset = ReturnVset(g_tset, g_sensortype);
+        I2CWriteData(I2C_COM_VSET);
+        PrintTset();
+        p_blinkTsetCursorFlag=0;
+        p_ee_change_state=EEADD_VSET_UPPER;	
+      break; 
+      
+      case 2:
+      	g_currentlim += g_counter;
+        if(g_currentlim>51) g_currentlim=51;
+        if(g_currentlim<1) g_currentlim=1;        
+        I2CWriteData(I2C_COM_CTR);
+        PrintIlim();
+        p_ee_change_state=EEADD_currentlim; 
+      break;
+
+      case 3:
+      	g_p += g_counter;
+        if(g_p>99) g_p=99;
+        if(g_p<1) g_p=1;    
+        I2CWriteData(I2C_COM_CTR);
+        PrintP();
+        p_ee_change_state=EEADD_P;
+      break;
+
+      case 4:
+      	g_kiindex += g_counter;
+        if(g_kiindex>50) g_kiindex=50;
+        if(g_kiindex<1) g_kiindex=1;      
+        I2CWriteData(I2C_COM_KI);
+        PrintKi();
+        p_ee_change_state=EEADD_KIINDEX;
+      break;
+
+      case 5:
+      	g_bconst += g_counter;
+	    if(g_bconst>4499) g_bconst=4499;
+	    if(g_bconst<3501) g_bconst=3501;
+	    I2CWriteData(I2C_COM_INIT);
+  	    g_vset = ReturnVset(g_tset, g_sensortype);
+	    I2CWriteData(I2C_COM_VSET);//only send Vset, Bconst is not important for slave
+	    PrintB();
+	    p_ee_change_state=EEADD_BCONST_UPPER;
+	    break;
+
+      case 6:
+        g_mod_status = g_countersensor;
+        I2CWriteData(I2C_COM_INIT);
+        PrintModStatus(); 
+        p_ee_change_state=EEADD_MODSTATUS;
+        break;
+
+      case 9:
+        PrintFactaryMode();
+        break;
+        
+      case 10:
+      	g_r1 += g_counter;
+	    if(g_r1>30) g_r1=30; // R1, 1~30 for 0.1~3.0 ohm set 
+	    if(g_r1<1) g_r1=1;//
+      	I2CWriteData(I2C_COM_R1R2);
+        PrintR1();
+        p_ee_change_state=EEADD_R1;
+        break;
+
+      case 11:
+      	g_r2 += g_counter;
+        if(g_r2>30) g_r2=30;
+        if(g_r2<1) g_r2=1;//R2, 1~30 for 1.0~3.0 ohm set 
+        I2CWriteData(I2C_COM_R1R2);
+        PrintR2();
+        p_ee_change_state=EEADD_R2;
+        break;
+
+      case 12:
+      	g_tpidoff += g_counter;
+        if(g_tpidoff>10) g_tpidoff=10; //Tpid offset, 0~10 for 1~10000 @1000 step
+        if(g_tpidoff<1) g_tpidoff=1;
+      
+        I2CWriteData (I2C_COM_TPIDOFF);
+        PrintTpidoff();
+        p_ee_change_state=EEADD_TPIDOFF;
+        break;
+
+
+      case 13:
+      	g_fbcbase +=(g_counter*100);
+        if(g_fbcbase>44900) g_fbcbase=44900;
+        if(g_fbcbase<16100) g_fbcbase=16100;
+        I2CWriteData(I2C_COM_FBC);
+        PrintVfbc();
+        p_ee_change_state=EEADD_FBC_UPPER;
+        break;
+
+      case 14:
+      	g_vmodoffset +=g_counter;
+        if(g_vmodoffset>33199) g_vmodoffset=33199;
+        if(g_vmodoffset<32199) g_vmodoffset=32199;
+        I2CWriteData(I2C_COM_VMOD);
+        PrintVmod();
+        p_ee_change_state=EEADD_MODOFF_UPPER;
+        break;
+
+      case 15:
+      	g_Rmeas += (g_counter*100);
+      	if(g_Rmeas>45000) g_Rmeas=45000;
+        if(g_Rmeas<20000) g_Rmeas=20000;
+        I2CWriteData(I2C_COM_RMEAS);
+        PrintRmeas();
+        p_ee_change_state=EEADD_RMEAS_UPPER;
+        break;
+
+      case 16:
+      	g_otp += (g_counter*4);
+		if (g_otp < 281) g_otp = 281; // 50C
+		if (g_otp > 561) g_otp = 561; //120C
+		I2CWriteData(I2C_COM_OTP);
+        PrintTotp();  
+        p_ee_change_state=EEADD_TOTP_UPPER;
+    }
+  }
 }
 void DTC03Master::Encoder()
 {

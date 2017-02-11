@@ -30,6 +30,8 @@
 //#define TESTGOPERIOD 60000 //testing period for one tempeature in the unit of ms (600,000 = 10 mins) used for functional test should be remove after function varification 
 #define TESTGOSTEP 22.00 // testgo temperature step, usually ttstart = Tamb -12 so the second step will be ttstart + 24 = Tamb +12
 #define CURSORSTATE_STAYTIME 700
+#define ACCUMULATE_TH 50
+#define DEBOUNCE_WAIT ACCUMULATE_TH*2
 //=================pin definition=========================
 #define ENC_B 3
 #define ENC_A 2
@@ -214,6 +216,7 @@ public:
     void SaveEEPROM();
     void ReadEEPROM();
     void I2CWriteAll();
+    void HoldCursortate();
 	
 	//working variable-------------------
 	unsigned int g_vact, g_vset, g_tpcb, g_otp, g_Rmeas, g_bconst, g_fbcbase, g_vmodoffset;
@@ -228,13 +231,12 @@ private:
 	glcd lcd;
 	int g_counter;
     unsigned int  g_icount , p_cursorStateCounter[3], p_temp, p_cursorStayTime;
-    unsigned int p_tBlink, p_tcursorStateBounce;
-    
+    unsigned int p_tBlink, p_tcursorStateBounce, p_holdCursorTimer;   
 	unsigned char g_iarrayindex, g_varrayindex, g_lastencoded, p_engmodeCounter, p_ee_change_state;
-    bool g_errcode1, g_errcode2, g_flag, g_paramupdate, g_countersensor, g_testgo, p_tBlink_toggle, p_engModeFlag,p_blinkTsetCursorFlag;
-    bool p_ee_changed;
+    bool g_errcode1, g_errcode2, g_flag, g_paramupdate, g_countersensor, g_testgo, p_tBlink_toggle, p_engModeFlag, p_blinkTsetCursorFlag;
+    bool p_ee_changed, p_HoldCursortateFlag, p_timerResetFlag;
     unsigned long g_tenc, p_loopindex;
-	float g_tsetstep, g_ttstart;
+	float g_tsetstep;
 
 
 };

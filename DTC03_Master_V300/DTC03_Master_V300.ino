@@ -38,6 +38,7 @@ void loop() {
 //  }
   master.UpdateEnable(); 
   master.CursorState();
+  master.HoldCursortate();
   master.blinkTsetCursor();
   master.UpdateParam();
   master.SaveEEPROM();
