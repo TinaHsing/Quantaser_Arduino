@@ -1,4 +1,4 @@
-/*Ver.3.00*/
+  /*Ver.3.00*/
 
 #include <SPI.h>
 #include <Wire.h>
@@ -83,7 +83,7 @@ void loop() {
      ioutput=ipid.Compute(dtc.g_en_state, ierr, 58, 1, 2); 
      tpid.g_errorsum=0; // 1112@Adam
      toutput=tpid.Compute(dtc.g_en_state, terr, dtc.g_p, 0, 0); // 1112@Adam, only compare to Pterm     
-//     dtc.CurrentLimit();// get dtc.g_iteclimitset
+     dtc.CurrentLimit();// get dtc.g_iteclimitset
      
      isense =abs((int)(dtc.g_itecread)-(int)(dtc.g_isense0));
      ierr = isense - dtc.g_iteclimitset;

@@ -31,7 +31,7 @@
 #define TESTGOSTEP 22.00 // testgo temperature step, usually ttstart = Tamb -12 so the second step will be ttstart + 24 = Tamb +12
 #define CURSORSTATE_STAYTIME 700
 #define ACCUMULATE_TH 50
-#define DEBOUNCE_WAIT ACCUMULATE_TH*2
+#define DEBOUNCE_WAIT ACCUMULATE_TH*3
 //=================pin definition=========================
 #define ENC_B 3
 #define ENC_A 2
@@ -62,17 +62,17 @@
 
 //----------NOEE Default value------
 #define NOEE_DUMMY 		104
-#define NOEE_VSET		30000
+#define NOEE_VSET		26214//25C
 #define NOEE_ILIM		11 // currntlimit=0.45+0.05*11=1A
 #define NOEE_P			10
-#define NOEE_kiindex    1 
+#define NOEE_kiindex    1 //OFF
 #define NOEE_BCONST		3988
 #define NOEE_MODSTATUS  0
 #define NOEE_R1			20
 #define NOEE_R2			30
 #define NOEE_TPIDOFF    2
 #define NOEE_FBC       	22400
-#define NOEE_MODOFF     32168
+#define NOEE_MODOFF     32768
 #define NOEE_RMEAS      29800
 #define NOEE_TOTP		561 //120C
 
@@ -178,6 +178,7 @@ public:
 	void ParamInit();
 	void WelcomeScreen();
 	void I2CReadData(unsigned char i);
+	void I2CWriteData(unsigned char com);
 	void I2CReadAll();
 	void VarrayInit();
 	void IarrayInit();
@@ -192,8 +193,7 @@ public:
 	void PrintB();
 	void PrintModStatus();
 	void Encoder();
-	void CursorState();
-	void I2CWriteData(unsigned char com);
+	void CursorState();	
 	void UpdateParam();
 	unsigned int ReturnVset(float tset, bool type);
 	void PrintFactaryMode();

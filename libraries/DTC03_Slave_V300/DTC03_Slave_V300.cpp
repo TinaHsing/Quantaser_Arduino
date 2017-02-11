@@ -27,6 +27,7 @@ void DTC03::ParamInit()
   dacforilim.ModeWrite(0);
   ltc1865.init(LTC1865CONV, CHVACT);  // CHVACT: first channel to read of ltc1865.Read
   g_en_state = 0;
+  g_sensortype=0;
   g_errcode1 = 0;
   g_errcode2 = 0;
   g_vactavgsum = 0;
@@ -102,7 +103,7 @@ void DTC03::DynamicVcc()
     if(g_sensortype) digitalWrite(SENSOR_TYPE,g_sensortype);
     SetMosOff();
     BuildUpArray(1,1,1);
-//    while(g_wakeup == 0) delay(1);
+    while(g_wakeup == 0) delay(1);
     ReadIsense();
     g_isense0 = g_itecavgsum>>AVGPWR;
     g_r1_f = float(g_r1)*0.1;
@@ -110,14 +111,16 @@ void DTC03::DynamicVcc()
     
     #ifdef DEBUGFLAG01
       Serial.begin(9600);
-      Serial.println("g_fbc_base:");
+      Serial.print(F("g_fbc_base:"));
       Serial.println(g_fbc_base);
-      Serial.println("R1, R2 for dynamic Vcc selection: ");
+      Serial.print(F("VGS for Rtec:"));
+      Serial.println(g_Rmeas);
+      Serial.print(F("R1, R2 for dynamic Vcc selection: "));
       Serial.print(g_r1_f);
-      Serial.print(", ");
+      Serial.print(F(", "));
       Serial.println(g_r2_f);
-      Serial.print("Isense0: ");
-      Serial.println(g_isense0);//20161031
+      Serial.print(F("Isense0: "));
+      Serial.println(g_isense0);
     #else
     #endif
     
@@ -309,16 +312,17 @@ void DTC03::I2CRequest()
     case I2C_COM_ITEC_ER:
     
     itec = (g_itecavgsum >> AVGPWR)-g_isense0;//g_isense0~612
+//    Serial.println(itec);
     if(itec<0) itecsign = 1;
     else itecsign = 0;
     temp[0]=abs(itec);
     temp[1]=abs(itec) >> 8;
        
-    if(g_errcode1)  temp[1] |= REQMSK_ERR1;
-    else temp[1] &= (~REQMSK_ERR1);//20161101 add
-    if(g_errcode2)  temp[1] |= REQMSK_ERR2;
-    else temp[1] &= (~REQMSK_ERR2);//
-    if(itecsign) temp[1]|= REQMSK_ITECSIGN;
+    if(g_errcode1) temp[1] |= REQMSK_ERR1;//B0001 0000, Err1:Sensor type
+    else temp[1] &= (~REQMSK_ERR1);
+    if(g_errcode2) temp[1] |= REQMSK_ERR2;//Err2: OTP
+//    else temp[1] &= (~REQMSK_ERR2);//B0010 0000
+    if(itecsign) temp[1]|= REQMSK_ITECSIGN;//B0000 0100
     else temp[1] &= (~REQMSK_ITECSIGN);//
     break;
 
@@ -352,12 +356,12 @@ void DTC03::I2CReceive()
     case I2C_COM_INIT:
     g_b_lower = temp[0];
     g_b_upper = REQMSK_BUPPER & temp[1];
-    g_en_state = REQMSK_ENSTATE & temp[1];
+    g_en_state = REQMSK_ENSTATE & temp[1]; //B10000000
 //    g_sensortype = temp[1] & REQMSK_SENSTYPE; //20161113
-	g_mod_status = temp[1] & REQMSK_SENSTYPE; 
-//    Serial.println("B:");
-//    Serial.println( (g_b_upper<<8|g_b_lower)+BCONSTOFFSET );
-//    Serial.print(", ");
+	g_mod_status = temp[1] & REQMSK_SENSTYPE; //B01000000
+//    Serial.print("g_en_state:");
+//    Serial.println(g_en_state);
+//    Serial.print("g_mod_status: ");
 //    Serial.println(g_mod_status);
     break;
 
@@ -366,8 +370,8 @@ void DTC03::I2CReceive()
     g_p = temp[1];
     CurrentLimit();
     
-//    Serial.println("CTR:");
-//    Serial.print(g_currentlim);
+//    Serial.print("g_currentlim:");
+//    Serial.println(g_currentlim);
 //    Serial.print("p: ");
 //    Serial.println(g_p);
     break;
@@ -377,8 +381,8 @@ void DTC03::I2CReceive()
     vset_upper = temp[1];
     g_vset_limit = vset_upper<<8 | vset_lower;
     setVset();
-//    Serial.println("VSET:");
-//    Serial.println( ReturnTemp(g_vset_limit,0) );
+//    Serial.print("VSET:");
+//    Serial.println( ReturnTemp(g_vset_limit,0),3);
     break;
 
     
@@ -404,13 +408,15 @@ void DTC03::I2CReceive()
     case I2C_COM_TPIDOFF:
     g_tpidoffset = temp[0];
 //     = temp[1];
+//	Serial.print("TPIDOFF: ");
+//    Serial.println(g_tpidoffset);
     break;
 
     case I2C_COM_FBC:
     fbc_lower = temp[0];
     fbc_upper = temp[1];
     g_fbc_base =(fbc_upper <<8)|fbc_lower;
-//    Serial.println("FBC:");
+//    Serial.print("FBC:");
 //    Serial.println(g_fbc_base);
     break;
 
@@ -418,13 +424,20 @@ void DTC03::I2CReceive()
     vmodoffset_lower = temp[0];
     vmodoffset_upper = temp[1];
     g_vmodoffset = (vmodoffset_upper << 8)| vmodoffset_lower;
-    //Serial.println("MOD");
+//    Serial.print("MOD offset");
+//    Serial.println(g_vmodoffset);
     break;
 
     case I2C_COM_OTP:
     	g_otp = temp[1]<<8 | temp[0];
-//    	Serial.println("OTP:");
-//    	Serial.println(g_otp);
+//    	Serial.print("OTP:");
+//    	Serial.println(float(g_otp)/4.0-20.5,0);
+    break;
+    
+    case I2C_COM_RMEAS:
+    	g_Rmeas = temp[1]<<8 | temp[0];
+//        Serial.print("g_Rmeas:");
+//    	Serial.println(g_Rmeas);
     break;
     
     case I2C_COM_WAKEUP:
@@ -436,16 +449,18 @@ void DTC03::I2CReceive()
 //    	Serial.println(g_overshoot);
     break;
     
-    case I2C_COM_RMEAS:
-    	g_Rmeas = temp[1]<<8 | temp[0];
-//        Serial.print("g_Rmeas:");
-//    	Serial.println(g_Rmeas);
-    break;
+   
     case I2C_COM_TEST1:  		
 //    	t_master = (temp[1] << 8) | temp[0];
 //    	Serial.println(t_master);
 //    	Serial.print(", ");
 //    	Serial.println(temp[1],HEX);
+    break;
+    case I2C_COM_TEST2:  		
+//    	t_master = (temp[1] << 8) | temp[0];
+//    	Serial.println(t_master);
+//    	Serial.print("g_cursor:");
+//    	Serial.println(temp[0]);
     break;
   }
  }

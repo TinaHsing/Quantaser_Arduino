@@ -24,6 +24,7 @@ void DTC03Master::ParamInit()
   Wire.begin();
   lcd.Init();
   g_paramupdate = 0;
+  g_sensortype=0;
   g_tsetstep = 1.00;
   g_en_state = 0;
   g_countersensor = 0;
@@ -48,12 +49,12 @@ void DTC03Master::WelcomeScreen()
   lcd.print("DTC03 Ver.3.01");
   lcd.GotoXY(0,ROWPIXEL0507*1);
   lcd.print("Initializing");
-//  for (byte i=9; i>0; i--)
-//  {
-//    lcd.GotoXY(COLUMNPIXEL0507*(12+1),ROWPIXEL0507*1);
-//    lcd.print(i);
-//    delay(1000);
-//  }
+  for (byte i=9; i>0; i--)
+  {
+    lcd.GotoXY(COLUMNPIXEL0507*(12+1),ROWPIXEL0507*1);
+    lcd.print(i);
+    delay(1000);
+  }
   lcd.ClearScreen(0);//0~255 means ratio of black  
 }
 void DTC03Master::ReadEEPROM()
@@ -213,9 +214,9 @@ void DTC03Master::I2CWriteData(unsigned char com)
     case I2C_COM_INIT:
         temp[0]= g_bconst - BCONSTOFFSET;
         temp[1]= (g_bconst - BCONSTOFFSET) >> 8;
-        if(g_en_state) temp[1] |= REQMSK_ENSTATE;
-//    if(g_sensortype) temp[1]|= REQMSK_SENSTYPE; //20161113 mark
-	    if(g_mod_status) temp[1]|= REQMSK_SENSTYPE; //20161113   
+        if(g_en_state) temp[1] |= REQMSK_ENSTATE; //B10000000
+//    if(g_sensortype) temp[1]|= REQMSK_SENSTYPE; 
+	    if(g_mod_status) temp[1]|= REQMSK_SENSTYPE; //B01000000   
         break;
 
     case I2C_COM_CTR:
@@ -433,13 +434,6 @@ void DTC03Master::PrintItec(float itec)
      lcd.print(itec,2);
    } 
 }
-void DTC03Master::PrintTpcb(float tpcb)
-{
-  lcd.SelectFont(SystemFont5x7);
-  lcd.GotoXY(TOTP_COORD_X2, TOTP_COORD_Y);
-  if (tpcb < 100.0 ) lcd.print(" ");
-  lcd.print(tpcb,0);
-}
 void DTC03Master::PrintIlim()
 {
   float currentlim;
@@ -603,7 +597,13 @@ void DTC03Master::PrintTotp()//g_cursorstate=16
   if (Topt_set < 99.5 ) lcd.print(" ");
   lcd.print(Topt_set,0);
 }
-
+void DTC03Master::PrintTpcb(float tpcb)
+{
+  lcd.SelectFont(SystemFont5x7);
+  lcd.GotoXY(TPCB_COORD_X2, TPCB_COORD_Y);
+  if (tpcb < 100.0 ) lcd.print(" ");
+  lcd.print(tpcb,0);
+}
 void DTC03Master::CursorState()
 {
   unsigned long t1, d1;
@@ -629,7 +629,8 @@ void DTC03Master::CursorState()
   		if ( p_cursorStateCounter[2]>LONGPRESSTIME ) //long press case:
 		{
 	  		if (abs(t_temp-p_cursorStayTime) > CURSORSTATE_STAYTIME && p_tBlink_toggle )
-			{	  			
+			{	
+				p_HoldCursortateFlag=0; 			
 	  			if( g_cursorstate==0 || g_cursorstate==1 ) g_cursorstate=2;
 		  		else g_cursorstate++;
 		  		
@@ -671,7 +672,6 @@ void DTC03Master::CursorState()
 		if( abs(t_temp-p_tcursorStateBounce)> DEBOUNCE_WAIT )
 		{		    			
 			g_cursorstate++;
-        	I2CWriteData(I2C_COM_TEST2);
 		    if( p_cursorStateCounter[2]>LONGPRESSTIME ) 
 		    {
 			    g_cursorstate=0;
@@ -691,6 +691,7 @@ void DTC03Master::CursorState()
 	  	    p_tcursorStateBounce=t_temp;
 		}		
 	}
+//	I2CWriteData(I2C_COM_TEST2);
 	p_cursorStateCounter[0]	= t_temp;
   }
 }
