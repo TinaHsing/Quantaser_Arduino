@@ -100,7 +100,7 @@ void DTC03::SetMosOff()
 void DTC03::DynamicVcc()
 {
     float restec, g_r1_f, g_r2_f;
-    if(g_sensortype) digitalWrite(SENSOR_TYPE,g_sensortype);
+    if(g_sensortype) digitalWrite(SENSOR_TYPE,LOW);
     SetMosOff();
     BuildUpArray(1,1,1);
     while(g_wakeup == 0) delay(1);
@@ -258,8 +258,8 @@ void DTC03::ReadVpcb()
 
 void DTC03::CheckSensorType()
 {
-  if(g_sensortype) digitalWrite(SENSOR_TYPE, HIGH); // High for AD590, Low for NTC
-  else digitalWrite(SENSOR_TYPE, LOW);
+//  if(g_sensortype) digitalWrite(SENSOR_TYPE, HIGH); // High for AD590, Low for NTC
+//  else digitalWrite(SENSOR_TYPE, LOW);
   if((g_sensortype && g_vact < V_NOAD590)|(g_sensortype ==0 && g_vact==65535))
     {
       g_errcode1=1;
@@ -315,8 +315,8 @@ void DTC03::I2CRequest()
 
     case I2C_COM_ITEC_ER:
     
-//    itec = (g_itecavgsum >> AVGPWR)-g_isense0;//g_isense0~612
-	itec = analogRead(ISENSE0) - g_isense0;
+    itec = (g_itecavgsum >> AVGPWR)-g_isense0;//g_isense0~612
+//	itec = analogRead(ISENSE0) - g_isense0;
     if(itec<0) itecsign = 1;
     else itecsign = 0;
     temp[0]=abs(itec);

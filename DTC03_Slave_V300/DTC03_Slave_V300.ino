@@ -24,8 +24,8 @@ void setup() {
   dtc.SetPinMode();
   dtc.ParamInit();
   dtc.DynamicVcc();
-  if(dtc.g_sensortype) digitalWrite(SENSOR_TYPE, HIGH);
-  else digitalWrite(SENSOR_TYPE, LOW);
+//  if(dtc.g_sensortype) digitalWrite(SENSOR_TYPE, HIGH);
+//  else digitalWrite(SENSOR_TYPE, LOW);
   dtc.CheckSensorType();
   dtc.CheckTemp();
   ipid.Init(32768,32768,0x7FFFFFFF);
@@ -51,8 +51,8 @@ void loop() {
 //  }
 //  loop_time[i] = micros();
  
-  if(dtc.g_sensortype) digitalWrite(SENSOR_TYPE, HIGH);
-  else digitalWrite(SENSOR_TYPE,LOW);
+//  if(dtc.g_sensortype) digitalWrite(SENSOR_TYPE, HIGH);
+//  else digitalWrite(SENSOR_TYPE,LOW);
   
   dtc.ReadVoltage(1);
   dtc.ReadIsense();
@@ -83,25 +83,25 @@ void loop() {
   {
     ioutput=ipid.Compute(dtc.g_en_state, ierr, 58, 1, 2);//kp=58,ki=1,ls=2, 20161116
         
-//    while(abs(ioutput)<(abs(toutput)+pidoffset)) //run current limit
-//    {
-//     output = (long)(abs(ioutput)+dtc.g_fbc_base);
-//     if (output>PIDOUTPUTLIMIT) output= PIDOUTPUTLIMIT;
-//     if(toutput<=0) dtc.SetMos(HEATING,output);
-//     else dtc.SetMos(COOLING,output);
-//
-//     ioutput=ipid.Compute(dtc.g_en_state, ierr, 58, 1, 2); 
-//     tpid.g_errorsum=0; // 1112@Adam
-//     toutput=tpid.Compute(dtc.g_en_state, terr, dtc.g_p, 0, 0); // 1112@Adam, only compare to Pterm     
-//     dtc.CurrentLimit();// get dtc.g_iteclimitset
-//     
-//     isense =abs((int)(dtc.g_itecread)-(int)(dtc.g_isense0));
-//     ierr = isense - dtc.g_iteclimitset;
-//     dtc.ReadVoltage(1);
-//     terr = (long)dtc.g_vact - (long)dtc.g_vset_limitt;   
-//     
-////     ipid.showParameter();  
-//    } 
+    while(abs(ioutput)<(abs(toutput)+pidoffset)) //run current limit
+    {
+     output = (long)(abs(ioutput)+dtc.g_fbc_base);
+     if (output>PIDOUTPUTLIMIT) output= PIDOUTPUTLIMIT;
+     if(toutput<=0) dtc.SetMos(HEATING,output);
+     else dtc.SetMos(COOLING,output);
+
+     ioutput=ipid.Compute(dtc.g_en_state, ierr, 58, 1, 2); 
+     tpid.g_errorsum=0; // 1112@Adam
+     toutput=tpid.Compute(dtc.g_en_state, terr, dtc.g_p, 0, 0); // 1112@Adam, only compare to Pterm     
+     dtc.CurrentLimit();// get dtc.g_iteclimitset
+     dtc.ReadIsense();
+     isense =abs((int)(dtc.g_itecread)-(int)(dtc.g_isense0));
+     ierr = isense - dtc.g_iteclimitset;
+     dtc.ReadVoltage(1);
+     terr = (long)dtc.g_vact - (long)dtc.g_vset_limitt;   
+     
+//     ipid.showParameter();  
+    } 
   }
 //  if (dtc.g_overshoot == 1){
 //    dtc.g_overshoot = 0;

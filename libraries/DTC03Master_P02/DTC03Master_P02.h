@@ -167,8 +167,7 @@
 //define calculation parameter
 #define T0INV 0.003354
 #define RTHRatio 25665 
-//#define CURRENTRatio 9.775	// code * 5000/1023/50/0.01= code * 9.997 (mA)
-#define CURRENTRatio 0.009997// code * 5/1023/50/0.01= code * 0.09997 (A)
+#define CURRENTRatio 0.00977	// 3A/307code=0.00977A/code 
 
 
 class DTC03Master {
