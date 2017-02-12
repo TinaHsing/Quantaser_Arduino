@@ -239,6 +239,9 @@ void DTC03::ReadIsense()
   g_itecread = Itecarray[g_currentindex];
   g_currentindex ++;
   if(g_currentindex == AVGTIME) g_currentindex = 0;
+//  Serial.print(g_currentindex);
+//  Serial.print(", ");
+//  Serial.println(Itecarray[g_currentindex]);
   interrupts(); 
 }
 void DTC03::ReadVpcb() 
@@ -307,12 +310,13 @@ void DTC03::I2CRequest()
     vact=g_vactavgsum >> AVGPWR;
     temp[0]=vact;
     temp[1]=vact >> 8;
+//    Serial.println("1");
     break;
 
     case I2C_COM_ITEC_ER:
     
-    itec = (g_itecavgsum >> AVGPWR)-g_isense0;//g_isense0~612
-//    Serial.println(itec);
+//    itec = (g_itecavgsum >> AVGPWR)-g_isense0;//g_isense0~612
+	itec = analogRead(ISENSE0) - g_isense0;
     if(itec<0) itecsign = 1;
     else itecsign = 0;
     temp[0]=abs(itec);
@@ -323,12 +327,24 @@ void DTC03::I2CRequest()
     if(g_errcode2) temp[1] |= REQMSK_ERR2;//Err2: OTP
 //    else temp[1] &= (~REQMSK_ERR2);//B0010 0000
     if(itecsign) temp[1]|= REQMSK_ITECSIGN;//B0000 0100
-    else temp[1] &= (~REQMSK_ITECSIGN);//
+    else temp[1] &= (~REQMSK_ITECSIGN);
+//    Serial.println("2");
+//	Serial.print("itec: ");
+//	Serial.println(itec);
+//	Serial.print(", ");
+//	Serial.print(itecsign);
+//	Serial.print(", ");
+//	Serial.print(g_errcode1);
+//	Serial.print(", ");
+//	Serial.println(g_errcode2);
     break;
 
     case I2C_COM_PCB:
     temp[0] = g_Vtemp;
     temp[1] = g_Vtemp >> 8;
+//    Serial.println("3");
+//    Serial.print("Vopt: ");
+//    Serial.println(g_Vtemp);
     break;
   }
   Wire.write(temp,2);
