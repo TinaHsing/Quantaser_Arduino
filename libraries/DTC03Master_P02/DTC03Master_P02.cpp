@@ -42,12 +42,12 @@ void DTC03Master::WelcomeScreen()
   lcd.print("DTC03 Ver.2.01");
   lcd.GotoXY(0,ROWPIXEL0507*1);
   lcd.print("Initializing");
-//  for (byte i=9; i>0; i--)
-//  {
-//    lcd.GotoXY(COLUMNPIXEL0507*(12+1),ROWPIXEL0507*1);
-//    lcd.print(i);
-//    delay(1000);
-//  }
+  for (byte i=9; i>0; i--)
+  {
+    lcd.GotoXY(COLUMNPIXEL0507*(12+1),ROWPIXEL0507*1);
+    lcd.print(i);
+    delay(1000);
+  }
   lcd.ClearScreen(0);//0~255 means ratio of black  
 }
 void DTC03Master::I2CReadData(unsigned char com)
