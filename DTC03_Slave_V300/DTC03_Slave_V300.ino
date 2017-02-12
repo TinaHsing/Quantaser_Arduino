@@ -63,12 +63,20 @@ void loop() {
   isense =abs((int)(dtc.g_itecread)-(int)(dtc.g_isense0));
   ierr = isense - dtc.g_iteclimitset; 
   terr = (long)dtc.g_vact - (long)dtc.g_vset_limitt;
-//  if (i%2000==0) {
-//    Serial.print(dtc.ReturnTemp(dtc.g_vact,0));
-//    Serial.print(", ");
-//    Serial.println(dtc.ReturnTemp(dtc.g_vset_limitt,0));
-//    Serial.println(dtc.g_overshoot);
-//  }
+  if (i%2000==0) {
+    
+    Serial.print("g_itecread: ");
+    Serial.print(dtc.g_itecread); 
+    Serial.print(", g_isense0: ");
+    Serial.print(dtc.g_isense0); 
+    Serial.print(", Isense: ");
+    Serial.print(isense); 
+    Serial.print(", g_iteclimitset: ");
+    Serial.print(dtc.g_iteclimitset); 
+    Serial.print(", ierr: ");
+    Serial.println(ierr);
+  }
+  
   if(ierr > -20) 
   {
     ioutput=ipid.Compute(dtc.g_en_state, ierr, 58, 1, 2);//kp=58,ki=1,ls=2, 20161116
@@ -88,8 +96,9 @@ void loop() {
      isense =abs((int)(dtc.g_itecread)-(int)(dtc.g_isense0));
      ierr = isense - dtc.g_iteclimitset;
      dtc.ReadVoltage(1);
-     terr = (long)dtc.g_vact - (long)dtc.g_vset_limitt;    
-     ipid.showParameter();  
+     terr = (long)dtc.g_vact - (long)dtc.g_vset_limitt;   
+     
+//     ipid.showParameter();  
     } 
   }
   if (dtc.g_overshoot == 1){
