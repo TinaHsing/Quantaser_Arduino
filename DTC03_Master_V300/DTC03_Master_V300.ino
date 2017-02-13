@@ -14,6 +14,7 @@ void setup() {
   float tset, tact, itec;
   unsigned int vact_mv;
   int itec_mv;
+  analogReference(DEFAULT);
   master.SetPinMode();
   master.ParamInit();
   master.ReadEEPROM();

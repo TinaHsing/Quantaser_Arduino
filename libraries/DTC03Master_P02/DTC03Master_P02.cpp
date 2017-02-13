@@ -13,8 +13,8 @@ void DTC03Master::SetPinMode()
 {
   pinMode(ENC_A, INPUT);
   pinMode(ENC_B, INPUT);
-  pinMode(PUSHB, INPUT);
-  pinMode(ENSW, INPUT);
+//  pinMode(PUSHB, INPUT);
+//  pinMode(ENSW, INPUT);
 }
 void DTC03Master::ParamInit()
 {
@@ -185,17 +185,17 @@ void DTC03Master::SaveEEPROM() {
 void DTC03Master::CheckStatus()
 {
 		float tact, itec_f, tpcb_f;
-				if (p_loopindex%3==0) {
+				if (p_loopindex%300==0) {
 					I2CReadData(I2C_COM_ITEC_ER);
 		            itec_f = float(g_itec)*CURRENTRatio;
 		            if(!p_engModeFlag) PrintItec(itec_f);
 				}								
-				if (p_loopindex%3==1) {
+				if (p_loopindex%300==1) {
 					I2CReadData(I2C_COM_VACT);
 	  	    		tact = ReturnTemp(g_vact,0);
 	  	    		if(!p_engModeFlag) PrintTact(tact);
 				}	
-				if (p_loopindex%3==2) {
+				if (p_loopindex%300==2) {
 					I2CReadData(I2C_COM_PCB);
 		            tpcb_f = float(g_tpcb)/4.0-20.5;
 		            if(p_engModeFlag) PrintTpcb(tpcb_f);
@@ -250,8 +250,8 @@ void DTC03Master::I2CWriteData(unsigned char com)
         break;
     
     case I2C_COM_KI:
-        temp[0]=pgm_read_word_near(kilstable+g_kiindex*2);
-        temp[1]=pgm_read_word_near(kilstable+g_kiindex*2+1);
+        temp[0]=pgm_read_word_near(kilstable420+g_kiindex*2);
+        temp[1]=pgm_read_word_near(kilstable420+g_kiindex*2+1);
         break;
     
     case I2C_COM_RMEAS:
@@ -311,6 +311,7 @@ void DTC03Master::I2CReadData(unsigned char com)
     case I2C_COM_ITEC_ER:
     	
         itectemp = ((temp[1] & REQMSK_ITECU) << 8)| temp[0];
+        if(itectemp<=2) itectemp=0;
         itecsign = temp[1] & REQMSK_ITECSIGN;
         g_errcode1 = temp[1] & REQMSK_ERR1;
         g_errcode2 = temp[1] & REQMSK_ERR2;
@@ -425,7 +426,7 @@ void DTC03Master::PrintItec(float itec)
 {
   lcd.SelectFont(SystemFont5x7);
   lcd.GotoXY(ITEC_COORD_X2,ITEC_COORD_Y);
-  if ( abs(itec) <= 0.015 ) itec = 0;
+//  if ( abs(itec) <= 0.015 ) itec = 0;
   if(itec <0.00) lcd.print(itec,2); 
 
   else
@@ -486,7 +487,18 @@ void DTC03Master::PrintModStatus()
   if(g_mod_status == 0) lcd.print("OFF");
   else lcd.print(" ON"); 
 }
-
+void DTC03Master::PrintEnable() 
+{
+  lcd.SelectFont(SystemFont5x7);
+  lcd.GotoXY(Test1_COORD_X, Test1_COORD_Y);
+  lcd.print(g_en_state); 
+  lcd.SelectFont(SystemFont5x7);
+  lcd.GotoXY(Test3_COORD_X, Test3_COORD_Y);
+  if(en_temp<10) lcd.print("   ");
+  else if(en_temp<100) lcd.print("  ");
+  else if (en_temp<1000) lcd.print(" ");
+  lcd.print(en_temp); 
+}
 void DTC03Master::UpdateEnable()
 {
  bool en_state;
@@ -497,6 +509,15 @@ void DTC03Master::UpdateEnable()
   g_en_state=en_state;
   I2CWriteData(I2C_COM_INIT);
  }
+//  en_temp = analogRead(ENSW);
+// if(en_temp>500) en_state=1;
+// else en_state=0;
+// if(g_en_state != en_state)
+// {
+//  g_en_state=en_state;
+//  I2CWriteData(I2C_COM_INIT);
+//  PrintEnable();
+// }
 }
 
 void DTC03Master::PrintFactaryMode() //show error message to avoid entering Eng.Mode 
@@ -649,7 +670,7 @@ void DTC03Master::CursorState()
 		}
 	  	else //short press case:
 		{
-			if( abs(t_temp-p_tcursorStateBounce)> DEBOUNCE_WAIT ) //DEBOUNCE_WAIT=ACCUMULATE_TH*2
+			if( abs(t_temp-p_tcursorStateBounce)> DEBOUNCE_WAIT ) //DEBOUNCE_WAIT=ACCUMULATE_TH*4
 			{
 				if( g_cursorstate==0 ) g_cursorstate=1;
 		  		if ( g_cursorstate==1 )
@@ -674,7 +695,7 @@ void DTC03Master::CursorState()
 			g_cursorstate++;
 		    if( p_cursorStateCounter[2]>LONGPRESSTIME ) 
 		    {
-			    g_cursorstate=0;
+			    g_cursorstate=1;
 			    p_engModeFlag=0;
 			    lcd.ClearScreen(0);
 			    BackGroundPrint();
@@ -718,6 +739,7 @@ void DTC03Master::HoldCursortate() //put this method in loop
 			oldCursorState=g_cursorstate;
 			g_cursorstate=0;
 			ShowCursor(oldCursorState);//here oldCursorState from 2~6
+			g_cursorstate=1;
 		}		
 	}
 }

@@ -316,7 +316,6 @@ void DTC03::I2CRequest()
     case I2C_COM_ITEC_ER:
     
     itec = (g_itecavgsum >> AVGPWR)-g_isense0;//g_isense0~612
-//	itec = analogRead(ISENSE0) - g_isense0;
     if(itec<0) itecsign = 1;
     else itecsign = 0;
     temp[0]=abs(itec);
@@ -330,9 +329,9 @@ void DTC03::I2CRequest()
     else temp[1] &= (~REQMSK_ITECSIGN);
 //    Serial.println("2");
 //	Serial.print("itec: ");
-//	Serial.println(itec);
+//	Serial.print(g_itecavgsum >> AVGPWR);
 //	Serial.print(", ");
-//	Serial.print(itecsign);
+//	Serial.println(g_itecread);
 //	Serial.print(", ");
 //	Serial.print(g_errcode1);
 //	Serial.print(", ");

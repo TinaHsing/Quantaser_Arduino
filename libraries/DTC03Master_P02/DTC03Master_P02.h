@@ -26,12 +26,9 @@
 #define CURRENTLIMMAX 50 //maximun of g_currentlim
 #define BCONSTMAX 4500//maximun of bconst
 #define HIGHLOWBOUNDRY 500 //
-#define TESTGOPERIOD 18000000 // testing period for one temperature in the unit of ms (18,000,000 = 5hrs)
-//#define TESTGOPERIOD 60000 //testing period for one tempeature in the unit of ms (600,000 = 10 mins) used for functional test should be remove after function varification 
-#define TESTGOSTEP 22.00 // testgo temperature step, usually ttstart = Tamb -12 so the second step will be ttstart + 24 = Tamb +12
 #define CURSORSTATE_STAYTIME 700
 #define ACCUMULATE_TH 50
-#define DEBOUNCE_WAIT ACCUMULATE_TH*3
+#define DEBOUNCE_WAIT ACCUMULATE_TH*4
 //=================pin definition=========================
 #define ENC_B 3
 #define ENC_A 2
@@ -71,9 +68,9 @@
 #define NOEE_R1			20
 #define NOEE_R2			30
 #define NOEE_TPIDOFF    2
-#define NOEE_FBC       	22400
-#define NOEE_MODOFF     32768
-#define NOEE_RMEAS      29800
+#define NOEE_FBC       	21000
+#define NOEE_MODOFF     32494
+#define NOEE_RMEAS      28400
 #define NOEE_TOTP		561 //120C
 
 
@@ -208,6 +205,7 @@ public:
 	void PrintRmeas();
 	void PrintTotp();
 	void PrintTpcb(float);
+	void PrintEnable();
 	
 	void ShowCursor(unsigned char);
     void UpdateEnable();
@@ -225,6 +223,7 @@ public:
     float g_tset;
     //------------------------------------
     bool g_sensortype, g_en_state;
+    int en_temp;
     
 private:
 	glcd lcd;
