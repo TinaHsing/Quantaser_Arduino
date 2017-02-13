@@ -107,7 +107,7 @@ void loop() {
 //    dtc.g_overshoot = 0;
 //    tpid.g_errorsum = 0;
 //  }
-  
+//  tpid.showParameter();
   toutput=tpid.Compute(dtc.g_en_state, terr, dtc.g_p, dtc.g_ki, dtc.g_ls); 
   output = (long)(abs(toutput)+dtc.g_fbc_base);
   if(output>PIDOUTPUTLIMIT) output=PIDOUTPUTLIMIT;//

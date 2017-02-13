@@ -109,8 +109,8 @@ void PID::showParameter()
 		unsigned long t1;
 		g_index++;
 		t1= micros();
-//		if(g_index == PIDDEBUGFLAG )
-//		{
+		if(g_index == PIDDEBUGFLAG )
+		{
 			g_index = 0;
 			Serial.print(g_en);		
 			Serial.print(",");
@@ -129,7 +129,7 @@ void PID::showParameter()
 			Serial.println(g_out);
 //			Serial.print(",");
 //			Serial.println(t1);
-//		}
+		}
 		#else
 		#endif
 	

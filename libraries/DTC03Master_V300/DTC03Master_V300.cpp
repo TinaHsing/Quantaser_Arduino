@@ -5,7 +5,7 @@
 	4. add PrintModStatus
 
 */
-#include <DTC03Master_P02.h>
+#include <DTC03Master_V300.h>
 DTC03Master::DTC03Master()
 {
 }
@@ -250,8 +250,8 @@ void DTC03Master::I2CWriteData(unsigned char com)
         break;
     
     case I2C_COM_KI:
-        temp[0]=pgm_read_word_near(kilstable420+g_kiindex*2);
-        temp[1]=pgm_read_word_near(kilstable420+g_kiindex*2+1);
+        temp[0]=pgm_read_word_near(kilstable280+g_kiindex*2);
+        temp[1]=pgm_read_word_near(kilstable280+g_kiindex*2+1);
         break;
     
     case I2C_COM_RMEAS:
@@ -311,7 +311,7 @@ void DTC03Master::I2CReadData(unsigned char com)
     case I2C_COM_ITEC_ER:
     	
         itectemp = ((temp[1] & REQMSK_ITECU) << 8)| temp[0];
-        if(itectemp<=2) itectemp=0;
+        if(itectemp<=1) itectemp=0;
         itecsign = temp[1] & REQMSK_ITECSIGN;
         g_errcode1 = temp[1] & REQMSK_ERR1;
         g_errcode2 = temp[1] & REQMSK_ERR2;
