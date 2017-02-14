@@ -509,6 +509,7 @@ void DTC03Master::UpdateEnable()
   g_en_state=en_state;
   I2CWriteData(I2C_COM_INIT);
  }
+ //----------------------//
 //  en_temp = analogRead(ENSW);
 // if(en_temp>500) en_state=1;
 // else en_state=0;
