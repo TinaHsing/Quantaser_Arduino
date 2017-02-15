@@ -41,6 +41,7 @@ void DTC03Master::ParamInit()
   p_ee_changed=0;
   p_holdCursorTimer=0;
   p_HoldCursortateFlag=0;
+  g_wakeup = 1
 }
 void DTC03Master::WelcomeScreen()
 {
