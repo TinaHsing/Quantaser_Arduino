@@ -36,7 +36,8 @@
 #define REQMSK_ITECU		0x03
 #define REQMSK_ITECSIGN		0x04
 #define REQMSK_ERR1		 	0x10
-#define REQMSK_ERR2			0x20			
+#define REQMSK_ERR2			0x20
+#define REQMSK_WAKEUP   0x30			//Tina 2017/2/15
 
 
 // first colume ki, second colume ls

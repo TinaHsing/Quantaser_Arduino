@@ -189,6 +189,7 @@ void DTC03Master::CheckStatus()
 					I2CReadData(I2C_COM_ITEC_ER);
 		            itec_f = float(g_itec)*CURRENTRatio;
 		            if(!p_engModeFlag) PrintItec(itec_f);
+                if(!g_wakeup) I2CWriteAll();
 				}								
 				if (p_loopindex%300==1) {
 					I2CReadData(I2C_COM_VACT);
@@ -315,6 +316,7 @@ void DTC03Master::I2CReadData(unsigned char com)
         itecsign = temp[1] & REQMSK_ITECSIGN;
         g_errcode1 = temp[1] & REQMSK_ERR1;
         g_errcode2 = temp[1] & REQMSK_ERR2;
+        g_wakeup = temp[1] & REQMSK_WAKEUP;
         if(itecsign) g_itec = (-1)*(int)itectemp;
         else g_itec = (int)itectemp;
         break;

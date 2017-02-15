@@ -327,6 +327,9 @@ void DTC03::I2CRequest()
 //    else temp[1] &= (~REQMSK_ERR2);//B0010 0000
     if(itecsign) temp[1]|= REQMSK_ITECSIGN;//B0000 0100
     else temp[1] &= (~REQMSK_ITECSIGN);
+
+    if(g_wakeup) temp[1]|=REQMSK_WAKEUP;
+    else temp[1] &= REQMSK_WAKEUP;
 //    Serial.println("2");
 //	Serial.print("itec: ");
 //	Serial.print(g_itecavgsum >> AVGPWR);
