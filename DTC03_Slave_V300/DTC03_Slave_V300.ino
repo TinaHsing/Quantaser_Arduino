@@ -91,14 +91,15 @@ void loop() {
      else dtc.SetMos(COOLING,output);
 
      ioutput=ipid.Compute(dtc.g_en_state, ierr, 58, 1, 2); 
-     tpid.g_errorsum=0; // 1112@Adam
+//     tpid.g_errorsum=0; // 1112@Adam
      toutput=tpid.Compute(dtc.g_en_state, terr, dtc.g_p, 0, 0); // 1112@Adam, only compare to Pterm     
      dtc.CurrentLimit();// get dtc.g_iteclimitset
      dtc.ReadIsense();
      isense =abs((int)(dtc.g_itecread)-(int)(dtc.g_isense0));
      ierr = isense - dtc.g_iteclimitset;
      dtc.ReadVoltage(1);
-     terr = (long)dtc.g_vact - (long)dtc.g_vset_limitt;   
+     terr = (long)dtc.g_vact - (long)dtc.g_vset_limitt;  
+     tpid.g_errorsum=ioutput; // test this @2017/02/18
      
 //     ipid.showParameter();  
     } 
