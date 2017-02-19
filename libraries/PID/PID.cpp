@@ -49,6 +49,7 @@ long PID::Compute(bool en, long errin, unsigned char kp, unsigned char ki, unsig
 	}
 	else
 	{
+		p_term=0; 
         g_errorsum =0;
 		output =0;
 
@@ -80,9 +81,13 @@ long PID::Compute(bool en, long errin, unsigned char kp, unsigned char ki, unsig
 			Serial.print(",");
 			Serial.print(g_i_term);
 			Serial.print(",");
-			Serial.println(g_out);
+			Serial.print(g_out);
+			Serial.print(",");
+			Serial.println(en);
 //			Serial.print(",");
-//			Serial.println(t1);
+//			Serial.print( (long)(g_errorsum>>32) ,HEX);
+//			Serial.print(",");
+//			Serial.println((long) g_errorsum,HEX);
 		}
 		#else
 		#endif
