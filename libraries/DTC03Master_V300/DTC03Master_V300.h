@@ -29,6 +29,9 @@
 #define CURSORSTATE_STAYTIME 700
 #define ACCUMULATE_TH 50
 #define DEBOUNCE_WAIT ACCUMULATE_TH*4
+#define MV_STATUS 1
+#define MVTIME 16
+#define MVTIME_POWER 4
 //=================pin definition=========================
 #define ENC_B 3
 #define ENC_A 2
@@ -214,9 +217,10 @@ public:
     void ReadEEPROM();
     void I2CWriteAll();
     void HoldCursortate();
+    void vact_MV();
 	
 	//working variable-------------------
-	unsigned int g_vact, g_vset, g_tpcb, g_otp, g_Rmeas, g_bconst, g_fbcbase, g_vmodoffset;
+	unsigned int g_vact,g_vact_MV, g_vset, g_tpcb, g_otp, g_Rmeas, g_bconst, g_fbcbase, g_vmodoffset;
 	unsigned char g_p, g_ki,g_ls,g_currentlim, g_tpidoff, g_r1, g_r2, g_kiindex, g_cursorstate;
 	int g_itec;
 	bool g_mod_status;	
@@ -229,7 +233,8 @@ private:
 	glcd lcd;
 	int g_counter;
     unsigned int  g_icount , p_cursorStateCounter[3], p_temp, p_cursorStayTime;
-    unsigned int p_tBlink, p_tcursorStateBounce, p_holdCursorTimer;   
+    unsigned int p_tBlink, p_tcursorStateBounce, p_holdCursorTimer, p_vact_array[16]; 
+	unsigned long  p_vact_MV_sum, p_mvindex;
 	unsigned char g_iarrayindex, g_varrayindex, g_lastencoded, p_engmodeCounter, p_ee_change_state;
     bool g_errcode1, g_errcode2, g_flag, g_paramupdate, g_countersensor, g_testgo, p_tBlink_toggle, p_engModeFlag, p_blinkTsetCursorFlag, g_wakeup;
     bool p_ee_changed, p_HoldCursortateFlag, p_timerResetFlag;

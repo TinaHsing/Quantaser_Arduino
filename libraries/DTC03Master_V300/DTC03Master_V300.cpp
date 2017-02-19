@@ -42,6 +42,9 @@ void DTC03Master::ParamInit()
   p_holdCursorTimer=0;
   p_HoldCursortateFlag=0;
   g_wakeup = 1;
+  p_vact_MV_sum=0;
+  p_mvindex=0;
+  for (int i=0;i<MVTIME;i++) p_vact_array[i]=0;
 }
 void DTC03Master::WelcomeScreen()
 {
@@ -194,7 +197,9 @@ void DTC03Master::CheckStatus()
 				}								
 				if (p_loopindex%300==1) {
 					I2CReadData(I2C_COM_VACT);
-	  	    		tact = ReturnTemp(g_vact,0);
+					vact_MV();
+					if (MV_STATUS) tact = ReturnTemp(g_vact_MV,0);
+	  	    		else tact = ReturnTemp(g_vact,0);
 	  	    		if(!p_engModeFlag) PrintTact(tact);
 				}	
 				if (p_loopindex%300==2) {
@@ -203,6 +208,15 @@ void DTC03Master::CheckStatus()
 		            if(p_engModeFlag) PrintTpcb(tpcb_f);
 				}	
 	    p_loopindex++;		       
+}
+void DTC03Master::vact_MV()
+{
+	p_vact_MV_sum -= p_vact_array[p_mvindex];
+	p_vact_array[p_mvindex] = g_vact;
+	p_vact_MV_sum += p_vact_array[p_mvindex];
+	g_vact_MV = p_vact_MV_sum>>MVTIME_POWER;
+	p_mvindex++;
+	if(p_mvindex==MVTIME) p_mvindex=0;
 }
 void DTC03Master::I2CWriteAll()
 {
