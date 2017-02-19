@@ -22,7 +22,7 @@ void PID::Init( long long p_limit, long long i_limit,long long error_limit)
 
 long PID::Compute(bool en, long errin, unsigned char kp, unsigned char ki, unsigned char ls)
 {
-	long p_term, output;
+	long p_term, i_term, output;
 	long long esumki;//
 	unsigned long t1;
 	if(en)
@@ -35,21 +35,22 @@ long PID::Compute(bool en, long errin, unsigned char kp, unsigned char ki, unsig
         //if (g_errorsum>0)g_i_term = (g_errorsum >>ls)*ki;//20161105 divieded first to avoid 
 		//else if (g_errorsum<0)g_i_term = (-1)*long((abs(g_errorsum)>>ls)*ki);//20161105
         
-        g_i_term = (long)(((long long)(g_errorsum)*(long long)(ki))>>ls);//20161105 divieded first to avoid 
+        i_term = (long)(((long long)(g_errorsum)*(long long)(ki))>>ls);//20161105 divieded first to avoid 
         
         //esumki=(long long)(g_errorsum)*(long long)(ki);//
         
         if(p_term > g_p_limit) p_term = g_p_limit;
 		else if(p_term < (-1)*g_p_limit) p_term = (-1)*g_p_limit ;
 		
-        if(g_i_term > g_i_limit) g_i_term = g_i_limit;//20161107 added
-		else if(g_i_term < (-1)*g_i_limit) g_i_term = (-1)*g_i_limit ;//
+        if(i_term > g_i_limit) i_term = g_i_limit;//20161107 added
+		else if(i_term < (-1)*g_i_limit) i_term = (-1)*g_i_limit ;//
         
-        output = -(p_term+g_i_term);//20161027
+        output = -(p_term+i_term);//20161027
 	}
 	else
 	{
 		p_term=0; 
+		i_term=0;
         g_errorsum =0;
 		output =0;
 
@@ -77,9 +78,9 @@ long PID::Compute(bool en, long errin, unsigned char kp, unsigned char ki, unsig
 			Serial.print(",");
 			Serial.print(g_ls);
 			Serial.print(",");
-			Serial.print(g_p_term);
+			Serial.print(p_term);
 			Serial.print(",");
-			Serial.print(g_i_term);
+			Serial.print(i_term);
 			Serial.print(",");
 			Serial.print(g_out);
 			Serial.print(",");
