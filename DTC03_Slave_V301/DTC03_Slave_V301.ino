@@ -10,6 +10,7 @@
 #include <DTC03_MS.h>
 #define PRINTLOOP 1
 #define PIDOUTPUTLIMIT 65535
+#define ISENSE_GAIN 0
 
 DTC03 dtc;
 PID ipid, tpid;
@@ -35,8 +36,8 @@ void setup() {
 void loop() {
   
   // put your main code here, to run repeatedly:
-  int isense, ierr, iset;
-  long ioutput,toutput,output, terr;
+  long isense, ierr, iset;
+  long ioutput,toutput,output, terr, iteclimit;
 //  if (i==5) {
 //    i=0;
 //    for (int j=0;j<5;j++) Serial.println(loop_time[j]);
@@ -51,15 +52,18 @@ void loop() {
   dtc.CheckSensorType();
   dtc.CheckTemp();
   dtc.CurrentLimit();
+  iteclimit=dtc.g_iteclimitset<<ISENSE_GAIN;
   
   terr = (long)dtc.g_vact - (long)dtc.g_vset_limitt;
   toutput=tpid.Compute(dtc.g_en_state, terr, dtc.g_p, dtc.g_ki, dtc.g_ls); 
-  iset=abs(map( toutput,-65535,65535,-300,300));
-  if(iset > dtc.g_iteclimitset) iset=dtc.g_iteclimitset;
   
-  isense =abs( (int)(dtc.g_itecread)-(int)(dtc.g_isense0) );
+//  iset=abs(map( toutput,-65535,65535,-300<<ISENSE_GAIN,300<<ISENSE_GAIN));
+  iset=abs(toutput*307>>16<<ISENSE_GAIN);
+  if(iset > iteclimit) iset=iteclimit;
+  
+  isense =abs( ( (long)(dtc.g_itecread)-(long)(dtc.g_isense0) )<<ISENSE_GAIN );
   ierr = isense - iset;
-  ioutput=ipid.Compute(dtc.g_en_state, ierr, 58, 1, 2);//kp=58,ki=1,ls=2
+  ioutput=ipid.Compute(dtc.g_en_state, ierr, 5, 1, 2);//kp=58,ki=1,ls=2
   
   output = (long)(abs(ioutput)+dtc.g_fbc_base);
   if (output>PIDOUTPUTLIMIT) output= PIDOUTPUTLIMIT;
