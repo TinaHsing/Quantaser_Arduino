@@ -35,48 +35,42 @@
 #define PUSHB A7
 #define ENSW A6 
 
-//=====================text coordinate definition=========
-#define TSET_T_X 0 
-#define TSET_T_Y 0
-#define TACT_T_X 0
-#define TACT_T_Y 24
-#define ITEC_T_X 7
-#define ITEC_T_Y 48
-#define ILIM_T_X 7
-#define ILIM_T_Y 56
-#define P_T_X 90
-#define P_T_Y 24
-#define I_T_X 90
-#define I_T_Y 32
-#define D_T_X 90
-#define D_T_Y 40
-#define BCONST_T_X 90
-#define BCONST_T_Y 48
-#define VMOD_T_X 90 // 11/13 when print Vmod status, dispble Sensor type selection funtion
-#define VMOD_T_Y 56
-#define SENSOR_V_X 90 
-#define SENSOR_V_Y 56
-
-#define VMOD_V_X 108 // 11/13 when print Vmod status, dispble Sensor type selection funtion
-#define VMOD_V_Y 56
-#define TSET_V_X 16
-#define TSET_V_Y 0
-#define TACT_V_X 18
-#define TACT_V_Y 24
-#define ITEC_V_X 37
-#define ITEC_V_Y 48
-#define ILIM_V_X 37
-#define ILIM_V_Y 56
-#define P_V_X 102
-#define P_V_Y 24
-#define I_V_X 102
-#define I_V_Y 32
-#define D_V_X 102
-#define D_V_Y 40
-#define BCONST_V_X 102
-#define BCONST_V_Y 48
+//=====================BG print coordinate definition=========
+#define TSET_COORD_X	0 
+#define TSET_COORD_Y	0
+#define TSET_COORD_X2	16
+#define Text_SET		"SET"
+#define TACT_COORD_X	0
+#define TACT_COORD_Y	ROWPIXEL0507*3
+#define TACT_COORD_X2	18
+#define Text_ACT		"ACT"
+#define ITEC_COORD_X	COLUMNPIXEL0507
+#define ITEC_COORD_Y	ROWPIXEL0507*6
+#define ITEC_COORD_X2	COLUMNPIXEL0507*6
+#define Text_ITEC		"ITEC:"
+#define ILIM_COORD_X	COLUMNPIXEL0507
+#define ILIM_COORD_Y	ROWPIXEL0507*7
+#define ILIM_COORD_X2	COLUMNPIXEL0507*7
+#define Text_ILIM		"ILIM:"
+#define P_COORD_X		COLUMNPIXEL0507*14
+#define P_COORD_Y		ROWPIXEL0507*3
+#define P_COORD_X2		COLUMNPIXEL0507*17
+#define Text_P			"P:"
+#define I_COORD_X		COLUMNPIXEL0507*14
+#define I_COORD_Y		ROWPIXEL0507*4
+#define I_COORD_X2		COLUMNPIXEL0507*16
+#define Text_I			"I:"
+#define BCONST_COORD_X 	COLUMNPIXEL0507*14
+#define BCONST_COORD_Y 	ROWPIXEL0507*6
+#define BCONST_COORD_X2	COLUMNPIXEL0507*16
+#define Text_B			"B:"
+#define VMOD_COORD_X 	COLUMNPIXEL0507*14
+#define VMOD_COORD_Y 	ROWPIXEL0507*7
+#define VMOD_COORD_X2 	COLUMNPIXEL0507*17
+#define Text_MS			"MS:"
 
 
+//==================ENG BG print coordinate definition=========
 #define VR1_X 0
 #define VR1_X2 42//
 #define VR1_Y 0
@@ -135,7 +129,6 @@ public:
 	void PrintP();
 	void PrintKi();
 	void PrintB();
-	void PrintSensor();
 	void PrintModStatus();
 	void Encoder();
 	void CursorState();

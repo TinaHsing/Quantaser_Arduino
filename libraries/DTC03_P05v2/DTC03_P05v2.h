@@ -29,7 +29,7 @@
 
 //=====================Freqently update define ==========================
 // ========User can copy below define to main function ==================
-#define RMEASUREVOUT 29000 //20161031, 55000
+#define RMEASUREVOUT 28400 //20161031, 55000
 #define RMEASUREDELAY 3000 //20161031
 #define RMEASUREAVGTIME 10
 #define VACTAVGTIME 64 // Note!!!! VACTAVGTIEM = 2 ^ VACTAVGPWR 
@@ -63,9 +63,9 @@
 #define NOEE_VBEH2	1 // R2, 1ohm
 #define NOEE_VBEC1	2 //Tpid offset 2000
 #define NOEE_VBEC2	19
-#define NOEE_FBC 22400
+#define NOEE_FBC 21000
 #define NOEE_DUMMY 104
-#define NOEE_OFFSET 32400
+#define NOEE_OFFSET 32494
 
 // The address of EEPROM
 #define EEADD_P 				0
@@ -129,7 +129,7 @@
 #define RTHRatio 25665 //(Isen*R0)*65535/vref concert Isense*R0 to 16bit ADC code
 #define T0INV 0.003354
 #define V_NOAD590 30000 
-#define V_OVERTEMP 481 // 90 degree
+#define V_OVERTEMP 481 // 150 degree 680
 
 const unsigned char PS_16 = (1<<ADPS2);
 const unsigned char PS_32 = (1<<ADPS2)|(1<<ADPS0);
