@@ -15,6 +15,7 @@ void AD5541::init()
 	SPI.setDataMode(SPI_MODE0);
 	SPI.setBitOrder(MSBFIRST);
 	SPI.setClockDivider(SPI_CLOCK_DIV2);
+	digitalWrite(_adcsel, HIGH);
 }
 void AD5541::ModeWrite(unsigned int dacvalue) // with spi.begin() and spi.end(), Need to set bit order in setup
 {
