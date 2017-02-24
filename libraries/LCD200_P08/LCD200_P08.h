@@ -7,7 +7,7 @@
 #define SOFTSCLPIN 2 // SOFTI2C !! No need to set the pin mode SoftI2C will do this in his member function
 #define PWR_OFF 3 // Vcc switch
 #define LD_EN 4 // on/off the LD current
-#define SOFTSDAPIN 5 // SDA for softI2C !! No need to set the pin mode SoftI2C will do this in his member function
+#define SOFTSDAPIN 8 // SDA for softI2C !! No need to set the pin mode SoftI2C will do this in his member function
 #define ENDAC 6  //PD6 for control AD5541
 #define VFC1 7 // VFC1 swich
 #define VFC2 9 // VFC3 switch
@@ -27,7 +27,7 @@
 #define OPENVTH 100 // vmon < 7.62mV while the current will be regards zero current and judge as Open
 #define VFSHORT 50 // if under 400uA condition, vf < 0.22V the LD will be regards as short
 #define I2CREADTIMEMAX 500 //maxmum I2C command read time is 500us
-#define IOUTSTEP 980 // around 3mA perstep
+#define IOUTSTEP 980 // around 3mA perstep (980*5/65535/25=0.003A)
 #define IOUTCOUNTERMAX 10 //if iout real can't equal to ioutseet for 10 loop times, it will be judge as output error, which means the dropout voltage is too large.
 #define POWERGOOD 550 //V_SENS pin detection values for power good, if vpluse smaller thna this value, need to by pass the LD to avoid inrush current caused LT1028
 

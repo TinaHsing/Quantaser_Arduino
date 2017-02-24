@@ -29,11 +29,12 @@ void LCD200::SetPinMode()
 void LCD200::DACInit()
 {
 	ad5541.SetPin(ENDAC);
-  ad5541.init();
+  	ad5541.init();
 	ad5541.NormalWrite(65535);
 }
-void LCD200::PWROnOff(bool en)
+void LCD200::PWROnOff(bool en) 
 {
+	// set en LOW to turn OFF VCC
   if (en)
     digitalWrite(PWR_OFF, LOW);
   else
@@ -85,7 +86,7 @@ bool LCD200::OpenShortVfCheck()
 {
   unsigned int vf;
  
-  digitalWrite(LD_EN, HIGH);
+  digitalWrite(LD_EN, HIGH); //LD_EN LOW : bypass LD current
   delay(200);
   ad5541.NormalWrite(CHECKCURRENT);
   delay(500);
@@ -125,14 +126,15 @@ bool LCD200::IoutSlow()
 {
   int deltaiout;
   unsigned int absdeltaiout;
-  deltaiout = g_dacout- g_dacoutslow;
+  deltaiout = g_dacout- g_dacoutslow; // deltaiout > 0 =>LD current decrease
   absdeltaiout = abs(deltaiout);
 
   //Change the dacout slowly
-  if(deltaiout > IOUTSTEP)
+  if(deltaiout > IOUTSTEP)  
     g_dacoutslow += IOUTSTEP;
   else if(absdeltaiout < IOUTSTEP)
-    g_dacoutslow += absdeltaiout;
+//    g_dacoutslow += absdeltaiout;
+    g_dacoutslow += deltaiout;
   else
     g_dacoutslow -= IOUTSTEP;
 
@@ -181,15 +183,15 @@ void LCD200::OnReceiveEvent()
     {
       case LCD200_COM_IOUT:
         if((g_AnyErrFlag == 0)) // if there is no error status, update the g_dacout
-          g_dacout = temp[0] << 8+ temp[1];
+          g_dacout = temp[0] << 8 | temp[1];
       break;
 
       case LCD200_COM_VFTH1:
-        g_vfth1 = temp[0] <<8 + temp[1];
+        g_vfth1 = temp[0] <<8 | temp[1];
       break;
 
       case LCD200_COM_VFTH2:
-        g_vfth2 = temp[0] <<8 + temp[1];
+        g_vfth2 = temp[0] <<8 | temp[1];
         g_initfinished = 1;
       break;
 
