@@ -11,13 +11,14 @@ LCD200 lcd200;
 bool g_first_turn_on_flag;
 void setup() {
   // put your setup code here, to run once:
+  Wire.begin(LCD200I2CSLAVEADD);
+  Wire.onReceive(ReceiveEvent);
+  Wire.onRequest(RequestEvent);
   lcd200.SetPinMode();
   lcd200.DACInit();
   lcd200.AnaBoardInit();
   lcd200.ResetFlag();
-  Wire.begin(LCD200I2CSLAVEADD);
-  Wire.onReceive(ReceiveEvent);
-  Wire.onRequest(RequestEvent);
+  
   while(~lcd200.g_initfinished) delay(100);
 
 }
