@@ -28,6 +28,9 @@ void setup() {
   else digitalWrite(SENSOR_TYPE, LOW);
   dtc.CheckSensorType();
   dtc.CheckTemp();
+//  dtc.CheckTemp();
+//  ipid.Init(65535,32768,0x40000000);
+
   ipid.Init(32768,32768,0x7FFFFFFF);
   tpid.Init(32768,32768,0x7FFFFFFF);
   dtc.dacforilim.ModeWrite(0);

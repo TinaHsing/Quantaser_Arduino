@@ -226,29 +226,29 @@ float DTC03Master::ReturnTemp(unsigned int vact, bool type)
 void DTC03Master::BackGroundPrint()
 {
   lcd.SelectFont(Iain5x7);
-  lcd.GotoXY(TSET_T_X,TSET_T_Y);
-  lcd.print("SET");
-  lcd.GotoXY(TACT_T_X,TACT_T_Y);    
-  lcd.print("ACT");
+  lcd.GotoXY(TSET_COORD_X,TSET_COORD_Y);
+  lcd.print(Text_SET);
+  lcd.GotoXY(TACT_COORD_X,TACT_COORD_Y);    
+  lcd.print(Text_ACT);
   lcd.SelectFont(SystemFont5x7);
-  lcd.GotoXY(P_T_X,P_T_Y);
-  lcd.print("P:");
-  lcd.GotoXY(I_T_X,I_T_Y);
-  lcd.print("I:");
-  lcd.GotoXY(ITEC_T_X, ITEC_T_Y);
-  lcd.print("ITEC:");
-  lcd.GotoXY(BCONST_T_X, BCONST_T_Y);
-  lcd.print("B:");
-  lcd.GotoXY(ILIM_T_X, ILIM_T_Y);
-  lcd.print("ILIM:");
-  lcd.GotoXY(VMOD_T_X, VMOD_T_Y);//20161113 show Modulation status
-  lcd.print("MS:");
+  lcd.GotoXY(ITEC_COORD_X, ITEC_COORD_Y);
+  lcd.print(Text_ITEC);
+  lcd.GotoXY(ILIM_COORD_X, ILIM_COORD_Y);
+  lcd.print(Text_ILIM);
+  lcd.GotoXY(P_COORD_X,P_COORD_Y);
+  lcd.print(Text_P);
+  lcd.GotoXY(I_COORD_X,I_COORD_Y);
+  lcd.print(Text_I);  
+  lcd.GotoXY(BCONST_COORD_X, BCONST_COORD_Y);
+  lcd.print(Text_B);
+  lcd.GotoXY(VMOD_COORD_X, VMOD_COORD_Y);
+  lcd.print(Text_MS);
 }
 
 void DTC03Master::PrintTset()
 {
   lcd.SelectFont(fixed_bold10x15);
-  lcd.GotoXY(TSET_V_X,TSET_V_Y);
+  lcd.GotoXY(TSET_COORD_X2,TSET_COORD_Y);
   if(g_tset<10.000)
     lcd.print("  ");
   else if(g_tset<100.000)
@@ -260,7 +260,7 @@ void DTC03Master::PrintTact(float tact)
 {
 
   lcd.SelectFont(Arial_bold_14);
-  lcd.GotoXY(TACT_V_X,TACT_V_Y);
+  lcd.GotoXY(TACT_COORD_X2,TACT_COORD_Y);
   if(g_errcode1) 
     {
       lcd.print("_error1");
@@ -294,7 +294,7 @@ void DTC03Master::PrintTact(float tact)
 void DTC03Master::PrintItec(float itec)
 {
   lcd.SelectFont(SystemFont5x7);
-  lcd.GotoXY(ITEC_V_X,ITEC_V_Y);
+  lcd.GotoXY(ITEC_COORD_X2,ITEC_COORD_Y);
   if ( abs(itec) <= 0.015 ) itec = 0;
   if(itec <0.00) lcd.print(itec,2); 
 
@@ -311,18 +311,17 @@ void DTC03Master::PrintIlim()
   float currentlim;
   currentlim =ILIMSTART + ILIMSTEP *(float)(g_currentlim);
   lcd.SelectFont(SystemFont5x7);
-  lcd.GotoXY(ILIM_V_X,ILIM_V_Y);
-  lcd.print(" ");
+  lcd.GotoXY(ILIM_COORD_X2,ILIM_COORD_Y);
+//  lcd.print(" ");
   lcd.print(currentlim,2);
 }
 void DTC03Master::PrintP()
 {
-  lcd.GotoXY(P_V_X, P_V_Y );
+  lcd.SelectFont(SystemFont5x7);
+  lcd.GotoXY(P_COORD_X2, P_COORD_Y );
   if(g_p<10)
-   lcd.print("   ");
-  else if (g_p<100)
    lcd.print("  ");
-  else if (g_p<1000)
+  else if (g_p<100)
    lcd.print(" ");
   lcd.print(g_p);
 }
@@ -330,8 +329,9 @@ void DTC03Master::PrintKi()
 {
   //unsigned int tconst;
   float tconst;
+  lcd.SelectFont(SystemFont5x7);
   tconst = float(pgm_read_word_near(timeconst+g_kiindex))/100.0;
-  lcd.GotoXY(I_V_X, I_V_Y);
+  lcd.GotoXY(I_COORD_X2, I_COORD_Y);
   if (g_kiindex==1) lcd.print(tconst);
   else if (g_kiindex<32)
   {
@@ -343,23 +343,17 @@ void DTC03Master::PrintKi()
   lcd.print("  ");
   lcd.print(tconst,0);
   }
-  // 20161031 remove
 }
 void DTC03Master::PrintB()
 {
-  //lcd.SelectFont(SystemFont5x7);//20161031
-  lcd.GotoXY(BCONST_V_X, BCONST_V_Y);
+  lcd.SelectFont(SystemFont5x7);
+  lcd.GotoXY(BCONST_COORD_X2, BCONST_COORD_Y);
   lcd.print(g_bconst); 
 }
-void DTC03Master::PrintSensor()
+void DTC03Master::PrintModStatus() 
 {
-  lcd.GotoXY(SENSOR_V_X, SENSOR_V_Y);
-  if(g_sensortype == 0) lcd.print("NTC  ");
-  else lcd.print("AD590"); 
-}
-void DTC03Master::PrintModStatus() //20161113
-{
-  lcd.GotoXY(VMOD_V_X, VMOD_V_Y);
+  lcd.SelectFont(SystemFont5x7);
+  lcd.GotoXY(VMOD_COORD_X2, VMOD_COORD_Y);
   if(g_mod_status == 0) lcd.print("OFF");
   else lcd.print(" ON"); 
 }
@@ -760,24 +754,24 @@ void DTC03Master::ShowCursor()
   {
     case 0:
     lcd.SelectFont(SystemFont5x7);
-    lcd.GotoXY(ILIM_T_X-COLUMNPIXEL0507, ILIM_T_Y);
+    lcd.GotoXY(ILIM_COORD_X-COLUMNPIXEL0507, ILIM_COORD_Y);
     lcd.print(" ");
-    lcd.GotoXY(P_T_X-COLUMNPIXEL0507, P_T_Y);
+    lcd.GotoXY(P_COORD_X-COLUMNPIXEL0507, P_COORD_Y);
     lcd.print(" ");
-    lcd.GotoXY(I_T_X-COLUMNPIXEL0507, I_T_Y);
+    lcd.GotoXY(I_COORD_X-COLUMNPIXEL0507, I_COORD_Y);
     lcd.print(" ");
-    lcd.GotoXY(BCONST_T_X-COLUMNPIXEL0507, BCONST_T_Y);
+    lcd.GotoXY(BCONST_COORD_X-COLUMNPIXEL0507, BCONST_COORD_Y);
     lcd.print(" ");
-    lcd.GotoXY(SENSOR_V_X-COLUMNPIXEL0507, SENSOR_V_Y);
+    lcd.GotoXY(VMOD_COORD_X-COLUMNPIXEL0507, VMOD_COORD_Y);
     lcd.print(" ");
     break;
 
     case 1:
     lcd.SelectFont(fixed_bold10x15);
-    if(g_tsetstep == 1.0) lcd.GotoXY(TSET_V_X+2*COLUMNPIXEL1015, TSET_V_Y);
-    else if(g_tsetstep == 0.1) lcd.GotoXY(TSET_V_X+4*COLUMNPIXEL1015, TSET_V_Y);//
-    else if(g_tsetstep == 0.01) lcd.GotoXY(TSET_V_X+5*COLUMNPIXEL1015, TSET_V_Y);//
-    else lcd.GotoXY(TSET_V_X+6*COLUMNPIXEL1015, TSET_V_Y);//
+    if(g_tsetstep == 1.0) lcd.GotoXY(TSET_COORD_X2+2*COLUMNPIXEL1015, TSET_COORD_Y);
+    else if(g_tsetstep == 0.1) lcd.GotoXY(TSET_COORD_X2+4*COLUMNPIXEL1015, TSET_COORD_Y);//
+    else if(g_tsetstep == 0.01) lcd.GotoXY(TSET_COORD_X2+5*COLUMNPIXEL1015, TSET_COORD_Y);//
+    else lcd.GotoXY(TSET_COORD_X2+6*COLUMNPIXEL1015, TSET_COORD_Y);//
     lcd.print(" ");
     delay(BLINKDELAY);
     PrintTset();
@@ -786,46 +780,46 @@ void DTC03Master::ShowCursor()
 
     case 2:
     lcd.SelectFont(SystemFont5x7, WHITE);
-    lcd.GotoXY(ILIM_T_X-COLUMNPIXEL0507, ILIM_T_Y);
+    lcd.GotoXY(ILIM_COORD_X-COLUMNPIXEL0507, ILIM_COORD_Y);
     lcd.print(" ");
-    lcd.SelectFont(SystemFont5x7);//20161031
-    lcd.GotoXY(SENSOR_V_X-COLUMNPIXEL0507, SENSOR_V_Y);//
-    lcd.print(" ");//
+    lcd.SelectFont(SystemFont5x7);
+    lcd.GotoXY(VMOD_COORD_X-COLUMNPIXEL0507, VMOD_COORD_Y);//
+    lcd.print(" ");
     break;
     
     case 3:
     lcd.SelectFont(SystemFont5x7, WHITE);
-    lcd.GotoXY(P_T_X-COLUMNPIXEL0507, P_T_Y);
+    lcd.GotoXY(P_COORD_X-COLUMNPIXEL0507, P_COORD_Y);
     lcd.print(" ");
     lcd.SelectFont(SystemFont5x7);
-    lcd.GotoXY(ILIM_T_X-COLUMNPIXEL0507, ILIM_T_Y);
+    lcd.GotoXY(ILIM_COORD_X-COLUMNPIXEL0507, ILIM_COORD_Y);
     lcd.print(" ");
     break;
     
     case 4:
     lcd.SelectFont(SystemFont5x7, WHITE);
-    lcd.GotoXY(I_T_X-COLUMNPIXEL0507, I_T_Y);
+    lcd.GotoXY(I_COORD_X-COLUMNPIXEL0507, I_COORD_Y);
     lcd.print(" ");
     lcd.SelectFont(SystemFont5x7);
-    lcd.GotoXY(P_T_X-COLUMNPIXEL0507, P_T_Y);
+    lcd.GotoXY(P_COORD_X-COLUMNPIXEL0507, P_COORD_Y);
     lcd.print(" ");
     break;
 
     case 5:
     lcd.SelectFont(SystemFont5x7, WHITE);
-    lcd.GotoXY(BCONST_T_X-COLUMNPIXEL0507, BCONST_T_Y);
+    lcd.GotoXY(BCONST_COORD_X-COLUMNPIXEL0507, BCONST_COORD_Y);
     lcd.print(" ");
     lcd.SelectFont(SystemFont5x7);
-    lcd.GotoXY(I_T_X-COLUMNPIXEL0507, I_T_Y);
+    lcd.GotoXY(I_COORD_X-COLUMNPIXEL0507, I_COORD_Y);
     lcd.print(" ");
     break;
 
     case 6:
     lcd.SelectFont(SystemFont5x7, WHITE);
-    lcd.GotoXY(VMOD_T_X-COLUMNPIXEL0507, VMOD_T_Y);
+    lcd.GotoXY(VMOD_COORD_X-COLUMNPIXEL0507, VMOD_COORD_Y);
     lcd.print(" ");
     lcd.SelectFont(SystemFont5x7);
-    lcd.GotoXY(BCONST_T_X-COLUMNPIXEL0507, BCONST_T_Y);
+    lcd.GotoXY(BCONST_COORD_X-COLUMNPIXEL0507, BCONST_COORD_Y);
     lcd.print(" ");
     break;
 
