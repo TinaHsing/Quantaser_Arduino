@@ -57,7 +57,7 @@ public:
 	LTC2451 ltc2451;
 //private:
 	bool g_LDOpenFlag, g_LDShortFlag, g_OutErrFlag, g_AnyErrFlag;
-	unsigned int g_vfth1, g_vfth2, g_dacout, g_vmon, g_dacoutslow;
-	unsigned char g_outerrorcounter;
+	unsigned int g_dacout, g_vmon, g_dacoutslow;
+	unsigned char g_outerrorcounter, g_vfth1, g_vfth2;
 
 };

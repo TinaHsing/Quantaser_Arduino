@@ -39,10 +39,9 @@
 #define ENSW A6 
 
 //-----------EEPROM ADDRESS---------
+//DTC03
 #define EEADD_VSET_UPPER	0
 #define EEADD_VSET_LOWER	1
-#define EEADD_BCONST_UPPER	19
-#define EEADD_BCONST_LOWER	20
 #define EEADD_MODSTATUS		4
 #define EEADD_currentlim 	5
 #define EEADD_FBC_UPPER		6
@@ -58,9 +57,19 @@
 #define EEADD_MODOFF_LOWER	16
 #define EEADD_RMEAS_UPPER	17
 #define EEADD_RMEAS_LOWER	18
-#define EEADD_DUMMY			100
+#define EEADD_BCONST_UPPER	19
+#define EEADD_BCONST_LOWER	20
 
+//LCD200
+#define EEADD_VTH1			21
+#define EEADD_VTH2			22
+#define EEADD_IOUT_UPPER    23
+#define EEADD_IOUT_LOWER    24
+
+
+#define EEADD_DUMMY			100
 //----------NOEE Default value------
+//DTC03
 #define NOEE_DUMMY 		104
 #define NOEE_VSET		26214//25C
 #define NOEE_ILIM		11 // currntlimit=0.45+0.05*11=1A
@@ -76,8 +85,13 @@
 #define NOEE_RMEAS      28400
 #define NOEE_TOTP		561 //120C
 
+//LCD200
+#define NOEE_VTH1		10
+#define NOEE_VTH2		20
+#define NOEE_IOUT		65535
 
 //=====================BG print coordinate definition=========
+//DTC03
 #define TSET_COORD_X	0 
 #define TSET_COORD_Y	0
 #define TSET_COORD_X2	16
@@ -148,11 +162,64 @@
 
 #define Test1_COORD_X    0
 #define Test1_COORD_Y    ROWPIXEL0507*2
-#define Test2_COORD_X    COLUMNPIXEL0507*9
-#define Test2_COORD_Y    ROWPIXEL0507*2
+#define Test2_COORD_X    0
+#define Test2_COORD_Y    ROWPIXEL0507*3
 #define Test3_COORD_X    0
-#define Test3_COORD_Y    ROWPIXEL0507*5
+#define Test3_COORD_Y    ROWPIXEL0507*4
 
+//Five in One circuit
+#define T1_S_X			0 
+#define T1_S_Y			0
+#define T1_S_X2			COLUMNPIXEL0507*5
+#define Text_T1_S		"T1_S:"
+#define T1_A_X			0 
+#define T1_A_Y			ROWPIXEL0507
+#define T1_A_X2			COLUMNPIXEL0507*5
+#define Text_T1_A		"T1_A:"
+#define A1_X			COLUMNPIXEL0507*12
+#define A1_Y			0
+#define A1_X2			COLUMNPIXEL0507*15
+#define Text_A1			"A1:"
+#define P1_X			COLUMNPIXEL0507*12
+#define P1_Y			ROWPIXEL0507
+#define P1_X2			COLUMNPIXEL0507*15
+#define Text_P1			"P1:"
+#define I1_X			COLUMNPIXEL0507*12
+#define I1_Y			ROWPIXEL0507*2
+#define I1_X2			COLUMNPIXEL0507*15
+#define Text_I1			"I1:"
+
+#define T2_S_X			0 
+#define T2_S_Y			ROWPIXEL0507*3
+#define T2_S_X2			COLUMNPIXEL0507*5
+#define Text_T2_S		"T2_S:"
+#define T2_A_X			0 
+#define T2_A_Y			ROWPIXEL0507*4
+#define T2_A_X2			COLUMNPIXEL0507*5
+#define Text_T2_A		"T2_A:"
+#define A2_X			COLUMNPIXEL0507*12
+#define A2_Y			ROWPIXEL0507*3
+#define A2_X2			COLUMNPIXEL0507*15
+#define Text_A2			"A2:"
+#define P2_X			COLUMNPIXEL0507*12
+#define P2_Y			ROWPIXEL0507*4
+#define P2_X2			COLUMNPIXEL0507*15
+#define Text_P2			"P2:"
+#define I2_X			COLUMNPIXEL0507*12
+#define I2_Y			ROWPIXEL0507*5
+#define I2_X2			COLUMNPIXEL0507*15
+#define Text_I2			"I2:"
+
+#define I_LD_X			COLUMNPIXEL0507
+#define I_LD_Y			ROWPIXEL0507*6
+#define I_LD_X2			COLUMNPIXEL0507*6
+#define I_LD_ACT_X2		COLUMNPIXEL0507*13
+#define Text_I_LD	 	"I_LD:"
+
+#define V_PZT_X			0
+#define V_PZT_Y			ROWPIXEL0507*7
+#define V_PZT_X2		COLUMNPIXEL0507*6
+#define Text_V_PZT	 	"V_PZT:"
 
 // define GLCD parameter
 #define COLUMNPIXEL1015 11 //column pixels of fixed_bold10x15
@@ -176,8 +243,8 @@ public:
 	void SetPinMode();
 	void ParamInit();
 	void WelcomeScreen();
-	void I2CReadData(unsigned char i);
-	void I2CWriteData(unsigned char com);
+	void I2CReadData(unsigned char, unsigned char);
+	void I2CWriteData(unsigned char, unsigned char);
 	void I2CReadAll();
 	void VarrayInit();
 	void IarrayInit();
@@ -209,6 +276,10 @@ public:
 	void PrintTotp();
 	void PrintTpcb(float);
 	void PrintEnable();
+	void PrintLDcurrentAct(float);
+	void PrintLDcurrentSet();
+	unsigned int ReturnCurrentDacout(float);
+	float ReturnCurrent(unsigned int);
 	
 	void ShowCursor(unsigned char);
     void UpdateEnable();
@@ -220,14 +291,20 @@ public:
     void vact_MV();
 	
 	//working variable-------------------
+	//DTC03
 	unsigned int g_vact,g_vact_MV, g_vset, g_tpcb, g_otp, g_Rmeas, g_bconst, g_fbcbase, g_vmodoffset;
 	unsigned char g_p, g_ki,g_ls,g_currentlim, g_tpidoff, g_r1, g_r2, g_kiindex, g_cursorstate;
 	int g_itec;
 	bool g_mod_status;	
     float g_tset;
+    //LCD200
+    unsigned int g_dacout, g_Ild;
+    unsigned char g_vfth1, g_vfth2;
+    float g_LDcurrent;
     //------------------------------------
     bool g_sensortype, g_en_state;
     int en_temp;
+    unsigned char g_test;
     
 private:
 	glcd lcd;

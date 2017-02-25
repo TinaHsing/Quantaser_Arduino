@@ -5,7 +5,8 @@
 #include <AD5541.h>
 #include <SPI.h>
 #include <LCD200_P08.h>
-#include <LCD200_P08_MS.h>
+//#include <LCD200_P08_MS.h>
+#include <DTC03_MS.h>
 
 
 
@@ -84,8 +85,10 @@ void LCD200::ResetFlag()
 }
 bool LCD200::OpenShortVfCheck()
 {
-  unsigned int vf;
+  unsigned int vf, vth1, vth2;
  
+  vth1 = (float)g_vfth1*20.46;
+  vth2 = (float)g_vfth2*20.46;
   digitalWrite(LD_EN, HIGH); //LD_EN LOW : bypass LD current
   delay(200);
   ad5541.NormalWrite(CHECKCURRENT);
@@ -106,9 +109,9 @@ bool LCD200::OpenShortVfCheck()
     ad5541.NormalWrite(65535);
   }
   PWROnOff(HIGH);
-  if(vf >g_vfth2)
+  if(vf >vth2)
     SetVCC(VCCHIGH);
-  else if(vf > g_vfth1)
+  else if(vf > vth1)
     SetVCC(VCCMEDIUM);
   g_checkflag = 0;
 }
@@ -181,23 +184,26 @@ void LCD200::OnReceiveEvent()
   {
     switch(com)
     {
+      case LCD200_COM_LDEN:
+        g_com_lden = temp[0];
+      break;
+      
       case LCD200_COM_IOUT:
         if((g_AnyErrFlag == 0)) // if there is no error status, update the g_dacout
           g_dacout = temp[0] << 8 | temp[1];
       break;
 
       case LCD200_COM_VFTH1:
-        g_vfth1 = temp[0] <<8 | temp[1];
+        g_vfth1 = temp[0];
+        
       break;
 
       case LCD200_COM_VFTH2:
-        g_vfth2 = temp[0] <<8 | temp[1];
+        g_vfth2 = temp[0];
         g_initfinished = 1;
       break;
 
-      case LCD200_COM_LDEN:
-        g_com_lden = temp[1];
-      break;
+      
     }
   }
 }
@@ -225,6 +231,10 @@ void LCD200::OnRequestEvent()
       if(g_OutErrFlag) temp[0] |= LCD200_ERRMASK_OUTERR;
       else temp[0] &= (~LCD200_ERRMASK_OUTERR);
     break;
+    
+    case I2C_COM_TEST1:
+    	temp[0]=g_initfinished;
+    	
   }
   Wire.write(temp,2);
 }

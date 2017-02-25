@@ -3,8 +3,8 @@
 #include <LTC2451.h>
 #include <SPI.h>
 #include <AD5541.h>
-#include <LCD200_P08_MS.h>
 #include <LCD200_P08.h>
+#include <DTC03_MS.h>>
 
 
 LCD200 lcd200;

@@ -4,8 +4,10 @@
 #include <avr/io.h>
 #include <avr/pgmspace.h>//
 // ==========DTC03_P05 I2C slave address ======
-#define DTC03P05 		0x07
+#define DTC03P05 		  0x07
+#define LCD200I2CSLAVEADD 0x40
 // =========receive Events Command and Address======
+//DTC03
 //Write
 #define I2C_COM_INIT 	0x11
 #define I2C_COM_CTR 	0x12
@@ -24,11 +26,19 @@
 #define I2C_COM_VACT	0x1D
 #define I2C_COM_PCB		0X1E
 
+//LCD200
+#define LCD200_COM_LDEN	 0x1F
+#define LCD200_COM_IOUT  0x20
+#define LCD200_COM_VFTH1 0x21
+#define LCD200_COM_VFTH2 0x22
+#define LCD200_COM_ERR 	 0x23
 
-#define I2C_COM_TEST1	0x1F
-#define I2C_COM_TEST2 	0x20
+
+#define I2C_COM_TEST1	LCD200_COM_ERR+1
+#define I2C_COM_TEST2 	LCD200_COM_ERR+2
 
 //=========request Events Mask ============
+//DTC03
 #define REQMSK_ENSTATE 		0x80
 #define REQMSK_SENSTYPE		0x40
 #define REQMSK_BUPPER		0x07
@@ -38,6 +48,10 @@
 #define REQMSK_ERR1		 	0x10
 #define REQMSK_ERR2			0x20
 #define REQMSK_WAKEUP   	0x40			//Tina 2017/2/15
+//LCD200
+#define LCD200_ERRMASK_LDOPEN 	0x01
+#define LCD200_ERRMASK_LDSHORT 	0x02
+#define LCD200_ERRMASK_OUTERR	0x04
 
 
 // first colume ki, second colume ls
