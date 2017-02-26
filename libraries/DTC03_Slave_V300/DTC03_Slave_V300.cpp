@@ -377,8 +377,8 @@ void DTC03::I2CReceive()
     g_en_state = REQMSK_ENSTATE & temp[1]; //B10000000
 //    g_sensortype = temp[1] & REQMSK_SENSTYPE; //20161113
 	g_mod_status = temp[1] & REQMSK_SENSTYPE; //B01000000
-//    Serial.print("g_en_state:");
-//    Serial.println(g_en_state);
+    Serial.print("g_en_state:");
+    Serial.println(g_en_state);
 //    Serial.print("g_mod_status: ");
 //    Serial.println(g_mod_status);
     break;
@@ -468,11 +468,10 @@ void DTC03::I2CReceive()
     break;
     
    
-    case I2C_COM_TEST1:  		
-//    	t_master = (temp[1] << 8) | temp[0];
-//    	Serial.println(t_master);
-//    	Serial.print(", ");
-//    	Serial.println(temp[1],HEX);
+    case I2C_COM_TEST1:  
+		Serial.print(F("t1:"));
+    	Serial.println(temp[0]);		
+
     break;
     case I2C_COM_TEST2:  		
 //    	t_master = (temp[1] << 8) | temp[0];

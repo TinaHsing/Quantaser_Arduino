@@ -11,7 +11,8 @@ LCD200 lcd200;
 bool g_first_turn_on_flag;
 void setup() {
   // put your setup code here, to run once:
-  Wire.begin(LCD200I2CSLAVEADD);
+  Serial.begin(9600);
+  Wire.begin(LCD200ADD);
   Wire.onReceive(ReceiveEvent);
   Wire.onRequest(RequestEvent);
   lcd200.SetPinMode();
@@ -19,22 +20,23 @@ void setup() {
   lcd200.AnaBoardInit();
   lcd200.ResetFlag();
   
-  while(~lcd200.g_initfinished) delay(100);
-
+//  while(!lcd200.g_initfinished) delay(1);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
+//  lcd200.PWRCheck();
+   digitalWrite(PWR_OFF, LOW);
   if(lcd200.g_com_lden)
   {
-  
-    if(lcd200.g_checkflag)
-      lcd200.OpenShortVfCheck();
-    lcd200.PWRCheck();
-    if(lcd200.IoutSlow())
-    {}
-    else
-      lcd200.CheckOutputErr();
+    if(lcd200.g_checkflag) lcd200.OpenShortVfCheck();   
+    lcd200.IoutSlow(); 
+//        delay(1000);
+//  digitalWrite(ENDAC,LOW);
+//    delay(1000);
+//     digitalWrite(ENDAC,HIGH);
+//    if(lcd200.IoutSlow()) {}
+//    else lcd200.CheckOutputErr();
    }
   else  
     lcd200.ResetFlag();

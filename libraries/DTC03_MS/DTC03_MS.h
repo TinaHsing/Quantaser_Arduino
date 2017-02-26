@@ -5,7 +5,8 @@
 #include <avr/pgmspace.h>//
 // ==========DTC03_P05 I2C slave address ======
 #define DTC03P05 		  0x07
-#define LCD200I2CSLAVEADD 0x40
+#define DTC03P05V2 		  0x08
+#define LCD200ADD         0x06
 // =========receive Events Command and Address======
 //DTC03
 //Write
@@ -27,11 +28,14 @@
 #define I2C_COM_PCB		0X1E
 
 //LCD200
+//write
 #define LCD200_COM_LDEN	 0x1F
 #define LCD200_COM_IOUT  0x20
 #define LCD200_COM_VFTH1 0x21
 #define LCD200_COM_VFTH2 0x22
-#define LCD200_COM_ERR 	 0x23
+//read
+#define LCD200_COM_IIN   0x23
+#define LCD200_COM_ERR 	 0x24
 
 
 #define I2C_COM_TEST1	LCD200_COM_ERR+1

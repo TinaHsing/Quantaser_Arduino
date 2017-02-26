@@ -14,8 +14,8 @@ LCD200::LCD200()
 {}
 void LCD200::SetPinMode()
 {
-    pinMode(ENC2_A, OUTPUT);
-  	pinMode(ENC2_SW, INPUT);
+//    pinMode(ENC2_A, OUTPUT);
+//  	pinMode(ENC2_SW, INPUT);
     pinMode(PWR_OFF, OUTPUT);
   	pinMode(LD_EN, OUTPUT);
   	pinMode(ENDAC, OUTPUT);
@@ -24,13 +24,14 @@ void LCD200::SetPinMode()
   	pinMode(VFC3, OUTPUT);
   	pinMode(VLD, INPUT);
   	pinMode(V_SENS, INPUT);
-  	pinMode(LCDSW, INPUT);
+//  	pinMode(LCDSW, INPUT);
 }
 
 void LCD200::DACInit()
 {
 	ad5541.SetPin(ENDAC);
   	ad5541.init();
+  	ad5541.ModeWrite(0);
 	ad5541.NormalWrite(65535);
 }
 void LCD200::PWROnOff(bool en) 
@@ -95,18 +96,20 @@ bool LCD200::OpenShortVfCheck()
   delay(500);
   g_vmon = ltc2451.SoftI2CRead(); // !!??Check if read twice is necessary!!
   vf = analogRead(VLD);
-  if(g_vmon < OPENVTH) 
-  {
-    g_LDOpenFlag =1;
-    g_AnyErrFlag =1;
-    ad5541.NormalWrite(65535); 
-
-  }
+//  if(g_vmon < OPENVTH) 
+//  {
+//    g_LDOpenFlag =1;
+//    g_AnyErrFlag =1;
+//    ad5541.NormalWrite(65535); 
+//    Serial.println("a");
+//
+//  }
   if(vf < VFSHORT)
   {
     g_LDShortFlag =1;
     g_AnyErrFlag =1;
     ad5541.NormalWrite(65535);
+    Serial.println("b");
   }
   PWROnOff(HIGH);
   if(vf >vth2)
@@ -120,8 +123,7 @@ void LCD200::PWRCheck()
 {
   unsigned int vplus;
   vplus = analogRead(V_SENS);
-  if((g_dacoutslow == 65535) || (vplus < POWERGOOD))
-    digitalWrite(LD_EN, LOW);
+  if((g_dacoutslow == 65535) || (vplus < POWERGOOD)) digitalWrite(LD_EN, LOW); 
   
 }
 
@@ -131,6 +133,8 @@ bool LCD200::IoutSlow()
   unsigned int absdeltaiout;
   deltaiout = g_dacout- g_dacoutslow; // deltaiout > 0 =>LD current decrease
   absdeltaiout = abs(deltaiout);
+  
+  digitalWrite(LD_EN, HIGH);
 
   //Change the dacout slowly
   if(deltaiout > IOUTSTEP)  
@@ -142,6 +146,11 @@ bool LCD200::IoutSlow()
     g_dacoutslow -= IOUTSTEP;
 
   ad5541.NormalWrite(g_dacoutslow);
+//  Serial.print(deltaiout);
+//  Serial.print(",");
+//  Serial.print(g_dacout);
+//  Serial.print(",");
+//  Serial.println(g_dacoutslow);
   // Check if program is in slow state.......
   if(absdeltaiout == 0)
     return 0;
@@ -163,6 +172,7 @@ void LCD200::CheckOutputErr() // Need to be use while IoutSlow = False
   {
     g_OutErrFlag =1;
     g_AnyErrFlag =1;
+    Serial.println("c");
   } 
 }
 void LCD200::OnReceiveEvent()
@@ -186,22 +196,42 @@ void LCD200::OnReceiveEvent()
     {
       case LCD200_COM_LDEN:
         g_com_lden = temp[0];
+        Serial.println(F("EN:"));
+        Serial.println(g_com_lden);
       break;
       
       case LCD200_COM_IOUT:
-        if((g_AnyErrFlag == 0)) // if there is no error status, update the g_dacout
-          g_dacout = temp[0] << 8 | temp[1];
+      	Serial.println(g_AnyErrFlag);
+        if(g_AnyErrFlag) {} // if there is no error status, update the g_dacout
+        else
+        {
+        	g_dacout = temp[1] << 8 | temp[0];
+          	Serial.println(F("dac:"));
+          	Serial.println(g_dacout);
+		}
+          
       break;
 
       case LCD200_COM_VFTH1:
         g_vfth1 = temp[0];
-        
+        Serial.println(F("VF1:"));
+        Serial.println(g_vfth1);
       break;
 
       case LCD200_COM_VFTH2:
         g_vfth2 = temp[0];
         g_initfinished = 1;
+        Serial.println(F("VF2, wakeup:"));
+        Serial.print(g_vfth2);
+        Serial.print(F(", "));
+        Serial.println(g_initfinished);
       break;
+      
+      case I2C_COM_TEST1:
+//      	Serial.print(F("t1:"));
+//    	Serial.println(temp[0]);
+      break;
+  
 
       
     }
@@ -215,7 +245,7 @@ void LCD200::OnRequestEvent()
     com = Wire.read();
   switch(com)
   {
-    case LCD200_COM_IOUT:
+    case LCD200_COM_IIN:
       temp[1] = g_vmon >> 8;
       temp[0] = g_vmon;
     break;
@@ -234,7 +264,7 @@ void LCD200::OnRequestEvent()
     
     case I2C_COM_TEST1:
     	temp[0]=g_initfinished;
-    	
+    break;
   }
   Wire.write(temp,2);
 }

@@ -82,7 +82,7 @@ void DTC03Master::ReadEEPROM()
         g_vmodoffset = EEPROM.read(EEADD_MODOFF_UPPER)<<8 |  EEPROM.read(EEADD_MODOFF_LOWER);
         g_Rmeas = EEPROM.read(EEADD_RMEAS_UPPER)<<8 | EEPROM.read(EEADD_RMEAS_LOWER); 
         g_otp = EEPROM.read(EEADD_TOTP_UPPER)<<8 | EEPROM.read(EEADD_TOTP_LOWER);
-        //LCD200
+        //LCD200I2C
         g_dacout = EEPROM.read(EEADD_IOUT_UPPER)<<8 | EEPROM.read(EEADD_IOUT_LOWER);
         g_vfth1 = EEPROM.read(EEADD_VTH1);
         g_vfth2 = EEPROM.read(EEADD_VTH2);
@@ -124,7 +124,7 @@ void DTC03Master::ReadEEPROM()
 		g_vmodoffset = NOEE_MODOFF;
 		g_Rmeas = NOEE_RMEAS;
 		g_otp = NOEE_TOTP; 
-		//LCD200
+		//LCD200I2C
 		EEPROM.write(EEADD_IOUT_UPPER, NOEE_IOUT>>8);
 		EEPROM.write(EEADD_IOUT_LOWER, NOEE_IOUT);
 		EEPROM.write(EEADD_VTH1, NOEE_VTH1);
@@ -198,7 +198,7 @@ void DTC03Master::SaveEEPROM() {
                 EEPROM.write(EEADD_RMEAS_UPPER, g_Rmeas >>8);
                 EEPROM.write(EEADD_RMEAS_LOWER, g_Rmeas );
                 break;   
-			//LCD200	
+			//LCD200I2C	
 			case EEADD_IOUT_UPPER:
                 EEPROM.write(EEADD_IOUT_UPPER, g_dacout >>8);
                 EEPROM.write(EEADD_IOUT_LOWER, g_dacout );
@@ -218,10 +218,13 @@ void DTC03Master::CheckStatus()
 {
 		float tact, itec_f, tpcb_f, Ild_f;
 				if (p_loopindex%300==0) {
+					Serial.println("a");
 					I2CReadData(I2C_COM_ITEC_ER,DTC03P05);
+					Serial.println("b");
 		            itec_f = float(g_itec)*CURRENTRatio;
 		            if(!p_engModeFlag) PrintItec(itec_f);
-                if(!g_wakeup) I2CWriteAll();
+//                if(!g_wakeup) I2CWriteAll();
+                    Serial.println("c");
 				}								
 				if (p_loopindex%300==1) {
 					I2CReadData(I2C_COM_VACT,DTC03P05);
@@ -236,11 +239,9 @@ void DTC03Master::CheckStatus()
 		            if(p_engModeFlag) PrintTpcb(tpcb_f);
 				}	
 				if (p_loopindex%300==3) {
-					I2CReadData(LCD200_COM_IOUT,LCD200I2CSLAVEADD);
+					I2CReadData(LCD200_COM_IIN,LCD200ADD);
 		            Ild_f = ReturnCurrent(g_Ild);
 		            if(!p_engModeFlag) PrintLDcurrentAct(Ild_f);
-		             I2CReadData(I2C_COM_TEST1,LCD200I2CSLAVEADD);
-		             PrintEnable();
 				}
 	    p_loopindex++;		       
 }
@@ -256,7 +257,7 @@ void DTC03Master::vact_MV()
 void DTC03Master::I2CWriteAll()
 {
 	for (int i=I2C_COM_INIT; i<=I2C_COM_WAKEUP; i++) I2CWriteData(i,DTC03P05);
-	for (int i=LCD200_COM_LDEN; i<=LCD200_COM_VFTH2; i++) I2CWriteData(i,LCD200I2CSLAVEADD);
+	for (int i=LCD200_COM_LDEN; i<=LCD200_COM_VFTH2; i++) I2CWriteData(i,LCD200ADD);
 }
 void DTC03Master::I2CWriteData(unsigned char com, unsigned char slaveAdd)
 {
@@ -323,7 +324,8 @@ void DTC03Master::I2CWriteData(unsigned char com, unsigned char slaveAdd)
     
     case I2C_COM_TEST1:
         temp[0]=p_temp;
-        temp[1]=p_temp>>8;
+        p_temp++;
+//        temp[1]=p_temp>>8;
         break;
     
     case I2C_COM_TEST2:
@@ -331,7 +333,7 @@ void DTC03Master::I2CWriteData(unsigned char com, unsigned char slaveAdd)
         temp[1]=p_tBlink_toggle;
         break;
         
-    //LCD200   
+    //LCD200I2C   
     case LCD200_COM_LDEN:
         temp[0]=g_en_state;
         break;
@@ -369,7 +371,7 @@ void DTC03Master::I2CReadData(unsigned char com, unsigned char slaveAdd)
   Wire.write(com);
   Wire.endTransmission();
   delayMicroseconds(I2CREADDELAY);
-  Wire.requestFrom(DTC03P05,2);
+  Wire.requestFrom(slaveAdd,2);
   while(Wire.available()==2)
   {
     temp[0] = Wire.read();
@@ -396,8 +398,8 @@ void DTC03Master::I2CReadData(unsigned char com, unsigned char slaveAdd)
     case I2C_COM_PCB:
         g_tpcb = (temp[1]<<8)|temp[0];
         break;
-    //LCD200 
-    case LCD200_COM_IOUT:
+    //LCD200I2C 
+    case LCD200_COM_IIN:
     	g_Ild = (temp[1]<<8)|temp[0];
     	break;
     	
@@ -593,7 +595,8 @@ void DTC03Master::UpdateEnable()
  {
   g_en_state=en_state;
   I2CWriteData(I2C_COM_INIT,DTC03P05);
-  I2CWriteData(LCD200_COM_LDEN,LCD200I2CSLAVEADD);
+//  delay(1);
+  I2CWriteData(LCD200_COM_LDEN,LCD200ADD);
  }
  
  //----------------------//
@@ -1058,7 +1061,7 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
         if(g_LDcurrent>200) g_LDcurrent=200;
         if(g_LDcurrent<0) g_LDcurrent=0;
 		g_dacout = ReturnCurrentDacout(g_LDcurrent);      
-        I2CWriteData(LCD200_COM_IOUT,LCD200I2CSLAVEADD);
+        I2CWriteData(LCD200_COM_IOUT,LCD200ADD);
         PrintLDcurrentSet();
         p_ee_change_state=EEADD_IOUT_UPPER;
       break;

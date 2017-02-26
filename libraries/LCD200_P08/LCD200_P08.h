@@ -2,19 +2,20 @@
 
 // ---------Pin definition of LCD200_P06----------//
 
-#define ENC2_A 0 //rotary encoder 2A
-#define ENC2_SW 1 //rotary encoeder switch for changing cursor
+//#define ENC2_A 0 //rotary encoder 2A
+//#define ENC2_SW 1 //rotary encoeder switch for changing cursor
 #define SOFTSCLPIN 2 // SOFTI2C !! No need to set the pin mode SoftI2C will do this in his member function
 #define PWR_OFF 3 // Vcc switch
 #define LD_EN 4 // on/off the LD current
-#define SOFTSDAPIN 8 // SDA for softI2C !! No need to set the pin mode SoftI2C will do this in his member function
+#define SOFTSDAPIN 5 // SDA for softI2C !! No need to set the pin mode SoftI2C will do this in his member function
+
 #define ENDAC 6  //PD6 for control AD5541
 #define VFC1 7 // VFC1 swich
 #define VFC2 9 // VFC3 switch
 #define VFC3 10 // VFC3 switch 
 #define VLD A1 // PC1 (ADC1) for LD voltage read
 #define V_SENS A2 // V+ voltage detection
-#define LCDSW A7 // page switch
+//#define LCDSW A7 // page switch
 
 
 //---------VCC setting parameter --------
