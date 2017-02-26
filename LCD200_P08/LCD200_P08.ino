@@ -25,16 +25,12 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-//  lcd200.PWRCheck();
-   digitalWrite(PWR_OFF, LOW);
+  lcd200.PWRCheck();
   if(lcd200.g_com_lden)
   {
     if(lcd200.g_checkflag) lcd200.OpenShortVfCheck();   
     lcd200.IoutSlow(); 
-//        delay(1000);
-//  digitalWrite(ENDAC,LOW);
-//    delay(1000);
-//     digitalWrite(ENDAC,HIGH);
+
 //    if(lcd200.IoutSlow()) {}
 //    else lcd200.CheckOutputErr();
    }

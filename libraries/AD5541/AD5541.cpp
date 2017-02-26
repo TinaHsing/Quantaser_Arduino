@@ -35,8 +35,8 @@ void AD5541::NormalWrite(unsigned int dacvalue) // Need to use spi setting in se
 	unsigned char high_byte, low_byte;
 	high_byte = dacvalue >>8;
 	low_byte = dacvalue;
-	SPI.transfer(0);
-	SPI.transfer(0);
+//	SPI.transfer(0);
+//	SPI.transfer(0);
 	digitalWrite(_adcsel, LOW);
 	SPI.transfer(high_byte);
 	SPI.transfer(low_byte);

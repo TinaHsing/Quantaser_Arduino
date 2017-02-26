@@ -31,7 +31,7 @@ void LCD200::DACInit()
 {
 	ad5541.SetPin(ENDAC);
   	ad5541.init();
-  	ad5541.ModeWrite(0);
+//  	ad5541.ModeWrite(0);
 	ad5541.NormalWrite(65535);
 }
 void LCD200::PWROnOff(bool en) 
@@ -95,6 +95,8 @@ bool LCD200::OpenShortVfCheck()
   ad5541.NormalWrite(CHECKCURRENT);
   delay(500);
   g_vmon = ltc2451.SoftI2CRead(); // !!??Check if read twice is necessary!!
+  Serial.print(F("Vmon:"));
+  Serial.println(g_vmon);
   vf = analogRead(VLD);
 //  if(g_vmon < OPENVTH) 
 //  {
@@ -124,6 +126,7 @@ void LCD200::PWRCheck()
   unsigned int vplus;
   vplus = analogRead(V_SENS);
   if((g_dacoutslow == 65535) || (vplus < POWERGOOD)) digitalWrite(LD_EN, LOW); 
+  else digitalWrite(LD_EN, HIGH);
   
 }
 
@@ -140,7 +143,6 @@ bool LCD200::IoutSlow()
   if(deltaiout > IOUTSTEP)  
     g_dacoutslow += IOUTSTEP;
   else if(absdeltaiout < IOUTSTEP)
-//    g_dacoutslow += absdeltaiout;
     g_dacoutslow += deltaiout;
   else
     g_dacoutslow -= IOUTSTEP;
