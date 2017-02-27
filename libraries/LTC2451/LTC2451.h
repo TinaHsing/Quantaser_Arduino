@@ -1,7 +1,8 @@
 #define LTC2451ADD 0x14
 #define I2CREAD 1
 #define I2CWRITE 0
-
+#include <SoftI2C.h>
+#include <Wire.h>
 class SoftI2C;
 class LTC2451
 {

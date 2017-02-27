@@ -109,16 +109,16 @@ void SoftI2C::Stop()
  {
  	uint8_t addRW;
  	addRW = ((address << 1) | RW);
- 	
  	oldSREG = SREG;
  	cli();
  	*sdaout &= ~sdabit; // set SDA Low
-
+	
  	delayMicroseconds(I2C_DELAY_USEC);
 
  	*sclout &= ~sclbit; // set SCL LOW
  	SREG = oldSREG;
  	return Write(addRW);
+ 	
  }
 
 bool SoftI2C::Write(uint8_t data)
