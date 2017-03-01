@@ -8,7 +8,8 @@
 #define cbi(sfr, bit) (_SFR_BYTE(sfr) &= ~_BV(bit))
 #endif
 
-
+#ifndef SoftI2C_H
+#define SoftI2C_H
 
 class SoftI2C {
 private:
@@ -27,3 +28,4 @@ public:
 private:
 	void turnOffPWM(uint8_t timer);
 };
+#endif

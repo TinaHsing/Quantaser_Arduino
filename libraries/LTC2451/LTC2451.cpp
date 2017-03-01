@@ -2,11 +2,11 @@
 
 LTC2451::LTC2451()
 {}
-void LTC2451::Init()
+void LTC2451::Init(unsigned char mode)
 {
 	Wire.begin();
 	Wire.beginTransmission(LTC2451ADD);
-	Wire.write(1);
+	Wire.write(mode);
 	Wire.endTransmission();
 }
 unsigned int LTC2451::Read()
@@ -24,36 +24,35 @@ unsigned int LTC2451::Read()
 	vout = voltage[0] << 8 | voltage[1];
 	return vout;
 }
-bool LTC2451::SoftI2CInit(unsigned char sdapin, unsigned char sclpin)
+bool LTC2451::SoftI2CInit(unsigned char sdapin, unsigned char sclpin, unsigned char mode)
 {
-//	Wire.begin();
+
 	g_sdapin = sdapin;
 	g_sclpin = sclpin;
 	softi2c.init(g_sdapin,g_sclpin);
-	if(softi2c.Start(LTC2451ADD,I2CWRITE))
+	if(softi2c.start(LTC2451ADD_SWRITE))  
 	{	
-		softi2c.Write(1);
-		softi2c.Stop();
-		return 0;
+		softi2c.write(mode);
+		softi2c.stop();
+
+		return 1;
 	}
-	else return 1;
+	else return 0;
 }
 unsigned int LTC2451::SoftI2CRead()
 {
 	unsigned char i, data[2];
 	unsigned int vout;
-	 Serial.println("1");
-	if(softi2c.Start(LTC2451ADD,I2CREAD))
-	{ Serial.println("2");
+
+	if(softi2c.start(LTC2451ADD_SREAD)) 
+	{
 		for(i =0; i< 2; i++)
 			{
-				data[i] = softi2c.Read(1);
+				data[i] = softi2c.read(0);
 			}
-		softi2c.Stop();
+		softi2c.stop();
 		vout = data[0] << 8 | data[1];
-		Serial.print(data[0]);
-		Serial.print(", ");
-		Serial.println(data[1]);
+
 	}
 
 	return vout;

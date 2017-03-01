@@ -111,11 +111,12 @@ void SoftI2C::Stop()
  	addRW = ((address << 1) | RW);
  	oldSREG = SREG;
  	cli();
- 	*sdaout &= ~sdabit; // set SDA Low
+ 	//*sdaout &= ~sdabit; // set SDA Low
+ 	digitalWrite(_sdapin,LOW);
 	
  	delayMicroseconds(I2C_DELAY_USEC);
-
- 	*sclout &= ~sclbit; // set SCL LOW
+ 	digitalWrite(_sclpin, LOW);
+ 	//*sclout &= ~sclbit; // set SCL LOW
  	SREG = oldSREG;
  	return Write(addRW);
  	
@@ -133,37 +134,37 @@ bool SoftI2C::Write(uint8_t data)
 		cli();
 
 		if( (m & data) == LOW)
-			{*sdaout &= ~sdabit; // set SDA Low
-			 //Serial.println("0");
-			}
+				*sdaout &= ~sdabit; // set SDA Low
+
 		
 		else		
-			{
-			*sdaout |= sdabit; // set SDA Hight
-			//Serial.println("1");
-			}
-		delayMicroseconds(I2C_DELAY_USEC);
-		//Serial.println((m & data));
-		
+				*sdaout |= sdabit; // set SDA Hight
+			
 		*sclout |= sclbit; // set SCL High
-		
-		SREG = oldSREG; // Enable the interupt
+		SREG = oldSREG;
 
 		delayMicroseconds(I2C_DELAY_USEC);
-		
 		oldSREG = SREG;
 		cli();
 		*sclout &= ~sclbit; // set SCL LOW
 		SREG = oldSREG;
 	}
-	oldSREG = SREG;
-	cli();
-	*sdareg &= ~sdabit;  // set SDA as input
-	*sdaout |= sdabit; // set SDA Hight
-	*sclout |= sclbit; // set SCL High
+	//oldSREG = SREG;
+	//cli();
+	pinMode(_sdapin, INPUT);
+	digitalWrite(_sdapin, HIGH);
+	digitalWrite(_sclpin, HIGH);
+
+	//*sdareg &= ~sdabit;  // set SDA as input
+	//*sdaout |= sdabit; // set SDA High
+	//*sclout |= sclbit; // set SCL High
 	//SREG = oldSREG;
 	delayMicroseconds(I2C_DELAY_USEC);
-	uint8_t rtn = (*portInputRegister(sdaport))& sdabit;
+	uint8_t rtn =digitalRead(_sdapin);
+
+	//uint8_t rtn = (*portInputRegister(sdaport))& sdabit;
+	Serial.print("rtn:");
+	Serial.println(rtn);
 
 	//oldSREG = SREG;
 	//cli();

@@ -46,18 +46,18 @@ uint8_t const I2C_WRITE = 0;
  */
 class SoftI2cMaster {
  public:
-  SoftI2cMaster(uint8_t sdaPin, uint8_t sclPin);
+  SoftI2cMaster();
+  void init(uint8_t sdaPin, uint8_t sclPin);
   uint8_t read(uint8_t last);
   bool restart(uint8_t addressRW);
   bool start(uint8_t addressRW);
   void stop(void);
   bool write(uint8_t b);
  private:
-  SoftI2cMaster() {}
+  //SoftI2cMaster() {}
   uint8_t sdaPin_, sdabit, sdaport;
   uint8_t sclPin_, sclbit, sclport;
   uint8_t timer, oldSREG;
-
   void turnOffPWM(uint8_t timer);
   volatile uint8_t *sdareg, *sdaout, *sclreg, *sclout;
 };

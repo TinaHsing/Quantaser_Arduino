@@ -30,7 +30,11 @@
  *
  * \param[in] sclPin The software SCL pin number.
  */
-SoftI2cMaster::SoftI2cMaster(uint8_t sdaPin, uint8_t sclPin) {
+
+SoftI2cMaster::SoftI2cMaster()
+{}
+void SoftI2cMaster::init(uint8_t sdaPin, uint8_t sclPin) 
+{
   sdaPin_ = sdaPin;
   sclPin_ = sclPin;
   
