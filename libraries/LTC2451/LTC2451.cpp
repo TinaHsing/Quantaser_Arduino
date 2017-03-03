@@ -23,7 +23,7 @@ unsigned int LTC2451::Read()
 {
 	bool i=0;
 	unsigned char voltage[2];
-	unsigned int vout;
+	unsigned int vout, currentTime = millis();
 	if ( abs(currentTime-p_timeStart)>=p_waitTime )
 	{
 		Wire.requestFrom(LTC2451ADD,2);

@@ -481,6 +481,7 @@ void DTC03Master::PrintLDcurrentAct(float current)
  	if(current<10.0) lcd.print("  ");
  	else if(current<100.0) lcd.print(" ");
  	lcd.print(current,2);	
+//    lcd.print(g_Ild);
 }
 
 void DTC03Master::PrintTset()
@@ -854,7 +855,7 @@ void DTC03Master::blinkTsetCursor()
 				p_tBlink_toggle=!p_tBlink_toggle;
 			}
 			else{
-				PrintTset();
+//				PrintTset();
 				p_tBlink_toggle=!p_tBlink_toggle;
 			}
 			p_tBlink=t_temp;		

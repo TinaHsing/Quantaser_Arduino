@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include <Wire.h>
-#include <SoftI2C.h>
+//#include <SoftI2C.h>
 #include <LTC2451.h>
 #include <AD5541.h>
 #include <SPI.h>
@@ -34,9 +34,9 @@ void LCD200::DACInit()
 //  	ad5541.ModeWrite(0);
 	ad5541.NormalWrite(65535);
 }
-void LCD200::PWROnOff(bool en) 
+void LCD200::PWROnOff(bool en) // set en LOW to turn OFF VCC
 {
-	// set en LOW to turn OFF VCC
+	
   if (en)
     digitalWrite(PWR_OFF, LOW);
   else
@@ -67,7 +67,7 @@ void LCD200::AnaBoardInit()
 {
   PWROnOff(LOW);
   SetVCC(LOW);
-  ltc2451.SoftI2CInit(SOFTSDAPIN, SOFTSCLPIN);
+  ltc2451.SoftI2CInit(SOFTSDAPIN, SOFTSCLPIN, 1);
   ad5541.NormalWrite(65535); // !!??Need to check why need this line??
   digitalWrite(LD_EN, LOW);
 
@@ -84,17 +84,22 @@ void LCD200::ResetFlag()
   g_dacout = 65535;
   g_outerrorcounter =0;
 }
+void LCD200::readMonitor()
+{
+	g_vmon = ltc2451.SoftI2CRead();
+//	Serial.println(g_vmon);
+}
 bool LCD200::OpenShortVfCheck()
 {
   unsigned int vf, vth1, vth2;
  
   vth1 = (float)g_vfth1*20.46;
   vth2 = (float)g_vfth2*20.46;
-  digitalWrite(LD_EN, HIGH); //LD_EN LOW : bypass LD current
+//  digitalWrite(LD_EN, HIGH); //LD_EN LOW : bypass LD current
   delay(200);
   ad5541.NormalWrite(CHECKCURRENT);
   delay(500);
-  g_vmon = ltc2451.SoftI2CRead(); // !!??Check if read twice is necessary!!
+//  g_vmon = ltc2451.SoftI2CRead(); // !!??Check if read twice is necessary!!
   vf = analogRead(VLD);
 //  if(g_vmon < OPENVTH) 
 //  {
@@ -104,13 +109,13 @@ bool LCD200::OpenShortVfCheck()
 //    Serial.println("a");
 //
 //  }
-  if(vf < VFSHORT)
-  {
-    g_LDShortFlag =1;
-    g_AnyErrFlag =1;
-    ad5541.NormalWrite(65535);
-    Serial.println("b");
-  }
+//  if(vf < VFSHORT)
+//  {
+//    g_LDShortFlag =1;
+//    g_AnyErrFlag =1;
+//    ad5541.NormalWrite(65535);
+//    Serial.println("b");
+//  }
   PWROnOff(HIGH);
   if(vf >vth2)
     SetVCC(VCCHIGH);
@@ -196,8 +201,8 @@ void LCD200::OnReceiveEvent()
     {
       case LCD200_COM_LDEN:
         g_com_lden = temp[0];
-        Serial.println(F("EN:"));
-        Serial.println(g_com_lden);
+//        Serial.println(F("EN:"));
+//        Serial.println(g_com_lden);
       break;
       
       case LCD200_COM_IOUT:
@@ -206,25 +211,25 @@ void LCD200::OnReceiveEvent()
         else
         {
         	g_dacout = temp[1] << 8 | temp[0];
-          	Serial.println(F("dac:"));
-          	Serial.println(g_dacout);
+//          	Serial.println(F("dac:"));
+//          	Serial.println(g_dacout);
 		}
           
       break;
 
       case LCD200_COM_VFTH1:
         g_vfth1 = temp[0];
-        Serial.println(F("VF1:"));
-        Serial.println(g_vfth1);
+//        Serial.println(F("VF1:"));
+//        Serial.println(g_vfth1);
       break;
 
       case LCD200_COM_VFTH2:
         g_vfth2 = temp[0];
         g_initfinished = 1;
-        Serial.println(F("VF2, wakeup:"));
-        Serial.print(g_vfth2);
-        Serial.print(F(", "));
-        Serial.println(g_initfinished);
+//        Serial.println(F("VF2, wakeup:"));
+//        Serial.print(g_vfth2);
+//        Serial.print(F(", "));
+//        Serial.println(g_initfinished);
       break;
       
       case I2C_COM_TEST1:
@@ -267,6 +272,14 @@ void LCD200::OnRequestEvent()
     break;
   }
   Wire.write(temp,2);
+}
+
+void LCD200::ad5541Test()
+{
+	ad5541.NormalWrite(65535);
+	delay(1000);
+	ad5541.NormalWrite(32768);
+	delay(1000);
 }
 
 

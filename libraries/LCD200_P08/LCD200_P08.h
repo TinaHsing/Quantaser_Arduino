@@ -7,7 +7,7 @@
 #define SOFTSCLPIN 2 // SOFTI2C !! No need to set the pin mode SoftI2C will do this in his member function
 #define PWR_OFF 3 // Vcc switch
 #define LD_EN 4 // on/off the LD current
-#define SOFTSDAPIN 5 // SDA for softI2C !! No need to set the pin mode SoftI2C will do this in his member function
+#define SOFTSDAPIN 8 // SDA for softI2C !! No need to set the pin mode SoftI2C will do this in his member function
 
 #define ENDAC 6  //PD6 for control AD5541
 #define VFC1 7 // VFC1 swich
@@ -33,13 +33,16 @@
 #define POWERGOOD 550 //V_SENS pin detection values for power good, if vpluse smaller thna this value, need to by pass the LD to avoid inrush current caused LT1028
 
 
-class SoftI2C;
+//class SoftI2C;
 class LTC2451;
 class AD5541;
 
 class LCD200
 {
 public:
+	AD5541 ad5541;
+	LTC2451 ltc2451;
+	
 	LCD200();
 	void SetPinMode();
 	void DACInit();
@@ -53,9 +56,11 @@ public:
 	void CheckOutputErr();
 	void OnReceiveEvent();
 	void OnRequestEvent();
+	void ad5541Test();
+	void readMonitor();
+	
 	bool g_checkflag, g_initfinished, g_com_lden;
-	AD5541 ad5541;
-	LTC2451 ltc2451;
+	
 //private:
 	bool g_LDOpenFlag, g_LDShortFlag, g_OutErrFlag, g_AnyErrFlag;
 	unsigned int g_dacout, g_vmon, g_dacoutslow;
