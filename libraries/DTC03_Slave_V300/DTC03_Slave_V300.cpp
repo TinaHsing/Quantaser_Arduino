@@ -100,7 +100,7 @@ void DTC03::SetMosOff()
 void DTC03::DynamicVcc()
 {
     float restec, g_r1_f, g_r2_f;
-    if(g_sensortype) digitalWrite(SENSOR_TYPE,LOW);
+    if(!g_sensortype) digitalWrite(SENSOR_TYPE,LOW);
     SetMosOff();
     BuildUpArray(1,1,1);
     while(g_wakeup == 0) delay(1);
@@ -260,7 +260,7 @@ void DTC03::CheckSensorType()
 {
 //  if(g_sensortype) digitalWrite(SENSOR_TYPE, HIGH); // High for AD590, Low for NTC
 //  else digitalWrite(SENSOR_TYPE, LOW);
-  if((g_sensortype && g_vact < V_NOAD590)|(g_sensortype ==0 && g_vact==65535))
+  if(g_vact==65535)
     {
       g_errcode1=1;
       g_en_state = 0;
@@ -377,8 +377,8 @@ void DTC03::I2CReceive()
     g_en_state = REQMSK_ENSTATE & temp[1]; //B10000000
 //    g_sensortype = temp[1] & REQMSK_SENSTYPE; //20161113
 	g_mod_status = temp[1] & REQMSK_SENSTYPE; //B01000000
-    Serial.print("g_en_state:");
-    Serial.println(g_en_state);
+//    Serial.print("g_en_state:");
+//    Serial.println(g_en_state);
 //    Serial.print("g_mod_status: ");
 //    Serial.println(g_mod_status);
     break;

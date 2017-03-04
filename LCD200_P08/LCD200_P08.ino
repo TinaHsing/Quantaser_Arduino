@@ -34,7 +34,6 @@ void loop()
 //    else lcd200.CheckOutputErr();
    }
   else  lcd200.ResetFlag();
-  lcd200.readMonitor();
 }
 void ReceiveEvent(int howmany)
 {

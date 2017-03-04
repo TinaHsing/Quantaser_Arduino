@@ -478,9 +478,14 @@ void DTC03Master::PrintLDcurrentAct(float current)
 {
 	lcd.SelectFont(SystemFont5x7);
  	lcd.GotoXY(I_LD_ACT_X2,I_LD_Y);
- 	if(current<10.0) lcd.print("  ");
- 	else if(current<100.0) lcd.print(" ");
- 	lcd.print(current,2);	
+ 	if(!g_en_state) lcd.print("OFF   ");
+ 	else 
+ 	{
+ 		if(current<10.0) lcd.print("  ");
+	 	else if(current<100.0) lcd.print(" ");
+	 	lcd.print(current,2);
+	 }
+		
 //    lcd.print(g_Ild);
 }
 
@@ -843,10 +848,10 @@ void DTC03Master::blinkTsetCursor()
 		t_temp=millis();
 		
 		lcd.SelectFont(SystemFont5x7);
-		if(g_tsetstep == 1.0) lcd.GotoXY(TSET_COORD_X2+2*COLUMNPIXEL0507, TSET_COORD_Y);
-	    else if(g_tsetstep == 0.1) lcd.GotoXY(TSET_COORD_X2+4*COLUMNPIXEL0507, TSET_COORD_Y);
-	    else if(g_tsetstep == 0.01) lcd.GotoXY(TSET_COORD_X2+5*COLUMNPIXEL0507, TSET_COORD_Y);
-	    else lcd.GotoXY(TSET_COORD_X2+6*COLUMNPIXEL0507, TSET_COORD_Y);
+		if(g_tsetstep == 1.0) lcd.GotoXY(T1_S_X2+COLUMNPIXEL0507, T1_S_Y);
+	    else if(g_tsetstep == 0.1) lcd.GotoXY(T1_S_X2+3*COLUMNPIXEL0507, T1_S_Y);
+	    else if(g_tsetstep == 0.01) lcd.GotoXY(T1_S_X2+4*COLUMNPIXEL0507, T1_S_Y);
+	    else lcd.GotoXY(T1_S_X2+5*COLUMNPIXEL0507, T1_S_Y);
 	    
 		if( abs(t_temp-p_tBlink)>BLINKDELAY )
 		{		  	
@@ -855,7 +860,7 @@ void DTC03Master::blinkTsetCursor()
 				p_tBlink_toggle=!p_tBlink_toggle;
 			}
 			else{
-//				PrintTset();
+				PrintTset();
 				p_tBlink_toggle=!p_tBlink_toggle;
 			}
 			p_tBlink=t_temp;		
@@ -877,10 +882,10 @@ void DTC03Master::ShowCursor(unsigned char state_old)
 //		    		lcd.GotoXY(ILIM_COORD_X-COLUMNPIXEL0507, ILIM_COORD_Y);
 //		    	break;
 		    	case 2:
-		    		lcd.GotoXY(P_COORD_X-COLUMNPIXEL0507, P_COORD_Y);
+		    		lcd.GotoXY(P1_X-COLUMNPIXEL0507, P1_Y);
 		    	break;
 		    	case 3:
-		    		lcd.GotoXY(I_COORD_X-COLUMNPIXEL0507, I_COORD_Y);
+		    		lcd.GotoXY(I1_X-COLUMNPIXEL0507, I1_Y);
 		    	break;
 		    	case 4:
 		    		lcd.GotoXY(I_LD_X-COLUMNPIXEL0507, I_LD_Y);

@@ -22,8 +22,8 @@ void LCD200::SetPinMode()
   	pinMode(VFC1, OUTPUT);
   	pinMode(VFC2, OUTPUT);
   	pinMode(VFC3, OUTPUT);
-  	pinMode(VLD, INPUT);
-  	pinMode(V_SENS, INPUT);
+//  	pinMode(VLD, INPUT);
+//  	pinMode(V_SENS, INPUT);
 //  	pinMode(LCDSW, INPUT);
 }
 
@@ -151,6 +151,7 @@ bool LCD200::IoutSlow()
     g_dacoutslow -= IOUTSTEP;
 
   ad5541.NormalWrite(g_dacoutslow);
+//  ad5541.NormalWrite(65535);
 //  Serial.print(deltaiout);
 //  Serial.print(",");
 //  Serial.print(g_dacout);
