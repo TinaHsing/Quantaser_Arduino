@@ -82,6 +82,13 @@ void DTC03Master::ReadEEPROM()
         g_vmodoffset = EEPROM.read(EEADD_MODOFF_UPPER)<<8 |  EEPROM.read(EEADD_MODOFF_LOWER);
         g_Rmeas = EEPROM.read(EEADD_RMEAS_UPPER)<<8 | EEPROM.read(EEADD_RMEAS_LOWER); 
         g_otp = EEPROM.read(EEADD_TOTP_UPPER)<<8 | EEPROM.read(EEADD_TOTP_LOWER);
+        //DTC03_2
+		g_vset2 = EEPROM.read(EEADD_VSET_UPPER_2)<<8 | EEPROM.read(EEADD_VSET_LOWER_2);
+		g_p2 = EEPROM.read(EEADD_P_2);
+		g_kiindex2 = EEPROM.read(EEADD_KIINDEX_2);		
+        g_fbcbase2 = EEPROM.read(EEADD_FBC_UPPER_2)<<8 | EEPROM.read(EEADD_FBC_LOWER_2);
+        g_vmodoffset2 = EEPROM.read(EEADD_MODOFF_UPPER_2)<<8 |  EEPROM.read(EEADD_MODOFF_LOWER_2);
+        g_Rmeas2 = EEPROM.read(EEADD_RMEAS_UPPER_2)<<8 | EEPROM.read(EEADD_RMEAS_LOWER_2); 
         //LCD200I2C
         g_dacout = EEPROM.read(EEADD_IOUT_UPPER)<<8 | EEPROM.read(EEADD_IOUT_LOWER);
         g_vfth1 = EEPROM.read(EEADD_VTH1);
@@ -110,19 +117,44 @@ void DTC03Master::ReadEEPROM()
 		EEPROM.write(EEADD_RMEAS_LOWER, NOEE_RMEAS);
 		EEPROM.write(EEADD_TOTP_UPPER, NOEE_TOTP>>8);
 		EEPROM.write(EEADD_TOTP_LOWER, NOEE_TOTP);
+		//DTC03_2
+		EEPROM.write(EEADD_VSET_UPPER_2, NOEE_VSET>>8);
+		EEPROM.write(EEADD_VSET_LOWER_2, NOEE_VSET);
+		EEPROM.write(EEADD_currentlim_2, NOEE_ILIM);		
+		EEPROM.write(EEADD_P_2, NOEE_P);		
+		EEPROM.write(EEADD_KIINDEX_2, NOEE_kiindex);
+		EEPROM.write(EEADD_BCONST_UPPER_2, NOEE_BCONST>>8);
+		EEPROM.write(EEADD_BCONST_LOWER_2, NOEE_BCONST);
+		EEPROM.write(EEADD_MODSTATUS_2, NOEE_MODSTATUS);
+		EEPROM.write(EEADD_R1_2, NOEE_R1);
+		EEPROM.write(EEADD_R2_2, NOEE_R2);		
+		EEPROM.write(EEADD_TPIDOFF_2, NOEE_TPIDOFF);
+		EEPROM.write(EEADD_FBC_UPPER_2, NOEE_FBC2>>8);
+		EEPROM.write(EEADD_FBC_LOWER_2, NOEE_FBC2);
+		EEPROM.write(EEADD_MODOFF_UPPER_2, NOEE_MODOFF2>>8);
+		EEPROM.write(EEADD_MODOFF_LOWER_2, NOEE_MODOFF2);		
+		EEPROM.write(EEADD_RMEAS_UPPER_2, NOEE_RMEAS2>>8);
+		EEPROM.write(EEADD_RMEAS_LOWER_2, NOEE_RMEAS2);
+		EEPROM.write(EEADD_TOTP_UPPER_2, NOEE_TOTP>>8);
+		EEPROM.write(EEADD_TOTP_LOWER_2, NOEE_TOTP);
 
 		g_vset = NOEE_VSET;
+		g_vset2 = NOEE_VSET;
 		g_currentlim = NOEE_ILIM;
 		g_p = NOEE_P;
+		g_p2 = NOEE_P;
 		g_kiindex = NOEE_kiindex;
+		g_kiindex2 = NOEE_kiindex;
 		g_bconst = NOEE_BCONST;
 		g_mod_status = NOEE_MODSTATUS;
 		g_r1 = NOEE_R1;
 		g_r2 = NOEE_R2;
 		g_tpidoff = NOEE_TPIDOFF;		
 		g_fbcbase = NOEE_FBC;
+		g_fbcbase2 = NOEE_FBC2;
 		g_vmodoffset = NOEE_MODOFF;
 		g_Rmeas = NOEE_RMEAS;
+		g_Rmeas2 = NOEE_RMEAS2;
 		g_otp = NOEE_TOTP; 
 		//LCD200I2C
 		EEPROM.write(EEADD_IOUT_UPPER, NOEE_IOUT>>8);
@@ -256,8 +288,9 @@ void DTC03Master::vact_MV()
 }
 void DTC03Master::I2CWriteAll()
 {
-	for (int i=I2C_COM_INIT; i<=I2C_COM_WAKEUP; i++) I2CWriteData(i,DTC03P05);
 	for (int i=LCD200_COM_LDEN; i<=LCD200_COM_VFTH2; i++) I2CWriteData(i,LCD200ADD);
+	for (int i=I2C_COM_INIT; i<=I2C_COM_WAKEUP; i++) I2CWriteData(i,DTC03P05);
+	
 }
 void DTC03Master::I2CWriteData(unsigned char com, unsigned char slaveAdd)
 {
@@ -498,21 +531,49 @@ void DTC03Master::PrintTset()
   
   lcd.print(g_tset,3);
 }
+void DTC03Master::PrintTset2()
+{
+  lcd.SelectFont(SystemFont5x7);
+  lcd.GotoXY(T2_S_X2,T2_S_Y);
+  if(g_tset<10.000)
+    lcd.print(" ");
+  
+  lcd.print(g_tset2,3);
+}
 void DTC03Master::PrintTact(float tact)
 {
 
   lcd.SelectFont(SystemFont5x7);
   lcd.GotoXY(T1_A_X2,T1_A_Y);
-//  if(g_errcode1) 
-//    {
-//      lcd.print("_error1");
-//      return;
-//    }
-//    if(g_errcode2)
-//    {
-//      lcd.print("_error2");
-//      return;
-//    }
+  if(g_errcode1) 
+    {
+      lcd.print("OPEN  ");
+      return;
+    }
+    if(g_errcode2)
+    {
+      lcd.print("OT    ");
+      return;
+    }
+   if(tact<10.000)
+    lcd.print(" ");
+    lcd.print(tact,3);
+}
+void DTC03Master::PrintTact2(float tact)
+{
+
+  lcd.SelectFont(SystemFont5x7);
+  lcd.GotoXY(T2_A_X2,T2_A_Y);
+  if(g_errcode1_2) 
+    {
+      lcd.print("OPEN  ");
+      return;
+    }
+    if(g_errcode2_2)
+    {
+      lcd.print("OT    ");
+      return;
+    }
    if(tact<10.000)
     lcd.print(" ");
     lcd.print(tact,3);
@@ -521,6 +582,19 @@ void DTC03Master::PrintItec(float itec)
 {
   lcd.SelectFont(SystemFont5x7);
   lcd.GotoXY(A1_X2,A1_Y);
+//  if ( abs(itec) <= 0.015 ) itec = 0;
+  if(itec <0.00) lcd.print(itec,2); 
+
+  else
+   {
+     lcd.print(" ");
+     lcd.print(itec,2);
+   } 
+}
+void DTC03Master::PrintItec2(float itec)
+{
+  lcd.SelectFont(SystemFont5x7);
+  lcd.GotoXY(A2_X2,A2_Y);
 //  if ( abs(itec) <= 0.015 ) itec = 0;
   if(itec <0.00) lcd.print(itec,2); 
 
@@ -549,6 +623,16 @@ void DTC03Master::PrintP()
    lcd.print(" ");
   lcd.print(g_p);
 }
+void DTC03Master::PrintP2()
+{
+  lcd.SelectFont(SystemFont5x7);
+  lcd.GotoXY(P2_X2, P2_Y );
+  if(g_p2<10)
+   lcd.print("  ");
+  else if (g_p2<100)
+   lcd.print(" ");
+  lcd.print(g_p2);
+}
 void DTC03Master::PrintKi()
 {
   //unsigned int tconst;
@@ -561,6 +645,26 @@ void DTC03Master::PrintKi()
   	else lcd.print(tconst,2);
   }   
   else if (g_kiindex < 33){
+   lcd.print(" ");
+   lcd.print(tconst,1);
+  }
+  else{
+  lcd.print("  ");
+  lcd.print(tconst,0);
+  }
+}
+void DTC03Master::PrintKi2()
+{
+  //unsigned int tconst;
+  float tconst;
+  lcd.SelectFont(SystemFont5x7);
+  tconst = float(pgm_read_word_near(timeconst+g_kiindex2))/100.0;
+  lcd.GotoXY(I2_X2, I2_Y);
+  if (g_kiindex2 < 3) {
+  	if (g_kiindex2==1) lcd.print(" OFF");
+  	else lcd.print(tconst,2);
+  }   
+  else if (g_kiindex2 < 33){
    lcd.print(" ");
    lcd.print(tconst,1);
   }

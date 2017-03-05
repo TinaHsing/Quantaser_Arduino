@@ -5,7 +5,7 @@
 #include <avr/pgmspace.h>//
 // ==========DTC03_P05 I2C slave address ======
 #define DTC03P05 		  0x07
-#define DTC03P05V2 		  0x08
+#define DTC03P05_2 		  0x08
 #define LCD200ADD         0x06
 // =========receive Events Command and Address======
 //DTC03

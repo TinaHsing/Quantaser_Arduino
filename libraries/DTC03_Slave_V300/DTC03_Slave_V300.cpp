@@ -124,10 +124,11 @@ void DTC03::DynamicVcc()
     #else
     #endif
     
-	restec = CalculateR(g_Rmeas,RMEASUREDELAY,RMEASUREAVGTIME,AVGTIME);
-    if (restec < g_r1_f ) SetVcc(VCCLOW);
-    else if(restec < g_r2_f ) SetVcc(VCCMEDIUM);
-    else SetVcc(VCCHIGH);
+//	restec = CalculateR(g_Rmeas,RMEASUREDELAY,RMEASUREAVGTIME,AVGTIME);
+//    if (restec < g_r1_f ) SetVcc(VCCLOW);
+//    else if(restec < g_r2_f ) SetVcc(VCCMEDIUM);
+//    else SetVcc(VCCHIGH);
+    SetVcc(VCCLOW);
 	
 }
 float DTC03::CalculateR(unsigned int fb_value, unsigned int stabletime, int ravgtime, int vavgtime)
@@ -469,8 +470,8 @@ void DTC03::I2CReceive()
     
    
     case I2C_COM_TEST1:  
-		Serial.print(F("t1:"));
-    	Serial.println(temp[0]);		
+//		Serial.print(F("t1:"));
+//    	Serial.println(temp[0]);		
 
     break;
     case I2C_COM_TEST2:  		

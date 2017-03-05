@@ -59,7 +59,26 @@
 #define EEADD_RMEAS_LOWER	18
 #define EEADD_BCONST_UPPER	19
 #define EEADD_BCONST_LOWER	20
-
+//DTC03_2
+#define EEADD_VSET_UPPER_2	25
+#define EEADD_VSET_LOWER_2	26
+#define EEADD_MODSTATUS_2	27
+#define EEADD_currentlim_2 	28
+#define EEADD_FBC_UPPER_2	29
+#define EEADD_FBC_LOWER_2	30
+#define EEADD_P_2           31
+#define EEADD_KIINDEX_2	    32
+#define EEADD_TOTP_UPPER_2  33
+#define EEADD_TOTP_LOWER_2  34  
+#define EEADD_R1_2          35
+#define EEADD_R2_2          36 
+#define EEADD_TPIDOFF_2		37
+#define EEADD_MODOFF_UPPER_2 38
+#define EEADD_MODOFF_LOWER_2 39	
+#define EEADD_RMEAS_UPPER_2	 40
+#define EEADD_RMEAS_LOWER_2	 41
+#define EEADD_BCONST_UPPER_2 42
+#define EEADD_BCONST_LOWER_2 43
 //LCD200
 #define EEADD_VTH1			21
 #define EEADD_VTH2			22
@@ -81,8 +100,11 @@
 #define NOEE_R2			30
 #define NOEE_TPIDOFF    2
 #define NOEE_FBC       	21000
+#define NOEE_FBC2       21000
 #define NOEE_MODOFF     32494
+#define NOEE_MODOFF2    32494
 #define NOEE_RMEAS      28400
+#define NOEE_RMEAS2     28400
 #define NOEE_TOTP		561 //120C
 
 //LCD200
@@ -251,11 +273,16 @@ public:
 	void BackGroundPrint();
 	float ReturnTemp(unsigned int vact, bool type);
 	void PrintTset();
+	void PrintTset2();
 	void PrintTact(float tact);
+	void PrintTact2(float tact);
 	void PrintItec(float itec);
+	void PrintItec2(float itec);
 	void PrintIlim();
 	void PrintP();
+	void PrintP2();
 	void PrintKi();
+	void PrintKi2();
 	void PrintB();
 	void PrintModStatus();
 	void Encoder();
@@ -292,11 +319,11 @@ public:
 	
 	//working variable-------------------
 	//DTC03
-	unsigned int g_vact,g_vact_MV, g_vset, g_tpcb, g_otp, g_Rmeas, g_bconst, g_fbcbase, g_vmodoffset;
-	unsigned char g_p, g_ki,g_ls,g_currentlim, g_tpidoff, g_r1, g_r2, g_kiindex, g_cursorstate;
+	unsigned int g_vact,g_vact_MV, g_vset, g_vset2, g_tpcb, g_otp, g_Rmeas, g_Rmeas2, g_bconst, g_fbcbase, g_fbcbase2, g_vmodoffset, g_vmodoffset2;
+	unsigned char g_p, g_p2, g_ki, g_ki2, g_ls,g_currentlim, g_tpidoff, g_r1, g_r2, g_kiindex, g_kiindex2, g_cursorstate;
 	int g_itec;
 	bool g_mod_status;	
-    float g_tset;
+    float g_tset, g_tset2;
     //LCD200
     unsigned int g_dacout, g_Ild;
     unsigned char g_vfth1, g_vfth2;
@@ -313,7 +340,7 @@ private:
     unsigned int p_tBlink, p_tcursorStateBounce, p_holdCursorTimer, p_vact_array[16]; 
 	unsigned long  p_vact_MV_sum, p_mvindex;
 	unsigned char g_iarrayindex, g_varrayindex, g_lastencoded, p_engmodeCounter, p_ee_change_state;
-    bool g_errcode1, g_errcode2, g_flag, g_paramupdate, g_countersensor, g_testgo, p_tBlink_toggle, p_engModeFlag, p_blinkTsetCursorFlag, g_wakeup;
+    bool g_errcode1, g_errcode1_2, g_errcode2, g_errcode2_2, g_flag, g_paramupdate, g_countersensor, g_testgo, p_tBlink_toggle, p_engModeFlag, p_blinkTsetCursorFlag, g_wakeup;
     bool p_ee_changed, p_HoldCursortateFlag, p_timerResetFlag;
     unsigned long g_tenc, p_loopindex;
 	float g_tsetstep;
