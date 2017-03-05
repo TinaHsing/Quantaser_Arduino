@@ -7,6 +7,7 @@
 #define DTC03P05 		  0x07
 #define DTC03P05_2 		  0x08
 #define LCD200ADD         0x06
+#define PZTDRF     		  0x09
 // =========receive Events Command and Address======
 //DTC03
 //Write
@@ -36,10 +37,14 @@
 //read
 #define LCD200_COM_IIN   0x23
 #define LCD200_COM_ERR 	 0x24
+//PZTDRF
+//write
+#define PZTDRF_COM_EN	 0x25
+//read
+#define PZTDRF_COM_VPZT	 0x26
 
-
-#define I2C_COM_TEST1	LCD200_COM_ERR+1
-#define I2C_COM_TEST2 	LCD200_COM_ERR+2
+#define I2C_COM_TEST1	PZTDRF_COM_VPZT+1
+#define I2C_COM_TEST2 	PZTDRF_COM_VPZT+2
 
 //=========request Events Mask ============
 //DTC03

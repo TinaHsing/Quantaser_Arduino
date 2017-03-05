@@ -305,6 +305,7 @@ public:
 	void PrintEnable();
 	void PrintLDcurrentAct(float);
 	void PrintLDcurrentSet();
+	void PrintPZTvolt(float);
 	unsigned int ReturnCurrentDacout(float);
 	float ReturnCurrent(unsigned int);
 	
@@ -328,6 +329,8 @@ public:
     unsigned int g_dacout, g_Ild;
     unsigned char g_vfth1, g_vfth2;
     float g_LDcurrent;
+    //PZTDRF
+    unsigned int g_vpzt;
     //------------------------------------
     bool g_sensortype, g_en_state;
     int en_temp;

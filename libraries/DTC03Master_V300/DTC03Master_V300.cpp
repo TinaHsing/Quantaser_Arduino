@@ -249,14 +249,12 @@ void DTC03Master::SaveEEPROM() {
 void DTC03Master::CheckStatus()
 {
 		float tact, itec_f, tpcb_f, Ild_f;
+				//DTC03
 				if (p_loopindex%300==0) {
-					Serial.println("a");
 					I2CReadData(I2C_COM_ITEC_ER,DTC03P05);
-					Serial.println("b");
 		            itec_f = float(g_itec)*CURRENTRatio;
 		            if(!p_engModeFlag) PrintItec(itec_f);
 //                if(!g_wakeup) I2CWriteAll();
-                    Serial.println("c");
 				}								
 				if (p_loopindex%300==1) {
 					I2CReadData(I2C_COM_VACT,DTC03P05);
@@ -270,10 +268,33 @@ void DTC03Master::CheckStatus()
 		            tpcb_f = float(g_tpcb)/4.0-20.5;
 		            if(p_engModeFlag) PrintTpcb(tpcb_f);
 				}	
+				//LCD200
 				if (p_loopindex%300==3) {
 					I2CReadData(LCD200_COM_IIN,LCD200ADD);
 		            Ild_f = ReturnCurrent(g_Ild);
 		            if(!p_engModeFlag) PrintLDcurrentAct(Ild_f);
+				}
+				//DTC03_2
+				if (p_loopindex%300==4) {
+					I2CReadData(I2C_COM_ITEC_ER,DTC03P05_2);
+		            itec_f = float(g_itec)*CURRENTRatio;
+		            if(!p_engModeFlag) PrintItec2(itec_f);
+//                if(!g_wakeup) I2CWriteAll();
+				}								
+				if (p_loopindex%300==5) {
+					I2CReadData(I2C_COM_VACT,DTC03P05_2);
+					vact_MV();
+					if (MV_STATUS) tact = ReturnTemp(g_vact_MV,0);
+	  	    		else tact = ReturnTemp(g_vact,0);
+	  	    		if(!p_engModeFlag) PrintTact(tact);
+				}
+				//PZTDRF
+				if (p_loopindex%300==6) {
+					I2CReadData(PZTDRF_COM_VPZT,PZTDRF);
+//					vact_MV();
+					if (MV_STATUS) tact = ReturnTemp(g_vact_MV,0);
+	  	    		else tact = ReturnTemp(g_vact,0);
+	  	    		if(!p_engModeFlag) PrintTact(tact);
 				}
 	    p_loopindex++;		       
 }
@@ -695,7 +716,14 @@ void DTC03Master::PrintEnable() //test i2c
   lcd.GotoXY(Test2_COORD_X, Test2_COORD_Y);
   lcd.print(g_test); 
 }
-
+void DTC03Master::PrintPZTvolt(float vpzt)
+{
+	lcd.SelectFont(SystemFont5x7);
+  	lcd.GotoXY(V_PZT_X2, V_PZT_Y);
+  	if(vpzt<10.0) lcd.print("  ");
+  	else if(vpzt<100.0) lcd.print(" ");
+  	lcd.print(vpzt,2); 
+}
 void DTC03Master::UpdateEnable()
 {
  bool en_state;
