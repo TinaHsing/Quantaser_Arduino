@@ -304,6 +304,7 @@ public:
 	void PrintRmeas();
 	void PrintTotp();
 	void PrintTpcb(float);
+	void PrintCursor(unsigned char, unsigned char, unsigned char, unsigned char);
 	void PrintEnable();
 	void PrintLDcurrentAct(float);
 	void PrintLDcurrentSet();
@@ -322,7 +323,7 @@ public:
     void ReadEEPROM();
     void I2CWriteAll();
     void HoldCursortate();
-    unsigned int MovingAVG(unsigned char);
+    unsigned int MovingAVG(unsigned char, unsigned int);
 	
 	//working variable-------------------
 	//DTC03
