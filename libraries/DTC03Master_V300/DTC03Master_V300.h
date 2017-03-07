@@ -29,7 +29,11 @@
 #define CURSORSTATE_STAYTIME 700
 #define ACCUMULATE_TH 50
 #define DEBOUNCE_WAIT ACCUMULATE_TH*4
-#define MV_STATUS 1
+#define MV_ROW   2
+#define MV_VACT  1
+#define MV_VACT2 1
+#define MV_LD    1
+#define MV_PZT    1
 #define MVTIME 16
 #define MVTIME_POWER 4
 //=================pin definition=========================
@@ -190,10 +194,10 @@
 #define Test3_COORD_Y    ROWPIXEL0507*4
 
 //Five in One circuit
-#define T1_S_X			0 
+#define T1_S_X			COLUMNPIXEL0507 
 #define T1_S_Y			0
-#define T1_S_X2			COLUMNPIXEL0507*5
-#define Text_T1_S		"T1_S:"
+#define T1_S_X2			COLUMNPIXEL0507*4
+#define Text_T1_S		"T1:"
 #define T1_A_X			0 
 #define T1_A_Y			ROWPIXEL0507
 #define T1_A_X2			COLUMNPIXEL0507*5
@@ -211,10 +215,10 @@
 #define I1_X2			COLUMNPIXEL0507*15
 #define Text_I1			"I1:"
 
-#define T2_S_X			0 
+#define T2_S_X			COLUMNPIXEL0507 
 #define T2_S_Y			ROWPIXEL0507*3
-#define T2_S_X2			COLUMNPIXEL0507*5
-#define Text_T2_S		"T2_S:"
+#define T2_S_X2			COLUMNPIXEL0507*4
+#define Text_T2_S		"T2:"
 #define T2_A_X			0 
 #define T2_A_Y			ROWPIXEL0507*4
 #define T2_A_X2			COLUMNPIXEL0507*5
@@ -271,7 +275,6 @@ public:
 	void VarrayInit();
 	void IarrayInit();
 	void BackGroundPrint();
-	float ReturnTemp(unsigned int vact, bool type);
 	void PrintTset();
 	void PrintTset2();
 	void PrintTact(float tact);
@@ -288,7 +291,6 @@ public:
 	void Encoder();
 	void CursorState();	
 	void UpdateParam();
-	unsigned int ReturnVset(float tset, bool type);
 	void PrintFactaryMode();
 	void CheckStatus();
 	void PrintEngBG();
@@ -306,8 +308,12 @@ public:
 	void PrintLDcurrentAct(float);
 	void PrintLDcurrentSet();
 	void PrintPZTvolt(float);
+	
+	unsigned int ReturnVset(float tset, bool type);
+	float ReturnTemp(unsigned int vact, bool type);
 	unsigned int ReturnCurrentDacout(float);
 	float ReturnCurrent(unsigned int);
+	float ReturnVpzt(unsigned int, float);
 	
 	void ShowCursor(unsigned char);
     void UpdateEnable();
@@ -316,11 +322,11 @@ public:
     void ReadEEPROM();
     void I2CWriteAll();
     void HoldCursortate();
-    void vact_MV();
+    unsigned int MovingAVG(unsigned char);
 	
 	//working variable-------------------
 	//DTC03
-	unsigned int g_vact,g_vact_MV, g_vset, g_vset2, g_tpcb, g_otp, g_Rmeas, g_Rmeas2, g_bconst, g_fbcbase, g_fbcbase2, g_vmodoffset, g_vmodoffset2;
+	unsigned int g_vact, g_vset, g_vset2, g_tpcb, g_otp, g_Rmeas, g_Rmeas2, g_bconst, g_fbcbase, g_fbcbase2, g_vmodoffset, g_vmodoffset2;
 	unsigned char g_p, g_p2, g_ki, g_ki2, g_ls,g_currentlim, g_tpidoff, g_r1, g_r2, g_kiindex, g_kiindex2, g_cursorstate;
 	int g_itec;
 	bool g_mod_status;	
@@ -340,11 +346,11 @@ private:
 	glcd lcd;
 	int g_counter;
     unsigned int  g_icount , p_cursorStateCounter[3], p_temp, p_cursorStayTime;
-    unsigned int p_tBlink, p_tcursorStateBounce, p_holdCursorTimer, p_vact_array[16]; 
-	unsigned long  p_vact_MV_sum, p_mvindex;
+    unsigned int p_tBlink, p_tcursorStateBounce, p_holdCursorTimer, p_MV_array[MV_ROW][MVTIME]; 
+	unsigned long  p_MV_sum[MV_ROW], p_MV_index[MV_ROW];
 	unsigned char g_iarrayindex, g_varrayindex, g_lastencoded, p_engmodeCounter, p_ee_change_state;
-    bool g_errcode1, g_errcode1_2, g_errcode2, g_errcode2_2, g_flag, g_paramupdate, g_countersensor, g_testgo, p_tBlink_toggle, p_engModeFlag, p_blinkTsetCursorFlag, g_wakeup;
-    bool p_ee_changed, p_HoldCursortateFlag, p_timerResetFlag;
+    bool g_errcode1, g_errcode1_2, g_errcode2, g_errcode2_2, g_flag, g_paramupdate, g_countersensor, g_testgo, p_tBlink_toggle, p_engModeFlag, p_blinkTsetCursorFlag;
+    bool g_wakeup, g_wakeup2, p_ee_changed, p_HoldCursortateFlag, p_timerResetFlag;
     unsigned long g_tenc, p_loopindex;
 	float g_tsetstep;
 
