@@ -29,8 +29,10 @@ void setup() {
   dtc.DynamicVcc();
   dtc.CheckSensorType();
   dtc.CheckTemp();
-  ipid.Init(32768,32768,0x7FFFFFFF);
-  tpid.Init(32768,32768,0x7FFFFFFF);
+  ipid.Init(32768,32768,0x7FFFFFFF,ISENSE_GAIN);
+  tpid.Init(32768,32768,0x7FFFFFFF,0);
+//  ipid.Init(32768,32768,0x7FFFFFFF);
+//  tpid.Init(32768,32768,0x7FFFFFFF);
   dtc.dacforilim.ModeWrite(0);
   dtc.dacformos.ModeWrite(0);
 }
@@ -66,22 +68,36 @@ void loop() {
   
   isense =abs( ( (long)(dtc.g_itecread)-(long)(dtc.g_isense0) )<<ISENSE_GAIN );
   ierr = isense - iset;
+//  ierr = isense - iteclimit;
   
-  ioutput=ipid.Compute(dtc.g_en_state, ierr, 1, 1, 2);//kp=58,ki=1,ls=2
-   
-   if(ipid.g_index==0)
+  ioutput=ipid.Compute(dtc.g_en_state, ierr, 20, 10, 1);//old :kp=58,ki=1,ls=2, new : 20,10,1
+  if(ipid.g_index==0)
   {
-    Serial.print(">>");
-    Serial.print(toutput);
-    Serial.print(", ");
-    Serial.print(iset);
-    Serial.print(", ");
-    Serial.print(iteclimit);
-    Serial.print(", ");
-    Serial.print(isense);
-    Serial.print(", ");
-    Serial.println(ierr);
+     Serial.print(dtc.g_itecread);
+     Serial.print(", ");
+     Serial.print(dtc.g_isense0);
+     Serial.print(", ");
+     Serial.print(isense);
+     Serial.print(", ");
+     Serial.print(iteclimit);
+     Serial.print(", ");
+     Serial.println(ierr);
+     Serial.println("");
   }
+   
+//   if(ipid.g_index==0)
+//  {
+//    Serial.print(">>");
+//    Serial.print(toutput);
+//    Serial.print(", ");
+//    Serial.print(iset);
+//    Serial.print(", ");
+//    Serial.print(iteclimit);
+//    Serial.print(", ");
+//    Serial.print(isense);
+//    Serial.print(", ");
+//    Serial.println(ierr);
+//  }
   output = (long)(abs(ioutput)+dtc.g_fbc_base);
   if (output>PIDOUTPUTLIMIT) output= PIDOUTPUTLIMIT;
   

@@ -4,13 +4,15 @@
 
 PID::PID()
 {}
-void PID::Init( long long p_limit, long long i_limit,long long error_limit)
+void PID::Init( long long p_limit, long long i_limit,long long error_limit, unsigned char err_gain)
+//void PID::Init( long long p_limit, long long i_limit,long long error_limit)
 {
 	g_errorsum = 0;
 	g_index=0;
 	g_p_limit = p_limit;
     g_i_limit = i_limit;//20171107
     g_errorlimit = error_limit;
+    g_errgain = err_gain;
 //    #ifdef DEBUGFLAG01
 //		Serial.println("====================comput print detail=============");
 //		Serial.print("loopcount to show:");
@@ -25,8 +27,11 @@ long PID::Compute(bool en, long errin, unsigned char kp, unsigned char ki, unsig
 	long p_term, i_term, output;
 	long long esumki;//
 	unsigned long t1;
+	
+	errin = errin >> g_errgain;
 	if(en)
 	{
+		
         g_errorsum+=errin;
 		if(g_errorsum > g_errorlimit) g_errorsum = g_errorlimit ;
 		else if(g_errorsum < (-1)*g_errorlimit) g_errorsum = (-1)*g_errorlimit ;
@@ -67,8 +72,8 @@ long PID::Compute(bool en, long errin, unsigned char kp, unsigned char ki, unsig
 		
 		g_index++;
 		t1= micros();
-		if(g_index == PIDDEBUGFLAG )
-		{
+//		if(g_index == PIDDEBUGFLAG )
+//		{
 			g_index = 0;
 			Serial.print(g_errin);
 			Serial.print(",");			
@@ -83,13 +88,13 @@ long PID::Compute(bool en, long errin, unsigned char kp, unsigned char ki, unsig
 			Serial.print(i_term);
 			Serial.print(",");
 			Serial.print(g_out);
-			Serial.print(",");
-			Serial.println(en);
+//			Serial.print(",");
+//			Serial.println(en);
 //			Serial.print(",");
 //			Serial.print( (long)(g_errorsum>>32) ,HEX);
-//			Serial.print(",");
-//			Serial.println((long) g_errorsum,HEX);
-		}
+			Serial.print(",");
+			Serial.println((long) g_errorsum,HEX);
+//		}
 		#else
 		#endif
 	return output;

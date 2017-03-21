@@ -1,6 +1,6 @@
 //==============Useful define variable it is suggest to copy this define to main program and remark these
 #define PIDDEBUGFLAG 1500 // User choose how many times to run compute and show the paramter in Serail once
-//#define DEBUGFLAG01
+#define DEBUGFLAG01
 
 #ifdef PIDDEBUG
 	#define DEBUGFLAG01 PIDDEBUG
@@ -14,7 +14,8 @@ class PID
 //        unsigned int g_index; 
 	public:
 		PID();		
-		void Init(long long p_limit,long long i_limit,long long error_limit);
+		void Init(long long ,long long ,long long , unsigned char );
+//		void Init(long long ,long long ,long long );
 		long Compute(bool, long, unsigned char, unsigned char, unsigned char);
 		void showParameter();
 		
@@ -23,6 +24,6 @@ class PID
 		///////add to show parameters////////
 		
 		long g_errin, g_out;
-		unsigned char g_kp, g_ki, g_ls;
+		unsigned char g_kp, g_ki, g_ls, g_errgain;
 		unsigned int g_index;
 };
