@@ -838,7 +838,7 @@ void DTC03SMaster::UpdateParam()
 			case 0:
 				g_tstart += g_counter2*0.01;
 				g_tnow = g_tstart;
-				if(g_tstart > 60.00) g_tstart =60.00;
+				if(g_tstart > 99.00) g_tstart =99.00;
 				if(g_tstart < 7.00) g_tstart = 7.00;
 				if(g_en_state==0 ){ // EN switch OFF
 					g_vset = ReturnVset(g_tstart, 0);
@@ -885,7 +885,7 @@ void DTC03SMaster::UpdateParam()
 			
 			case 6:
 				g_tstart += g_counter2*0.01;
-				if(g_tstart > 60.00) g_tstart =60.00;
+				if(g_tstart > 99.00) g_tstart =99.00;
 				if(g_tstart < 7.00) g_tstart = 7.00;
 				g_vset = ReturnVset(g_tstart, 0);
 				I2CWriteData(I2C_COM_VSET);
