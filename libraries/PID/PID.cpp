@@ -31,7 +31,7 @@ long PID::Compute(bool en, long errin, unsigned char kp, unsigned char ki, unsig
 	errin = errin >> g_errgain;
 	if(en)
 	{
-		
+//		g_errorlimit =  (g_i_limit<<ls)/ki;
         g_errorsum+=errin;
 		if(g_errorsum > g_errorlimit) g_errorsum = g_errorlimit ;
 		else if(g_errorsum < (-1)*g_errorlimit) g_errorsum = (-1)*g_errorlimit ;
