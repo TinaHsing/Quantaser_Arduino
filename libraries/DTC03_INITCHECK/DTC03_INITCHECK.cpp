@@ -23,25 +23,25 @@ void DTC03::CheckInitValue()
 		unsigned int fbc_heating, i_step=0, fbc_cooling, cal_R_value, mod_avg, mod_std;
 		unsigned long mod_sum = 0;
 		boolean fbc_flag = 1;
-		Serial.println("#Please measure VCC voltage");
-		SetVcc(VCCLOW);
-		Serial.print("Vcc LOW : ");
-		for (int i=10; i>0; i--) {
-			Serial.println(i);
-			delay(1000);
-		}
-		SetVcc(VCCHIGH);
-		Serial.print("Vcc HIGH : ");
-		for (int i=5; i>0; i--) {
-			Serial.println(i);
-			delay(1000);
-		}
-		SetVcc(VCCMEDIUM);
-		Serial.print("Vcc MID : ");
-		for (int i=5; i>0; i--) {
-			Serial.println(i);
-			delay(1000);
-		}
+//		Serial.println("#Please measure VCC voltage");
+//		SetVcc(VCCLOW);
+//		Serial.print("Vcc LOW : ");
+//		for (int i=10; i>0; i--) {
+//			Serial.println(i);
+//			delay(1000);
+//		}
+//		SetVcc(VCCHIGH);
+//		Serial.print("Vcc HIGH : ");
+//		for (int i=5; i>0; i--) {
+//			Serial.println(i);
+//			delay(1000);
+//		}
+//		SetVcc(VCCMEDIUM);
+//		Serial.print("Vcc MID : ");
+//		for (int i=5; i>0; i--) {
+//			Serial.println(i);
+//			delay(1000);
+//		}
 		
 		SetMosOff();	
 		izero = ReadIsense();
