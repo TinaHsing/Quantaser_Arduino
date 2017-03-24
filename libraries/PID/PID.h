@@ -1,6 +1,6 @@
 //==============Useful define variable it is suggest to copy this define to main program and remark these
 #define PIDDEBUGFLAG 1500 // User choose how many times to run compute and show the paramter in Serail once
-#define DEBUGFLAG01
+//#define DEBUGFLAG01
 
 #ifdef PIDDEBUG
 	#define DEBUGFLAG01 PIDDEBUG

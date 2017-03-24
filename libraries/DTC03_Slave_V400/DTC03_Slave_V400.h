@@ -6,8 +6,8 @@
 // ===================================================
 
 // =====================DEBUGFLAG Table =================================
-#define DEBUGFLAG01
-//#define DEBUGFLAG02 2
+//#define DEBUGFLAG01
+//#define DEBUGFLAG02 1
 //#define DEBUGFLAG03
 
 #ifdef DTCDEBUG01
@@ -29,7 +29,7 @@
 
 //=====================Freqently update define ==========================
 // ========User can copy below define to main function ==================
-#define RMEASUREVOUT 29000 //20161031, 55000
+#define RMEASUREVOUT 55800 //20161031, 55000
 #define RMEASUREDELAY 3000 //20161031
 #define RMEASUREAVGTIME 10
 #define AVGTIME 64 // Note!!!! VACTAVGTIEM = 2 ^ VACTAVGPWR 

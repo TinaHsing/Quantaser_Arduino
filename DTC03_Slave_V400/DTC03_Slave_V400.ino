@@ -4,7 +4,7 @@
 #include <Wire.h>
 #include <AD5541.h>
 #include <LTC1865.h>
-#include <DTC03_Slave_V300.h>
+#include <DTC03_Slave_V400.h>
 #include <PID.h>
 #include <EEPROM.h>
 #include <DTC03_MS.h>
@@ -29,7 +29,7 @@ void setup() {
   dtc.CheckSensorType();
   dtc.CheckTemp();
   ipid.Init(32768,32768,0x7FFFFFFF,0);
-  tpid.Init(32768,32768,0x7FFFFFFF,0 );
+  tpid.Init(32768,32768,0x7FFFFFFF,0);
   dtc.dacforilim.ModeWrite(0);
   dtc.dacformos.ModeWrite(0);
 }

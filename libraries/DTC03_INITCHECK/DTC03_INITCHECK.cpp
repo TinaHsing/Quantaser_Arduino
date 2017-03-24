@@ -14,7 +14,7 @@
 DTC03::DTC03()
 {}
 
-void DTC03::CheckInitValue() 
+void DTC03::CheckInitValue(bool sw1, bool sw2, bool sw3) 
 {
 	#ifdef INITIAL_VALUE_CHECK
 		Serial.begin(9600);
@@ -23,30 +23,29 @@ void DTC03::CheckInitValue()
 		unsigned int fbc_heating, i_step=0, fbc_cooling, cal_R_value, mod_avg, mod_std;
 		unsigned long mod_sum = 0;
 		boolean fbc_flag = 1;
-//		Serial.println("#Please measure VCC voltage");
-//		SetVcc(VCCLOW);
-//		Serial.print("Vcc LOW : ");
-//		for (int i=10; i>0; i--) {
-//			Serial.println(i);
-//			delay(1000);
-//		}
-//		SetVcc(VCCHIGH);
-//		Serial.print("Vcc HIGH : ");
-//		for (int i=5; i>0; i--) {
-//			Serial.println(i);
-//			delay(1000);
-//		}
-//		SetVcc(VCCMEDIUM);
-//		Serial.print("Vcc MID : ");
-//		for (int i=5; i>0; i--) {
-//			Serial.println(i);
-//			delay(1000);
-//		}
-		
-		SetMosOff();	
-		izero = ReadIsense();
-		
-		
+		SetMosOff();
+		if(sw1)
+		{
+			Serial.println("#Please measure VCC voltage");
+			SetVcc(VCCLOW);
+			Serial.print("Vcc LOW : ");
+			for (int i=10; i>0; i--) {
+				Serial.println(i);
+				delay(1000);
+			}
+			SetVcc(VCCHIGH);
+			Serial.print("Vcc HIGH : ");
+			for (int i=5; i>0; i--) {
+				Serial.println(i);
+				delay(1000);
+			}
+			SetVcc(VCCMEDIUM);
+			Serial.print("Vcc MID : ");
+			for (int i=5; i>0; i--) {
+				Serial.println(i);
+				delay(1000);
+			}
+		}	
 		Serial.println("#Searching  Fbc_base Value");
 		Serial.print("Vgs_low = ");
 		Serial.println(FBCCHECK_LOW);
@@ -55,63 +54,81 @@ void DTC03::CheckInitValue()
 		Serial.print("current0 =");
 		Serial.println(izero);
 		
-		Serial.println("heating :");
-		Serial.println("Vgs   , Itec");
-		itec = ReadIsense();
-		
-		while( ( abs(itec - izero) ) < 5) {
-			SetMos(HEATING, FBCCHECK_LOW + i_step);
-			delay(100);
+		if(sw2)
+		{
+			SetMosOff();	
+			izero = ReadIsense();
+							
+			////heating//////
+			Serial.println("heating :");
+			Serial.println("Vgs   , Itec");
 			itec = ReadIsense();
-			if (i>2) i=2;
-			itec_array[i] = itec-izero; 
-			Serial.print(FBCCHECK_LOW + i_step);
-			Serial.print("  , ");
-			Serial.println(itec_array[i]);
+	//		Serial.println(itec);
+			while( ( abs(itec - izero) ) < 5) 
+			{ // old value 5
+				SetMos(HEATING, FBCCHECK_LOW + i_step);
+				delay(100);
+				itec = ReadIsense();
+	//			Serial.println(itec);
+	//			delay(5000);
+				if (i>2) i=2;
+				itec_array[i] = itec-izero; 
+				Serial.print(FBCCHECK_LOW + i_step);
+				Serial.print("  , ");
+				Serial.print(itec_array[i]);
+				Serial.print("  , ");
+				Serial.println(itec*5/1023); //check read voltage value 
+				
+				if ( (i =2) && fbc_flag ) {
+					if ( (abs(itec_array[0]) > di) && (abs(itec_array[1]) > di) && (abs(itec_array[2]) > di) && fbc_flag ){ //連續3個值都 > di 才判定 fbc_heating
+						fbc_flag = 0; //一進if loop裡即關掉flag, 下次就不會進來 
+						fbc_heating = FBCCHECK_LOW + i_step - 400;
+					}  
+					 itec_array[0] = itec_array[1];
+					 itec_array[1] = itec_array[2];
+				}
+				i_step += 100;
+				i++;
+			}	
+		}	
+		
+		if(sw3)
+		{
+			////cooling////
+			SetMosOff();			
+			i_step = 0; //計算cooling 前先歸零 
+			i = 0; 
+			fbc_flag = 1;
 			
-			if ( (i =2) && fbc_flag ) {
-				if ( (abs(itec_array[0]) > di) && (abs(itec_array[1]) > di) && (abs(itec_array[2]) > di) && fbc_flag ){ //連續3個值都 > di 才判定 fbc_heating
-					fbc_flag = 0; //一進if loop裡即關掉flag, 下次就不會進來 
-					fbc_heating = FBCCHECK_LOW + i_step - 400;
-				}  
-				 itec_array[0] = itec_array[1];
-				 itec_array[1] = itec_array[2];
-			}
-			i_step += 100;
-			i++;
-		}
-		SetMosOff();			
-		i_step = 0; //計算cooling 前先歸零 
-		i = 0; 
-		fbc_flag = 1;
-		
-		Serial.println("cooling :");
-		itec = ReadIsense();
-		
-		while( ( abs(itec - izero) ) < 49) {
-			SetMos(COOLING, FBCCHECK_LOW + i_step);
-//			SetMos(COOLING, 0);
-			delay(100);
+			Serial.println("cooling :");
 			itec = ReadIsense();
-			if (i>2) i=2;
-			itec_array[i] = itec-izero; 
-			Serial.print(FBCCHECK_LOW + i_step);
-			Serial.print("  , ");
-			Serial.println(itec_array[i]);
 			
-			if ( (i =2) && fbc_flag ) {
-				if ( (abs(itec_array[0]) > di) && (abs(itec_array[1]) > di) && (abs(itec_array[2]) > di) && fbc_flag ){ //連續3個值都 > di 才判定 fbc_heating
-					fbc_flag = 0; //一進if loop裡即關掉flag, 下次就不會進來 
-					fbc_cooling = FBCCHECK_LOW + i_step - 400;
-				}  
-				 itec_array[0] = itec_array[1];
-				 itec_array[1] = itec_array[2];
+			while( ( abs(itec - izero) ) < 49) {
+				SetMos(COOLING, FBCCHECK_LOW + i_step);
+	//			SetMos(COOLING, 0);
+				delay(100);
+				itec = ReadIsense();
+				if (i>2) i=2;
+				itec_array[i] = itec-izero; 
+				Serial.print(FBCCHECK_LOW + i_step);
+				Serial.print("  , ");
+				Serial.println(itec_array[i]);
+				
+				if ( (i =2) && fbc_flag ) {
+					if ( (abs(itec_array[0]) > di) && (abs(itec_array[1]) > di) && (abs(itec_array[2]) > di) && fbc_flag ){ //連續3個值都 > di 才判定 fbc_heating
+						fbc_flag = 0; //一進if loop裡即關掉flag, 下次就不會進來 
+						fbc_cooling = FBCCHECK_LOW + i_step - 400;
+					}  
+					 itec_array[0] = itec_array[1];
+					 itec_array[1] = itec_array[2];
+				}
+				cal_R_value = FBCCHECK_LOW + i_step; //跳出while迴圈前的最後一個值為itec接近500mA之值 
+				i_step += 100;
+				i++;
 			}
-			cal_R_value = FBCCHECK_LOW + i_step; //跳出while迴圈前的最後一個值為itec接近500mA之值 
-			i_step += 100;
-			i++;
+			SetMosOff();
 		}
-		SetMosOff();
+		
 		Serial.println("    ");
 		Serial.print("fbc_base heating =");
 		Serial.println(fbc_heating);
@@ -129,7 +146,11 @@ void DTC03::CheckInitValue()
 		for ( int i=0; i<100; i++) {
 			ReadVoltage();
 			mod_sum += g_vmod; 
-			Serial.println(g_vmod);			
+			Serial.print(g_vact);	
+			Serial.print(", ");
+			Serial.print(g_vmod);	
+			Serial.print(", ");
+			Serial.println((float)ReadIsense()*5/1023);		
 		}
 		mod_avg = mod_sum/100;
 		Serial.print("100 times AVG MOD offset value= ");
@@ -497,26 +518,26 @@ void DTC03::ReadVoltage()
   g_vact = ltc1865.Read(CHVMOD);
   g_vmod = ltc1865.Read(CHVACT);
   //vmod = g_vmod - g_vmodoffset;
-  vmod = long(g_vmod) - long(g_vmodoffset);//
-  g_vactavgsum -= Vactarray[g_vactindex];
-  Vactarray[g_vactindex] = g_vact;
-  g_vactavgsum += g_vact;
-  g_vactindex++;
-  if(g_vactindex >= VACTAVGTIME) g_vactindex =0;
-  
-//  vset_limit_long=(long)(g_vset_limit)+vmod;//20161113
-  if (g_mod_status) vset_limit_long=(long)(g_vset_limit)+vmod;//20161113
-  else vset_limit_long=(long)(g_vset_limit);//20161113
-  
-  if(vset_limit_long>65535) vset_limit_long=65535;
-  else if (vset_limit_long<0) vset_limit_long=0;
-  g_vset_limitt = (unsigned int)vset_limit_long;
-
-  //g_vset_limit = (unsigned int)(long(g_vset_limit)+vmod);//
-  #ifdef DEBUGFLAG03
-  #else 
-  //g_vset +=vmod;  //can unsigned int add int?
-  #endif
+//  vmod = long(g_vmod) - long(g_vmodoffset);//
+//  g_vactavgsum -= Vactarray[g_vactindex];
+//  Vactarray[g_vactindex] = g_vact;
+//  g_vactavgsum += g_vact;
+//  g_vactindex++;
+//  if(g_vactindex >= VACTAVGTIME) g_vactindex =0;
+//  
+////  vset_limit_long=(long)(g_vset_limit)+vmod;//20161113
+//  if (g_mod_status) vset_limit_long=(long)(g_vset_limit)+vmod;//20161113
+//  else vset_limit_long=(long)(g_vset_limit);//20161113
+//  
+//  if(vset_limit_long>65535) vset_limit_long=65535;
+//  else if (vset_limit_long<0) vset_limit_long=0;
+//  g_vset_limitt = (unsigned int)vset_limit_long;
+//
+//  //g_vset_limit = (unsigned int)(long(g_vset_limit)+vmod);//
+//  #ifdef DEBUGFLAG03
+//  #else 
+//  //g_vset +=vmod;  //can unsigned int add int?
+//  #endif
 }
 //void DTC03::VsetSlow()
 //{

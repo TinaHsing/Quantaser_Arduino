@@ -50,7 +50,7 @@
 #define ILIMDACOUTSTART 500		// define the current limit start current 500mA
 #define ILIMDACSTEP 50  		// define the current limit step current 50mA
 #define LIMCOUNTER 10
-#define FBCCHECK_LOW 0
+#define FBCCHECK_LOW 25000
 #define FBCCHECK_HIGH 55000
 
 //=================end of Frequently update define======================
@@ -173,7 +173,7 @@ public:
 	void I2CReceive();
 	void SaveEEPROM();
     int ReadIsense();//
-    void CheckInitValue();
+    void CheckInitValue(bool, bool, bool);
 
 	unsigned int g_vact, g_vset, g_fbc_base, g_isense0,Vactarray[VACTAVGTIME], Itecarray[ITECAVGTIME],g_currentabs,g_itecread;//
     unsigned char g_p, g_ki, g_ls, g_currentlim, g_ee_change_state,g_kiindex, g_limcounter,g_currentindex, g_tpidoffset, g_r1, g_r2;

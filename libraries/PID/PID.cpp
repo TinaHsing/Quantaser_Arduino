@@ -72,8 +72,8 @@ long PID::Compute(bool en, long errin, unsigned char kp, unsigned char ki, unsig
 		
 		g_index++;
 		t1= micros();
-//		if(g_index == PIDDEBUGFLAG )
-//		{
+		if(g_index == PIDDEBUGFLAG )
+		{
 			g_index = 0;
 			Serial.print(g_errin);
 			Serial.print(",");			
@@ -88,13 +88,13 @@ long PID::Compute(bool en, long errin, unsigned char kp, unsigned char ki, unsig
 			Serial.print(i_term);
 			Serial.print(",");
 			Serial.print(g_out);
-//			Serial.print(",");
-//			Serial.println(en);
+			Serial.print(",");
+			Serial.println(en);
 //			Serial.print(",");
 //			Serial.print( (long)(g_errorsum>>32) ,HEX);
-			Serial.print(",");
-			Serial.println((long) g_errorsum,HEX);
-//		}
+//			Serial.print(",");
+//			Serial.println((long) g_errorsum,HEX);
+		}
 		#else
 		#endif
 	return output;

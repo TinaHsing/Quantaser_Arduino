@@ -6,7 +6,7 @@ void setup() {
   dtc.SetPinMode();
   dtc.ParamInit();
   dtc.InitVactArray();
-  dtc.CheckInitValue();
+  dtc.CheckInitValue(0,0,0);
   
 //                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     dtc.ReadEEPROM();
 

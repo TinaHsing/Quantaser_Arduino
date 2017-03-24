@@ -1036,8 +1036,8 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
 
       case 13:
       	g_fbcbase +=(g_counter*100);
-        if(g_fbcbase>44900) g_fbcbase=44900;
-        if(g_fbcbase<16100) g_fbcbase=16100;
+        if(g_fbcbase>50000) g_fbcbase=50000;
+        if(g_fbcbase<20000) g_fbcbase=20000;
         I2CWriteData(I2C_COM_FBC);
         PrintVfbc();
         p_ee_change_state=EEADD_FBC_UPPER;
@@ -1054,7 +1054,7 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
 
       case 15:
       	g_Rmeas += (g_counter*100);
-      	if(g_Rmeas>45000) g_Rmeas=45000;
+      	if(g_Rmeas>60000) g_Rmeas=60000;
         if(g_Rmeas<20000) g_Rmeas=20000;
         I2CWriteData(I2C_COM_RMEAS);
         PrintRmeas();
