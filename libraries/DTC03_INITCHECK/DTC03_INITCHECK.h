@@ -50,7 +50,7 @@
 #define ILIMDACOUTSTART 500		// define the current limit start current 500mA
 #define ILIMDACSTEP 50  		// define the current limit step current 50mA
 #define LIMCOUNTER 10
-#define FBCCHECK_LOW 25000
+#define FBCCHECK_LOW 41000
 #define FBCCHECK_HIGH 55000
 
 //=================end of Frequently update define======================

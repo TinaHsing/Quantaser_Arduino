@@ -68,12 +68,12 @@
 #define NOEE_kiindex    1 //OFF
 #define NOEE_BCONST		3988
 #define NOEE_MODSTATUS  0
-#define NOEE_R1			20
-#define NOEE_R2			30
+#define NOEE_R1			10
+#define NOEE_R2			20
 #define NOEE_TPIDOFF    2
-#define NOEE_FBC       	21000
-#define NOEE_MODOFF     32494
-#define NOEE_RMEAS      28400
+#define NOEE_FBC       	45000
+#define NOEE_MODOFF     32500
+#define NOEE_RMEAS      55000
 #define NOEE_TOTP		561 //120C
 
 

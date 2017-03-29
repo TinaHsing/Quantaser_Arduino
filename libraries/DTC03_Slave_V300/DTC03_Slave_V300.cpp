@@ -70,15 +70,18 @@ void DTC03::SetVcc(unsigned char state)
 	switch (state)
 	{
 		case VCCLOW:
-			digitalWrite(VCC2,LOW);
+			digitalWrite(VCC3,LOW); //P08
+//			digitalWrite(VCC2,LOW);
  			digitalWrite(VCC1,LOW);
  		break;
  		case VCCMEDIUM:
- 			digitalWrite(VCC2,LOW);
+ 			digitalWrite(VCC3,LOW);
+// 			digitalWrite(VCC2,LOW);
  			digitalWrite(VCC1,HIGH);
  		break;
  		case VCCHIGH:
- 	 		digitalWrite(VCC2,HIGH);
+ 			digitalWrite(VCC3,LOW);
+// 	 		digitalWrite(VCC2,HIGH);
  			digitalWrite(VCC1,LOW);
  		break;
  		default:
@@ -400,6 +403,11 @@ void DTC03::I2CReceive()
     g_vset_limit = vset_upper<<8 | vset_lower;
     setVset();
 //    Serial.print("VSET:");
+//    Serial.print(", ");
+//    Serial.print(vset_upper);
+//    Serial.print(", ");
+//    Serial.print(vset_lower);
+//    Serial.print(", ");
 //    Serial.println( ReturnTemp(g_vset_limit,0),3);
     break;
 

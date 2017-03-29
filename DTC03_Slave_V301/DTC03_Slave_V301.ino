@@ -19,7 +19,7 @@ PID ipid, tpid;
 unsigned int i=0;
 unsigned long loop_time[5];
 void setup() {
-  Serial.begin(9600);
+//  Serial.begin(9600);
   Wire.begin(DTC03P05);
   Wire.onReceive(ReceiveEvent);
   Wire.onRequest(RequestEvent);
@@ -29,10 +29,10 @@ void setup() {
   dtc.DynamicVcc();
   dtc.CheckSensorType();
   dtc.CheckTemp();
-  ipid.Init(32768,32768,0x7FFFFFFF,ISENSE_GAIN);
-  tpid.Init(32768,32768,0x7FFFFFFF,0);
-//  ipid.Init(32768,32768,0x7FFFFFFF);
-//  tpid.Init(32768,32768,0x7FFFFFFF);
+  ipid.Init(32768,32768,dtc.g_ki,dtc.g_ls,ISENSE_GAIN);
+  tpid.Init(50000,32768,1,2,0 );
+//  ipid.Init(32768,32768,0x7FFFFFFF,ISENSE_GAIN);
+//  tpid.Init(32768,32768,0x7FFFFFFF,0);
   dtc.dacforilim.ModeWrite(0);
   dtc.dacformos.ModeWrite(0);
 }
@@ -71,19 +71,19 @@ void loop() {
 //  ierr = isense - iteclimit;
   
   ioutput=ipid.Compute(dtc.g_en_state, ierr, 20, 10, 1);//old :kp=58,ki=1,ls=2, new : 20,10,1
-  if(ipid.g_index==0)
-  {
-     Serial.print(dtc.g_itecread);
-     Serial.print(", ");
-     Serial.print(dtc.g_isense0);
-     Serial.print(", ");
-     Serial.print(isense);
-     Serial.print(", ");
-     Serial.print(iteclimit);
-     Serial.print(", ");
-     Serial.println(ierr);
-     Serial.println("");
-  }
+//  if(ipid.g_index==0)
+//  {
+//     Serial.print(dtc.g_itecread);
+//     Serial.print(", ");
+//     Serial.print(dtc.g_isense0);
+//     Serial.print(", ");
+//     Serial.print(isense);
+//     Serial.print(", ");
+//     Serial.print(iteclimit);
+//     Serial.print(", ");
+//     Serial.println(ierr);
+//     Serial.println("");
+//  }
    
 //   if(ipid.g_index==0)
 //  {

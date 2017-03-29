@@ -14,7 +14,8 @@ class PID
 //        unsigned int g_index; 
 	public:
 		PID();		
-		void Init(long long ,long long ,long long , unsigned char );
+//		void Init(long long ,long long ,long long , unsigned char );
+		void Init(long long ,long long ,unsigned char, unsigned char , unsigned char );
 //		void Init(long long ,long long ,long long );
 		long Compute(bool, long, unsigned char, unsigned char, unsigned char);
 		void showParameter();

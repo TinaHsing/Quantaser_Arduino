@@ -70,15 +70,18 @@ void DTC03::SetVcc(unsigned char state)
 	switch (state)
 	{
 		case VCCLOW:
-			digitalWrite(VCC3,LOW);
+//			digitalWrite(VCC3,LOW);
+			digitalWrite(VCC2,LOW);
  			digitalWrite(VCC1,LOW);
  		break;
  		case VCCMEDIUM:
- 			digitalWrite(VCC3,LOW);
+// 			digitalWrite(VCC3,LOW);
+ 			digitalWrite(VCC2,LOW);
  			digitalWrite(VCC1,HIGH);
  		break;
  		case VCCHIGH:
- 	 		digitalWrite(VCC3,HIGH);
+// 	 		digitalWrite(VCC3,HIGH);
+            digitalWrite(VCC2,LOW);
  			digitalWrite(VCC1,LOW);
  		break;
  		default:
@@ -100,7 +103,8 @@ void DTC03::SetMosOff()
 void DTC03::DynamicVcc()
 {
     float restec, g_r1_f, g_r2_f;
-    if(g_sensortype) digitalWrite(SENSOR_TYPE,LOW);
+//    if(g_sensortype) digitalWrite(SENSOR_TYPE,LOW);
+    digitalWrite(SENSOR_TYPE,LOW);
     SetMosOff();
     BuildUpArray(1,1,1);
     while(g_wakeup == 0) delay(1);
@@ -399,8 +403,8 @@ void DTC03::I2CReceive()
     vset_upper = temp[1];
     g_vset_limit = vset_upper<<8 | vset_lower;
     setVset();
-//    Serial.print("VSET:");
-//    Serial.println( ReturnTemp(g_vset_limit,0),3);
+    Serial.print("VSET:");
+    Serial.println( ReturnTemp(g_vset_limit,0),3);
     break;
 
     

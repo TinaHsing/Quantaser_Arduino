@@ -24,6 +24,7 @@ void DTC03::CheckInitValue(bool sw1, bool sw2, bool sw3)
 		unsigned long mod_sum = 0;
 		boolean fbc_flag = 1;
 		SetMosOff();
+		digitalWrite(SENSOR_TYPE,0);
 		if(sw1)
 		{
 			Serial.println("#Please measure VCC voltage");
