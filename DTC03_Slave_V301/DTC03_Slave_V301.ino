@@ -48,7 +48,7 @@ void loop() {
 //    Serial.println(); 
 //  }
 //  loop_time[i] = micros();
-  i++;
+//  i++;
 
   dtc.ReadVoltage(1);
   dtc.ReadIsense();

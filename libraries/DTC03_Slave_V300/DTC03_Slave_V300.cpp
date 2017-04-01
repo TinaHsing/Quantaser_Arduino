@@ -70,7 +70,7 @@ void DTC03::SetVcc(unsigned char state)
 	switch (state)
 	{
 		case VCCLOW:
-			digitalWrite(VCC3,LOW); //P08
+			digitalWrite(VCC3,LOW); //use VCC3 only for P08, otherwise use VCC2
 //			digitalWrite(VCC2,LOW);
  			digitalWrite(VCC1,LOW);
  		break;

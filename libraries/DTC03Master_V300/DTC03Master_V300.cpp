@@ -266,8 +266,8 @@ void DTC03Master::I2CWriteData(unsigned char com)
         break;
     
     case I2C_COM_KI:
-        temp[0]=pgm_read_word_near(kilstable280+g_kiindex*2);
-        temp[1]=pgm_read_word_near(kilstable280+g_kiindex*2+1);
+        temp[0]=pgm_read_word_near(kilstable230+g_kiindex*2);
+        temp[1]=pgm_read_word_near(kilstable230+g_kiindex*2+1);
         break;
     
     case I2C_COM_RMEAS:
@@ -967,7 +967,7 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
 
       case 3:
       	g_p += g_counter;
-        if(g_p>99) g_p=99;
+        if(g_p>150) g_p=150;
         if(g_p<1) g_p=1;    
         I2CWriteData(I2C_COM_CTR);
         PrintP();
