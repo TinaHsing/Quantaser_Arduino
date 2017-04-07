@@ -17,13 +17,13 @@ void PZTDRF::init()
 	p_powerOffFlag = 1;
 }
 
-void PZTDRF::PowerOn(float vth_on)
+void PZTDRF::PowerOn(float vth_on, uint8_t delat_t)
 {	
 	int vth;
 	vth = (int) vth_on/3.0*1024/5;	
 	while( !(analogRead(p_voltStatusPin)>vth) ) {};
 	digitalWrite(p_drv2700En, HIGH);
-	delay(1000);
+	delay(delat_t);
 	digitalWrite(p_dcbiasSw, HIGH);
 }
 
@@ -36,7 +36,7 @@ void PZTDRF::PowerOff(float vth_off)
 		if( analogRead(p_voltStatusPin) <= vth )
 		{
 			digitalWrite(p_drv2700En, LOW);
-			delay(5);
+			delay(delat_t);
 			digitalWrite(p_dcbiasSw, LOW);
 			p_powerOffFlag = 0;
 		}

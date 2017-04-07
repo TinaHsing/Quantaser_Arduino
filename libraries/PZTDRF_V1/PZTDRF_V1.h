@@ -8,8 +8,8 @@ class PZTDRF
 {
 	public:	
 		PZTDRF(uint8_t, uint8_t, uint8_t); 
-		void PowerOn(float);
-		void PowerOff(float); 
+		void PowerOn(float, uint8_t);
+		void PowerOff(float, uint8_t); 
 		void init();
 		
 	private:
