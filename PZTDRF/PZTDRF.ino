@@ -8,13 +8,13 @@ PZTDRF pzt(A2,7,A3); // +15V check pin, dcbias EN pin, drv2700 EN pin
 
 void setup() {
   pzt.init();
-  pzt.PowerOn(10.0, 10);
+  pzt.PowerOn(10.0, 100);//Vth, delay time
   led.init(A0, 10, 31.1); // AI pin; adc bits, option : 10, 12, 16; gain 
 }
 
 void loop() {
   fn_gen.Sawtooth_out();
-  pzt.PowerOff(14.0, 5);
+  pzt.PowerOff(14.0, 10);//Vth, delay time
   led.print();
 }
 

@@ -27,7 +27,7 @@ void PZTDRF::PowerOn(float vth_on, uint8_t delat_t)
 	digitalWrite(p_dcbiasSw, HIGH);
 }
 
-void PZTDRF::PowerOff(float vth_off)
+void PZTDRF::PowerOff(float vth_off, uint8_t delat_t)
 {
 	int vth;
 	if(p_powerOffFlag)	
