@@ -344,11 +344,10 @@ void DTC03Master::I2CWriteAll()
 }
 void DTC03Master::I2CWriteData(unsigned char com, unsigned char slaveAdd)
 {
-  unsigned char temp[2];
+  unsigned char temp[0]=0, temp[1]=0;
   switch(com)
   {
     case I2C_COM_INIT:
-    	temp[1] = 0;
 //    	lcd.SelectFont(SystemFont5x7);
 //    	lcd.GotoXY(Test1_COORD_X, Test1_COORD_Y);
 //        lcd.print(temp[1],BIN); 
