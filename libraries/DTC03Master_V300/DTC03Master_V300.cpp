@@ -947,7 +947,7 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
 
       case 1:
         g_tset += g_tsetstep*g_counter;
-        if(g_tset>100) g_tset=100;
+        if(g_tset>200) g_tset=200;
         if(g_tset<7) g_tset=7;
         g_vset = ReturnVset(g_tset, g_sensortype);
         I2CWriteData(I2C_COM_VSET);
