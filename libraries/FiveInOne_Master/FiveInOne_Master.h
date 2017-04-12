@@ -192,7 +192,7 @@
 #define Test1_COORD_X    0
 #define Test1_COORD_Y    ROWPIXEL0507*2
 #define Test2_COORD_X    0
-#define Test2_COORD_Y    ROWPIXEL0507*3
+#define Test2_COORD_Y    ROWPIXEL0507*5
 #define Test3_COORD_X    0
 #define Test3_COORD_Y    ROWPIXEL0507*4
 

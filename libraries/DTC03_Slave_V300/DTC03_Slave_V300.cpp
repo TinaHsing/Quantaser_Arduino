@@ -378,11 +378,14 @@ void DTC03::I2CReceive()
     case I2C_COM_INIT:
     g_b_lower = temp[0];
     g_b_upper = REQMSK_BUPPER & temp[1];
-    g_en_state = REQMSK_ENSTATE & temp[1]; //B10000000
+    g_en_state = REQMSK_ENSTATE & temp[1];
 //    g_sensortype = temp[1] & REQMSK_SENSTYPE; //20161113
 	g_mod_status = temp[1] & REQMSK_SENSTYPE; //B01000000
-    Serial.print("g_en_state:");
-    Serial.println(g_en_state);
+//    Serial.print("g_en_state:");
+//    Serial.print(", ");
+//    Serial.print(temp[1],BIN);
+//    Serial.print(", ");
+//    Serial.println(g_en_state);
 //    Serial.print("g_mod_status: ");
 //    Serial.println(g_mod_status);
     break;
@@ -403,13 +406,13 @@ void DTC03::I2CReceive()
     vset_upper = temp[1];
     g_vset_limit = vset_upper<<8 | vset_lower;
     setVset();
-//    Serial.print("VSET:");
+    Serial.print("VSET:");
 //    Serial.print(", ");
 //    Serial.print(vset_upper);
 //    Serial.print(", ");
 //    Serial.print(vset_lower);
 //    Serial.print(", ");
-//    Serial.println( ReturnTemp(g_vset_limit,0),3);
+    Serial.println( ReturnTemp(g_vset_limit,0),3);
     break;
 
     

@@ -43,6 +43,7 @@ void DTC03Master::ParamInit()
   p_HoldCursortateFlag=0;
   g_wakeup = 1;
   g_test=0;
+  g_mod_status = 0;
   
   for (int i=0;i<MV_ROW; i++) 
   {
@@ -347,13 +348,25 @@ void DTC03Master::I2CWriteData(unsigned char com, unsigned char slaveAdd)
   switch(com)
   {
     case I2C_COM_INIT:
+    	temp[1] = 0;
+//    	lcd.SelectFont(SystemFont5x7);
+//    	lcd.GotoXY(Test1_COORD_X, Test1_COORD_Y);
+//        lcd.print(temp[1],BIN); 
 //        temp[0]= g_bconst - BCONSTOFFSET;
 //        temp[1]= (g_bconst - BCONSTOFFSET) >> 8;
-        if(g_en_state) temp[1] |= REQMSK_ENSTATE; //B10000000
-        else temp[1] &= ~REQMSK_ENSTATE;
+		
+        if(g_en_state) temp[1] |= REQMSK_ENSTATE; //B10000000     
+		if(g_mod_status) temp[1]|= REQMSK_SENSTYPE; //B01000000   
+//        else temp[1] &= (~REQMSK_ENSTATE);
+//        temp[1] = temp[1] & B01111111;
+//        lcd.SelectFont(SystemFont5x7);
+//        lcd.GotoXY(Test2_COORD_X, Test2_COORD_Y);
+//        lcd.print(temp[1],BIN); 
 //    if(g_sensortype) temp[1]|= REQMSK_SENSTYPE; 
-	    if(g_mod_status) temp[1]|= REQMSK_SENSTYPE; //B01000000 
-		else temp[1] &= REQMSK_SENSTYPE;
+	    
+//		else temp[1] &= REQMSK_SENSTYPE;
+		
+		
         break;
 
     case I2C_COM_CTR:
@@ -839,8 +852,8 @@ void DTC03Master::PrintEnable() //test i2c
   lcd.GotoXY(Test1_COORD_X, Test1_COORD_Y);
   lcd.print(g_en_state); 
 //  lcd.SelectFont(SystemFont5x7);
-  lcd.GotoXY(Test2_COORD_X, Test2_COORD_Y);
-  lcd.print(g_test); 
+//  lcd.GotoXY(Test2_COORD_X, Test2_COORD_Y);
+//  lcd.print(g_test); 
 }
 void DTC03Master::PrintPZTvolt(float vpzt)
 {
