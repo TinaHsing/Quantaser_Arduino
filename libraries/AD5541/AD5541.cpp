@@ -14,7 +14,7 @@ void AD5541::init()
 	SPI.begin();
 	SPI.setDataMode(SPI_MODE0);
 	SPI.setBitOrder(MSBFIRST);
-	SPI.setClockDivider(SPI_CLOCK_DIV2);
+	SPI.setClockDivider(SPI_CLOCK_DIV128);
 }
 void AD5541::ModeWrite(unsigned int dacvalue) // with spi.begin() and spi.end(), Need to set bit order in setup
 {
@@ -35,8 +35,8 @@ void AD5541::NormalWrite(unsigned int dacvalue) // Need to use spi setting in se
 	unsigned char high_byte, low_byte;
 	high_byte = dacvalue >>8;
 	low_byte = dacvalue;
-	SPI.transfer(0);
-	SPI.transfer(0);
+//	SPI.transfer(0);
+//	SPI.transfer(0);
 	digitalWrite(_adcsel, LOW);
 	SPI.transfer(high_byte);
 	SPI.transfer(low_byte);
