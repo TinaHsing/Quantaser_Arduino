@@ -144,6 +144,8 @@ bool LCD200::IoutSlow()
   int deltaiout;
   unsigned int absdeltaiout;
   deltaiout = g_dacout- g_dacoutslow; // deltaiout > 0 =>LD current decrease
+  									  // increase Iout->decrease g_dacout
+  									  // decrease Iout->increase g_dacout
   absdeltaiout = abs(deltaiout);
   
   digitalWrite(LD_EN, HIGH);
@@ -157,8 +159,8 @@ bool LCD200::IoutSlow()
   else
     g_dacoutslow -= IOUTSTEP;
 
-//  ad5541.NormalWrite(g_dacoutslow);
-  ad5541.NormalWrite(65535);
+  ad5541.NormalWrite(g_dacoutslow);
+//  ad5541.NormalWrite(65535);
 //  Serial.print(deltaiout);
 //  Serial.print(",");
 //  Serial.print(g_dacout);

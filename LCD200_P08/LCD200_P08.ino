@@ -4,7 +4,7 @@
 #include <SPI.h>
 #include <AD5541.h>
 #include <LCD200_P08.h>
-#include <FiveInOne_MS.h>>
+#include <FiveInOne_MS.h>
 
 
 LCD200 lcd200;
@@ -16,15 +16,18 @@ void setup() {
   Wire.onReceive(ReceiveEvent);
   Wire.onRequest(RequestEvent);
   lcd200.SetPinMode();
-  lcd200.DACInit();
-  lcd200.AnaBoardInit();
+  lcd200.DACInit(); //set DAC out to 65535
+  lcd200.AnaBoardInit(); // set to Vcc Low
   lcd200.ResetFlag();
 //  while(!lcd200.g_initfinished) delay(1);
 }
 
 void loop() 
 {
-  lcd200.PWRCheck(); //if((g_dacoutslow == 65535) || (vplus < POWERGOOD)) digitalWrite(LD_EN, LOW) [bypass LD mos];
+  //if((g_dacoutslow == 65535) || (vplus < POWERGOOD)) digitalWrite(LD_EN, LOW) [bypass LD mos];
+  //check every loop  
+  lcd200.PWRCheck(); 
+  /////////////////////
   lcd200.readMonitor();
   if(lcd200.g_com_lden)
   {
@@ -33,7 +36,11 @@ void loop()
 //    if(lcd200.IoutSlow()) {}
 //    else lcd200.CheckOutputErr();
    }
-  else  lcd200.ResetFlag();
+  else  
+  {
+    lcd200.ResetFlag();
+    lcd200.ad5541.NormalWrite(65535);
+  }
 }
 void ReceiveEvent(int howmany)
 {
