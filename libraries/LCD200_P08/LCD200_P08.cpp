@@ -6,7 +6,7 @@
 #include <SPI.h>
 #include <LCD200_P08.h>
 //#include <LCD200_P08_MS.h>
-#include <DTC03_MS.h>
+#include <FiveInOne_MS.h>
 
 
 
@@ -66,7 +66,7 @@ void LCD200::SetVCC(unsigned char vcc)
 void LCD200::AnaBoardInit()
 {
   PWROnOff(LOW);
-  SetVCC(LOW);
+  SetVCC(VCCLOW);
   ltc2451.SoftI2CInit(SOFTSDAPIN, SOFTSCLPIN, 1);
   ad5541.NormalWrite(65535); // !!??Need to check why need this line??
   digitalWrite(LD_EN, LOW);
@@ -93,35 +93,40 @@ bool LCD200::OpenShortVfCheck()
 {
   unsigned int vf, vth1, vth2;
  
-  vth1 = (float)g_vfth1*20.46;
-  vth2 = (float)g_vfth2*20.46;
+//  vth1 = (float)g_vfth1*20.46;
+//  vth2 = (float)g_vfth2*20.46;
 //  digitalWrite(LD_EN, HIGH); //LD_EN LOW : bypass LD current
-  delay(200);
-  ad5541.NormalWrite(CHECKCURRENT);
-  delay(500);
+//  delay(200);
+//  ad5541.NormalWrite(CHECKCURRENT);
+//  delay(500);
 //  g_vmon = ltc2451.SoftI2CRead(); // !!??Check if read twice is necessary!!
-  vf = analogRead(VLD);
+//  vf = analogRead(VLD);
 //  if(g_vmon < OPENVTH) 
 //  {
 //    g_LDOpenFlag =1;
 //    g_AnyErrFlag =1;
 //    ad5541.NormalWrite(65535); 
-//    Serial.println("a");
-//
+//	PWROnOff(LOW);
 //  }
-//  if(vf < VFSHORT)
+//  else if(vf < VFSHORT)
 //  {
 //    g_LDShortFlag =1;
 //    g_AnyErrFlag =1;
 //    ad5541.NormalWrite(65535);
-//    Serial.println("b");
+//    PWROnOff(LOW);
 //  }
+//  else 
+//  { 	
+//	if(vf >vth2)
+//		SetVCC(VCCHIGH);
+//	else if(vf > vth1)
+//	    SetVCC(VCCMEDIUM);
+//	PWROnOff(HIGH);
+//	g_checkflag = 0;
+//  }
+  //only for temp test
   PWROnOff(HIGH);
-  if(vf >vth2)
-    SetVCC(VCCHIGH);
-  else if(vf > vth1)
-    SetVCC(VCCMEDIUM);
-  g_checkflag = 0;
+  //
 }
 
 void LCD200::PWRCheck()
@@ -129,6 +134,8 @@ void LCD200::PWRCheck()
   unsigned int vplus;
   vplus = analogRead(V_SENS);
   if((g_dacoutslow == 65535) || (vplus < POWERGOOD)) digitalWrite(LD_EN, LOW); 
+  
+//  if(g_com_lden==1 && g_dacoutslow!=65535) digitalWrite(LD_EN, 1);
   
 }
 
@@ -150,8 +157,8 @@ bool LCD200::IoutSlow()
   else
     g_dacoutslow -= IOUTSTEP;
 
-  ad5541.NormalWrite(g_dacoutslow);
-//  ad5541.NormalWrite(65535);
+//  ad5541.NormalWrite(g_dacoutslow);
+  ad5541.NormalWrite(65535);
 //  Serial.print(deltaiout);
 //  Serial.print(",");
 //  Serial.print(g_dacout);

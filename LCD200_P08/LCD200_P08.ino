@@ -19,12 +19,12 @@ void setup() {
   lcd200.DACInit();
   lcd200.AnaBoardInit();
   lcd200.ResetFlag();
-  while(!lcd200.g_initfinished) delay(1);
+//  while(!lcd200.g_initfinished) delay(1);
 }
 
 void loop() 
 {
-  lcd200.PWRCheck();
+  lcd200.PWRCheck(); //if((g_dacoutslow == 65535) || (vplus < POWERGOOD)) digitalWrite(LD_EN, LOW) [bypass LD mos];
   lcd200.readMonitor();
   if(lcd200.g_com_lden)
   {
