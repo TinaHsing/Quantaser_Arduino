@@ -68,20 +68,19 @@ void LCD200::AnaBoardInit()
   PWROnOff(LOW);
   SetVCC(VCCLOW);
   ltc2451.SoftI2CInit(SOFTSDAPIN, SOFTSCLPIN, 1);
-  ad5541.NormalWrite(65535); // !!??Need to check why need this line??
+//  ad5541.NormalWrite(65535); // !!??Need to check why need this line??
   digitalWrite(LD_EN, LOW);
-
-
+  g_dacoutslow = 65535;
+  g_dacout = 65535;
+  g_dacoutslow = 65535;
+  g_initfinished = 0;
 }
 void LCD200::ResetFlag()
 {
   g_LDOpenFlag =0;
   g_LDShortFlag =0;
-  g_initfinished =0;
   g_AnyErrFlag =0;
   g_checkflag =1;
-  g_dacoutslow = 65535;
-  g_dacout = 65535;
   g_outerrorcounter =0;
 }
 void LCD200::readMonitor()
@@ -93,14 +92,16 @@ bool LCD200::OpenShortVfCheck()
 {
   unsigned int vf, vth1, vth2;
  
-//  vth1 = (float)g_vfth1*20.46;
-//  vth2 = (float)g_vfth2*20.46;
-//  digitalWrite(LD_EN, HIGH); //LD_EN LOW : bypass LD current
-//  delay(200);
-//  ad5541.NormalWrite(CHECKCURRENT);
-//  delay(500);
-//  g_vmon = ltc2451.SoftI2CRead(); // !!??Check if read twice is necessary!!
-//  vf = analogRead(VLD);
+  vth1 = (float)g_vfth1*20.46;
+  vth2 = (float)g_vfth2*20.46;
+  digitalWrite(LD_EN, HIGH); //LD_EN LOW : bypass LD current
+  delay(200);
+  ad5541.NormalWrite(CHECKCURRENT);
+  delay(500);
+  vf = analogRead(VLD);
+  g_vf = vf;
+  ad5541.NormalWrite(65535);
+  digitalWrite(LD_EN, LOW);
 //  if(g_vmon < OPENVTH) 
 //  {
 //    g_LDOpenFlag =1;
@@ -117,15 +118,16 @@ bool LCD200::OpenShortVfCheck()
 //  }
 //  else 
 //  { 	
-//	if(vf >vth2)
-//		SetVCC(VCCHIGH);
-//	else if(vf > vth1)
-//	    SetVCC(VCCMEDIUM);
-//	PWROnOff(HIGH);
-//	g_checkflag = 0;
+	if(vf >vth2)
+		SetVCC(VCCHIGH);
+	else if(vf > vth1)
+	    SetVCC(VCCMEDIUM);
+	PWROnOff(HIGH);
+	g_checkflag = 0;
 //  }
+  
   //only for temp test
-  PWROnOff(HIGH);
+//  PWROnOff(HIGH);
   //
 }
 
@@ -133,7 +135,8 @@ void LCD200::PWRCheck()
 {
   unsigned int vplus;
   vplus = analogRead(V_SENS);
-  if((g_dacoutslow == 65535) || (vplus < POWERGOOD)) digitalWrite(LD_EN, LOW); 
+  p_vplus = vplus; //I2C test
+  if( ((g_dacoutslow == 65535) || (vplus < POWERGOOD)) && (abs(g_ioutset-g_ioutreal)<30) ) digitalWrite(LD_EN, LOW); 
   
 //  if(g_com_lden==1 && g_dacoutslow!=65535) digitalWrite(LD_EN, 1);
   
@@ -141,25 +144,25 @@ void LCD200::PWRCheck()
 
 bool LCD200::IoutSlow()
 {
-  int deltaiout;
+  long deltaiout;
   unsigned int absdeltaiout;
-  deltaiout = g_dacout- g_dacoutslow; // deltaiout > 0 =>LD current decrease
-  									  // increase Iout->decrease g_dacout
-  									  // decrease Iout->increase g_dacout
-  absdeltaiout = abs(deltaiout);
   
-  digitalWrite(LD_EN, HIGH);
-
-  //Change the dacout slowly
-  if(deltaiout > IOUTSTEP)  
-    g_dacoutslow += IOUTSTEP;
-  else if(absdeltaiout < IOUTSTEP)
-//    g_dacoutslow += absdeltaiout;
-    g_dacoutslow += deltaiout;
-  else
-    g_dacoutslow -= IOUTSTEP;
-
-  ad5541.NormalWrite(g_dacoutslow);
+  if(g_dacoutslow != 65535) digitalWrite(LD_EN, HIGH);
+  if(g_com_lden) deltaiout = (long)g_dacout-g_dacoutslow; // deltaiout > 0 =>LD current decrease
+  									  				// increase Iout->decrease g_dacout
+  									  				// decrease Iout->increase g_dacout
+  else  deltaiout = 65535-g_dacoutslow;
+  absdeltaiout = abs(deltaiout); 
+  	
+   //Change the dacout slowly
+   if(deltaiout > IOUTSTEP) g_dacoutslow += IOUTSTEP; 		
+   else if(absdeltaiout <= IOUTSTEP) g_dacoutslow += deltaiout; 	    
+   else g_dacoutslow -= IOUTSTEP;
+   
+   ad5541.NormalWrite(g_dacoutslow);
+//   ad5541.NormalWrite(g_dacout);
+   g_ioutset = 65535 - g_dacoutslow;
+   g_ioutreal = g_vmon;
 //  ad5541.NormalWrite(65535);
 //  Serial.print(deltaiout);
 //  Serial.print(",");
@@ -178,16 +181,18 @@ void LCD200::CheckOutputErr() // Need to be use while IoutSlow = False
   int deltaiout;
   vf = analogRead(VLD);
   ioutreal = ltc2451.SoftI2CRead(); 
-  ioutset = 65535- g_dacout;
+//  ioutset = 65535- g_dacout;
+  ioutset = 65535 - g_dacoutslow;
   deltaiout = ioutset - ioutreal;
-  if(abs(deltaiout)> IOUTSTEP)
+  if(abs(deltaiout)> 980)
     g_outerrorcounter ++;
+  else g_outerrorcounter=0;
   
   if(g_outerrorcounter > IOUTCOUNTERMAX)
   {
     g_OutErrFlag =1;
-    g_AnyErrFlag =1;
-    Serial.println("c");
+//    g_AnyErrFlag =1;
+//    Serial.println("c");
   } 
 }
 void LCD200::OnReceiveEvent()
@@ -216,7 +221,7 @@ void LCD200::OnReceiveEvent()
       break;
       
       case LCD200_COM_IOUT:
-      	Serial.println(g_AnyErrFlag);
+//      	Serial.println(g_AnyErrFlag);
         if(g_AnyErrFlag) {} // if there is no error status, update the g_dacout
         else
         {
@@ -241,14 +246,6 @@ void LCD200::OnReceiveEvent()
 //        Serial.print(F(", "));
 //        Serial.println(g_initfinished);
       break;
-      
-      case I2C_COM_TEST1:
-//      	Serial.print(F("t1:"));
-//    	Serial.println(temp[0]);
-      break;
-  
-
-      
     }
   }
 }
@@ -276,9 +273,31 @@ void LCD200::OnRequestEvent()
       if(g_OutErrFlag) temp[0] |= LCD200_ERRMASK_OUTERR;
       else temp[0] &= (~LCD200_ERRMASK_OUTERR);
     break;
-    
+
+//I2C test mode
     case I2C_COM_TEST1:
-    	temp[0]=g_initfinished;
+//    	temp[0]=g_initfinished;
+//        temp[0]=32768;
+//    	temp[1]=32768>>8;
+
+        temp[0]=g_vfth1;
+    	temp[1]=g_vfth1>>8;
+//    	temp[0]=g_dacout;
+//    	temp[1]=g_dacout>>8;
+    break;
+    
+    case I2C_COM_TEST2:
+//    	temp[0]=60000;
+//    	temp[1]=60000>>8;
+        temp[0]=g_vfth2;
+    	temp[1]=g_vfth2>>8;
+    break;
+    
+    case I2C_COM_TEST3:
+//    	temp[0]=60000;
+//    	temp[1]=60000>>8;
+        temp[0]=g_vf;
+    	temp[1]=g_vf>>8;
     break;
   }
   Wire.write(temp,2);

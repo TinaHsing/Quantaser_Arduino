@@ -45,6 +45,7 @@
 
 #define I2C_COM_TEST1	PZTDRF_COM_VPZT+1
 #define I2C_COM_TEST2 	PZTDRF_COM_VPZT+2
+#define I2C_COM_TEST3 	PZTDRF_COM_VPZT+3
 
 //=========request Events Mask ============
 //DTC03

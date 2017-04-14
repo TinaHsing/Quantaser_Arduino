@@ -24,11 +24,11 @@
 #define VCCLOW 2
 
 //----Current Parameter----
-#define CHECKCURRENT 65335 // set the check current around 400uA for open short checking
+#define CHECKCURRENT 65335 //65335 set the check current around 400uA for open short checking
 #define OPENVTH 100 // vmon < 7.62mV while the current will be regards zero current and judge as Open
 #define VFSHORT 50 // if under 400uA condition, vf < 0.22V the LD will be regards as short
 #define I2CREADTIMEMAX 500 //maxmum I2C command read time is 500us
-#define IOUTSTEP 980 // around 3mA perstep (980*5/65535/25=0.003A)
+#define IOUTSTEP 3 // around 3mA perstep (980*5/65535/25=0.003A)
 #define IOUTCOUNTERMAX 10 //if iout real can't equal to ioutseet for 10 loop times, it will be judge as output error, which means the dropout voltage is too large.
 #define POWERGOOD 550 //V_SENS pin detection values for power good, if vpluse smaller thna this value, need to by pass the LD to avoid inrush current caused LT1028
 
@@ -63,7 +63,8 @@ public:
 	
 //private:
 	bool g_LDOpenFlag, g_LDShortFlag, g_OutErrFlag, g_AnyErrFlag;
-	unsigned int g_dacout, g_vmon, g_dacoutslow;
+	unsigned int g_dacout, g_vmon, p_vplus, g_ioutreal, g_ioutset, g_vf;
 	unsigned char g_outerrorcounter, g_vfth1, g_vfth2;
+	long g_dacoutslow;
 
 };

@@ -23,24 +23,23 @@ void setup() {
 }
 
 void loop() 
-{
-  //if((g_dacoutslow == 65535) || (vplus < POWERGOOD)) digitalWrite(LD_EN, LOW) [bypass LD mos];
-  //check every loop  
-  lcd200.PWRCheck(); 
-  /////////////////////
+{ 
+  lcd200.PWRCheck(); // if (g_dacoutslow=65535) or (vplus < POWERGOOD), by pass LD
   lcd200.readMonitor();
   if(lcd200.g_com_lden)
   {
-    if(lcd200.g_checkflag) lcd200.OpenShortVfCheck();   
-    lcd200.IoutSlow();
-//    if(lcd200.IoutSlow()) {}
-//    else lcd200.CheckOutputErr();
+    if(lcd200.g_checkflag) lcd200.OpenShortVfCheck(); // select and turn on Vcc here  
+//    lcd200.IoutSlow();
+    if(lcd200.IoutSlow()) {}
+    else lcd200.CheckOutputErr();
    }
   else  
   {
     lcd200.ResetFlag();
-    lcd200.ad5541.NormalWrite(65535);
+//    lcd200.ad5541.NormalWrite(65535);
+//    lcd200.IoutSlow();
   }
+  lcd200.IoutSlow();
 }
 void ReceiveEvent(int howmany)
 {

@@ -42,7 +42,6 @@ void DTC03Master::ParamInit()
   p_holdCursorTimer=0;
   p_HoldCursortateFlag=0;
   g_wakeup = 1;
-  g_test=0;
   g_mod_status = 0;
   
   for (int i=0;i<MV_ROW; i++) 
@@ -315,6 +314,23 @@ void DTC03Master::CheckStatus()
 //	  	    		else tact = ReturnTemp(g_vact,0);
 	  	    		if(!p_engModeFlag) PrintPZTvolt(vpzt_f);
 				}
+				//I2C test
+				if (p_loopindex%300==7) 
+				{
+					I2CReadData(I2C_COM_TEST1,LCD200ADD);
+					PrintTest1();
+				}
+				if (p_loopindex%300==8) 
+				{
+					I2CReadData(I2C_COM_TEST2,LCD200ADD);
+					PrintTest2();
+				}
+				if (p_loopindex%300==9) 
+				{
+					I2CReadData(I2C_COM_TEST3,LCD200ADD);
+					PrintTest3();
+				}
+				
 	    p_loopindex++;		       
 }
 unsigned int DTC03Master::MovingAVG(unsigned char row, unsigned int Var)
@@ -570,8 +586,16 @@ void DTC03Master::I2CReadData(unsigned char com, unsigned char slaveAdd)
     case PZTDRF_COM_VPZT:
     	g_vpzt = (temp[1]<<8)|temp[0]; 
     	break;
+    //test
     case I2C_COM_TEST1:
-    	g_test = temp[0];
+    	g_test1 = (temp[1]<<8) | temp[0];
+    	break;
+    	
+    case I2C_COM_TEST2:
+    	g_test2 = (temp[1]<<8) | temp[0];
+    	break;
+    case I2C_COM_TEST3:
+    	g_test3 = (temp[1]<<8) | temp[0];
     	break;
   }
 }
@@ -863,6 +887,36 @@ void DTC03Master::PrintPZTvolt(float vpzt)
   	if(vpzt<10.0) lcd.print("  ");
   	else if(vpzt<100.0) lcd.print(" ");
   	lcd.print(vpzt,2); 
+}
+void DTC03Master::PrintTest1()
+{
+	lcd.SelectFont(SystemFont5x7);
+  	lcd.GotoXY(Test1_COORD_X, Test1_COORD_Y);
+  	if(g_test1<10) lcd.print("    ");
+  	else if(g_test1<100) lcd.print("   ");
+  	else if(g_test1<1000) lcd.print("  ");
+  	else if(g_test1<10000) lcd.print(" ");
+  	lcd.print(g_test1); 
+}
+void DTC03Master::PrintTest2()
+{
+	lcd.SelectFont(SystemFont5x7);
+  	lcd.GotoXY(Test2_COORD_X, Test2_COORD_Y);
+  	if(g_test2<10) lcd.print("    ");
+  	else if(g_test2<100) lcd.print("   ");
+  	else if(g_test2<1000) lcd.print("  ");
+  	else if(g_test2<10000) lcd.print(" ");
+  	lcd.print(g_test2);  
+}
+void DTC03Master::PrintTest3()
+{
+	lcd.SelectFont(SystemFont5x7);
+  	lcd.GotoXY(Test3_COORD_X, Test3_COORD_Y);
+  	if(g_test3<10) lcd.print("    ");
+  	else if(g_test3<100) lcd.print("   ");
+  	else if(g_test3<1000) lcd.print("  ");
+  	else if(g_test3<10000) lcd.print(" ");
+  	lcd.print(g_test3);  
 }
 void DTC03Master::UpdateEnable()
 {

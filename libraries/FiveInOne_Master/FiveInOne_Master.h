@@ -193,8 +193,8 @@
 #define Test1_COORD_Y    ROWPIXEL0507*2
 #define Test2_COORD_X    0
 #define Test2_COORD_Y    ROWPIXEL0507*5
-#define Test3_COORD_X    0
-#define Test3_COORD_Y    ROWPIXEL0507*4
+#define Test3_COORD_X    COLUMNPIXEL0507*6
+#define Test3_COORD_Y    ROWPIXEL0507*5
 
 //Five in One circuit
 #define T1_S_X			COLUMNPIXEL0507 
@@ -312,6 +312,9 @@ public:
 	void PrintLDcurrentAct(float);
 	void PrintLDcurrentSet();
 	void PrintPZTvolt(float);
+	void PrintTest1();
+	void PrintTest2();
+	void PrintTest3();
 	
 	unsigned int ReturnVset(float tset, bool type);
 	float ReturnTemp(unsigned int vact, bool type);
@@ -344,7 +347,7 @@ public:
     //------------------------------------
     bool g_sensortype, g_en_state;
     int en_temp;
-    unsigned char g_test;
+    unsigned int g_test1, g_test2, g_test3;
     
 private:
 	glcd lcd;
