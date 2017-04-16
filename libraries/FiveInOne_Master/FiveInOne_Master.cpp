@@ -308,8 +308,8 @@ void DTC03Master::CheckStatus()
 				}
 				//PZTDRF
 				if (p_loopindex%300==6) {
-					I2CReadData(PZTDRF_COM_VPZT,PZTDRF);
-					vpzt_f = ReturnVpzt(g_vpzt, 31.1);
+					I2CReadData(PZTDRF_COM_VPZT,PZTDRFADD);
+					vpzt_f = ReturnVpzt(g_vpzt, 31.5);
 //					if (MV_PZT) vpzt_f = g_vpzt;
 //	  	    		else tact = ReturnTemp(g_vact,0);
 	  	    		if(!p_engModeFlag) PrintPZTvolt(vpzt_f);
@@ -317,7 +317,7 @@ void DTC03Master::CheckStatus()
 				//I2C test
 				if (p_loopindex%300==7) 
 				{
-					I2CReadData(I2C_COM_TEST1,LCD200ADD);
+					I2CReadData(I2C_COM_TEST1,PZTDRFADD);
 					PrintTest1();
 				}
 				if (p_loopindex%300==8) 
