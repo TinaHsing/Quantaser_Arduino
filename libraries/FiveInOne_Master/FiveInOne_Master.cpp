@@ -26,6 +26,7 @@ void DTC03Master::ParamInit()
   g_paramupdate = 0;
   g_sensortype=0;
   g_tsetstep = 1.00;
+  g_currentStep = 1.00;
   g_en_state = 0;
   g_countersensor = 0;
   g_cursorstate=1;
@@ -317,19 +318,21 @@ void DTC03Master::CheckStatus()
 				//I2C test
 				if (p_loopindex%300==7) 
 				{
-					I2CReadData(I2C_COM_TEST1,PZTDRFADD);
-					PrintTest1();
+//					I2CReadData(I2C_COM_TEST1,PZTDRFADD);
+//					PrintTest1();
+					///////////////////////////////////////
+//					PrintDacout();
 				}
 				if (p_loopindex%300==8) 
 				{
-					I2CReadData(I2C_COM_TEST2,LCD200ADD);
-					PrintTest2();
+//					I2CReadData(I2C_COM_TEST2,LCD200ADD);
+//					PrintTest2();
 				}
-				if (p_loopindex%300==9) 
-				{
-					I2CReadData(I2C_COM_TEST3,LCD200ADD);
-					PrintTest3();
-				}
+//				if (p_loopindex%300==9) 
+//				{
+//					I2CReadData(I2C_COM_TEST3,LCD200ADD);
+//					PrintTest3();
+//				}
 				
 	    p_loopindex++;		       
 }
@@ -347,12 +350,17 @@ unsigned int DTC03Master::MovingAVG(unsigned char row, unsigned int Var)
 
 void DTC03Master::I2CWriteAll()
 {
-	//DTC03 and DTC03_2
+	//DTC03
 	for (int i=I2C_COM_INIT; i<=I2C_COM_WAKEUP; i++)
 	{
 		I2CWriteData(i,DTC03P05);
 		I2CWriteData(i,DTC03P05_2);
 	 } 
+	 //DTC03_2
+	for (int i=I2C_COM_INIT; i<=I2C_COM_WAKEUP; i++)
+	{
+		I2CWriteData(i,DTC03P05_2);
+	 }
 	//LCD200
 	for (int i=LCD200_COM_LDEN; i<=LCD200_COM_VFTH2; i++) I2CWriteData(i,LCD200ADD);
 	
@@ -628,7 +636,7 @@ float DTC03Master::ReturnCurrent(unsigned int current_mon)
 
 unsigned int DTC03Master::ReturnCurrentDacout(float current_f)
 {
-	unsigned int currentDacout = 65535-(unsigned int)current_f*327.675;
+	unsigned int currentDacout = 65535-current_f*327.675;
 	return(currentDacout); 
 }
 float DTC03Master::ReturnVpzt(unsigned int vpzt_mon, float G)
@@ -701,7 +709,7 @@ void DTC03Master::PrintLDcurrentAct(float current)
  	else 
  	{
  		if(current<10.0) lcd.print("  ");
-	 	else if(current<100.0) lcd.print(" ");
+	 	else if(current<99.994) lcd.print(" ");
 	 	lcd.print(current,2);
 	 }		
 }
@@ -884,7 +892,7 @@ void DTC03Master::PrintPZTvolt(float vpzt)
 {
 	lcd.SelectFont(SystemFont5x7);
   	lcd.GotoXY(V_PZT_X2, V_PZT_Y);
-  	if(vpzt<10.0) lcd.print("  ");
+  	if(vpzt<9.90) lcd.print("  ");
   	else if(vpzt<100.0) lcd.print(" ");
   	lcd.print(vpzt,2); 
 }
@@ -920,17 +928,16 @@ void DTC03Master::PrintTest3()
 }
 void DTC03Master::UpdateEnable()
 {
- bool en_state;
- if(analogRead(ENSW)>500) en_state=1;
- else en_state=0;
- if(g_en_state != en_state)
- {
-  g_en_state=en_state;
-  I2CWriteData(I2C_COM_INIT,DTC03P05);
-  I2CWriteData(I2C_COM_INIT,DTC03P05_2);
-  I2CWriteData(LCD200_COM_LDEN,LCD200ADD);
- }
- 
+	bool en_state;
+	if(analogRead(ENSW)>500) en_state=1;
+	else en_state=0;
+	if(g_en_state != en_state)
+	{
+		g_en_state=en_state;
+	  	I2CWriteData(I2C_COM_INIT,DTC03P05);
+	  	I2CWriteData(I2C_COM_INIT,DTC03P05_2);
+	  	I2CWriteData(LCD200_COM_LDEN,LCD200ADD);	  
+	}
  //----------------------//
 //  en_temp = analogRead(ENSW);
 // if(en_temp>500) en_state=1;
@@ -941,8 +948,18 @@ void DTC03Master::UpdateEnable()
 //  I2CWriteData(I2C_COM_INIT);
 //  PrintEnable();
 // }
+ 
 }
-
+ void DTC03Master::PrintDacout()
+ {
+ 	lcd.SelectFont(SystemFont5x7);
+  	lcd.GotoXY(Test1_COORD_X, Test1_COORD_Y);
+  	if(g_dacout<10) lcd.print("    ");
+  	else if(g_dacout<100) lcd.print("   ");
+  	else if(g_dacout<1000) lcd.print("  ");
+  	else if(g_dacout<10000) lcd.print(" ");
+  	lcd.print(g_dacout);
+ }
 void DTC03Master::PrintFactaryMode() //show error message to avoid entering Eng.Mode 
 {
    lcd.ClearScreen(0); //clear the monitor
@@ -1102,6 +1119,12 @@ void DTC03Master::CursorState()
 		            else g_tsetstep = g_tsetstep/10.0;
 		            ShowCursor(0);
 				}
+				else if(g_cursorstate==7)
+				{
+					if(g_currentStep <= 0.01) g_currentStep = 1.0;
+		            else g_currentStep = g_currentStep/10.0;
+		            ShowCursor(0);
+				}
 		  		else //g_cursorstate=2~6
 				{
 					p_HoldCursortateFlag=1;
@@ -1184,11 +1207,27 @@ void DTC03Master::blinkTsetCursor()
 	    	x=T2_S_X2;
 	    	y=T2_S_Y;
 	    }
+	    else if(g_cursorstate==7)
+	    {
+	    	x=I_LD_X2;
+	    	y=I_LD_Y;
+	    }
+	    
 		lcd.SelectFont(SystemFont5x7);
-		if(g_tsetstep == 1.0) lcd.GotoXY(x+COLUMNPIXEL0507, y);
-	    else if(g_tsetstep == 0.1) lcd.GotoXY(x+3*COLUMNPIXEL0507, y);
-	    else if(g_tsetstep == 0.01) lcd.GotoXY(x+4*COLUMNPIXEL0507, y);
-	    else lcd.GotoXY(x+5*COLUMNPIXEL0507, y);
+		if(g_cursorstate==1 || g_cursorstate==4)
+		{
+			if(g_tsetstep == 1.0) lcd.GotoXY(x+COLUMNPIXEL0507, y);
+	        else if(g_tsetstep == 0.1) lcd.GotoXY(x+3*COLUMNPIXEL0507, y);
+	        else if(g_tsetstep == 0.01) lcd.GotoXY(x+4*COLUMNPIXEL0507, y);
+	        else lcd.GotoXY(x+5*COLUMNPIXEL0507, y);
+		}
+		else if(g_cursorstate==7)
+		{
+			if(g_currentStep == 1.0) lcd.GotoXY(x+2*COLUMNPIXEL0507, y);
+	        else if(g_currentStep == 0.1) lcd.GotoXY(x+4*COLUMNPIXEL0507, y);
+	        else lcd.GotoXY(x+5*COLUMNPIXEL0507, y);
+		}
+		
 	    
 		if( abs(t_temp-p_tBlink)>BLINKDELAY )
 		{		  	
@@ -1199,6 +1238,7 @@ void DTC03Master::blinkTsetCursor()
 			else{
 				if(g_cursorstate==1) PrintTset();
 				else if(g_cursorstate==4) PrintTset2();
+				else if(g_cursorstate==7) PrintLDcurrentSet();
 				p_tBlink_toggle=!p_tBlink_toggle;
 			}
 			p_tBlink=t_temp;		
@@ -1217,7 +1257,7 @@ void DTC03Master::PrintCursor(unsigned char x_new, unsigned char y_new, unsigned
 }
 void DTC03Master::ShowCursor(unsigned char state_old)
 {
-		if( g_cursorstate!=1 && g_cursorstate!=4) p_blinkTsetCursorFlag=0;
+		if( g_cursorstate!=1 && g_cursorstate!=4 && g_cursorstate!=7) p_blinkTsetCursorFlag=0;
 
 		switch(g_cursorstate)
 		{
@@ -1237,9 +1277,9 @@ void DTC03Master::ShowCursor(unsigned char state_old)
 			    	case 6:
 			    		lcd.GotoXY(I2_X-COLUMNPIXEL0507, I2_Y);		  		    
 			    	break;	
-			    	case 7:
-			    		lcd.GotoXY(I_LD_X-COLUMNPIXEL0507, I_LD_Y);;		  		    
-			    	break;
+//			    	case 7:
+//			    		lcd.GotoXY(I_LD_X-COLUMNPIXEL0507, I_LD_Y);;		  		    
+//			    	break;
 				}
 				lcd.print(" ");		    
 			    break;
@@ -1272,6 +1312,7 @@ void DTC03Master::ShowCursor(unsigned char state_old)
 		    	
 		    case 7:
 		    	PrintCursor(I_LD_X,I_LD_Y,I2_X,I2_Y);
+		    	p_blinkTsetCursorFlag=1;
 		    	break;
 		
 		    case 10:
@@ -1385,12 +1426,14 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
       break;
       //LCD200
       case 7:
-      	g_LDcurrent += g_counter;
-        if(g_LDcurrent>200) g_LDcurrent=200;
+      	g_LDcurrent += g_currentStep*g_counter;
+        if(g_LDcurrent>130) g_LDcurrent=130;
         if(g_LDcurrent<0) g_LDcurrent=0;
 		g_dacout = ReturnCurrentDacout(g_LDcurrent);      
         I2CWriteData(LCD200_COM_IOUT,LCD200ADD);
         PrintLDcurrentSet();
+//        PrintDacout();
+        p_blinkTsetCursorFlag=0;
         p_ee_change_state=EEADD_IOUT_UPPER;
       break;
 

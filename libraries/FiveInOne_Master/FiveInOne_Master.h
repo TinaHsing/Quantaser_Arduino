@@ -312,6 +312,7 @@ public:
 	void PrintLDcurrentAct(float);
 	void PrintLDcurrentSet();
 	void PrintPZTvolt(float);
+	void PrintDacout();
 	void PrintTest1();
 	void PrintTest2();
 	void PrintTest3();
@@ -359,7 +360,7 @@ private:
     bool g_errcode1, g_errcode1_2, g_errcode2, g_errcode2_2, g_flag, g_paramupdate, g_countersensor, g_testgo, p_tBlink_toggle, p_engModeFlag, p_blinkTsetCursorFlag;
     bool g_wakeup, g_wakeup2, p_ee_changed, p_HoldCursortateFlag, p_timerResetFlag;
     unsigned long g_tenc, p_loopindex;
-	float g_tsetstep;
+	float g_tsetstep, g_currentStep;
 
 
 };

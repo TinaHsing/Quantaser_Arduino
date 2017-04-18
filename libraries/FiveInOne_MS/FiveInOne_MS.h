@@ -4,10 +4,10 @@
 #include <avr/io.h>
 #include <avr/pgmspace.h>//
 // ==========DTC03_P05 I2C slave address ======
-#define DTC03P05 		  0x07
-#define DTC03P05_2 		  0x08
-#define LCD200ADD         0x06
-#define PZTDRFADD     	  0x09
+#define DTC03P05 		  0x07	//B0000 0101
+#define DTC03P05_2 		  0x08	//B0000 1000
+#define LCD200ADD         0x06  //B0000 0110
+#define PZTDRFADD     	  0x09	//B0000 1001
 // =========receive Events Command and Address======
 //DTC03
 //Write

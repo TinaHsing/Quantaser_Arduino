@@ -198,8 +198,8 @@ void LCD200::CheckOutputErr() // Need to be use while IoutSlow = False
 void LCD200::OnReceiveEvent()
 {
   unsigned char com,temp[2];
-  unsigned long t1, t2;
-  unsigned int deltat;
+  unsigned long t1, t2, deltat;
+//  unsigned int deltat;
   while(Wire.available()==3)
   {
     t1= micros();
@@ -222,13 +222,13 @@ void LCD200::OnReceiveEvent()
       
       case LCD200_COM_IOUT:
 //      	Serial.println(g_AnyErrFlag);
-        if(g_AnyErrFlag) {} // if there is no error status, update the g_dacout
-        else
-        {
+//        if(g_AnyErrFlag) {} // if there is no error status, update the g_dacout
+//        else
+//        {
         	g_dacout = temp[1] << 8 | temp[0];
 //          	Serial.println(F("dac:"));
 //          	Serial.println(g_dacout);
-		}
+//		}
           
       break;
 
@@ -287,17 +287,17 @@ void LCD200::OnRequestEvent()
     break;
     
     case I2C_COM_TEST2:
-//    	temp[0]=60000;
-//    	temp[1]=60000>>8;
-        temp[0]=g_vfth2;
-    	temp[1]=g_vfth2>>8;
+    	temp[0]=g_dacout;
+    	temp[1]=g_dacout>>8;
+//        temp[0]=g_vfth2;
+//    	temp[1]=g_vfth2>>8;
     break;
     
     case I2C_COM_TEST3:
-//    	temp[0]=60000;
-//    	temp[1]=60000>>8;
-        temp[0]=g_vf;
-    	temp[1]=g_vf>>8;
+    	temp[0]=g_com_lden;
+    	temp[1]=g_com_lden>>8;
+//        temp[0]=g_vf;
+//    	temp[1]=g_vf>>8;
     break;
   }
   Wire.write(temp,2);

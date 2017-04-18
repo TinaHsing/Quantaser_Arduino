@@ -19,12 +19,12 @@ void setup() {
   lcd200.DACInit(); //set DAC out to 65535
   lcd200.AnaBoardInit(); // set to Vcc Low
   lcd200.ResetFlag();
-//  while(!lcd200.g_initfinished) delay(1);
+  while(!lcd200.g_initfinished) delay(1);
 }
 
 void loop() 
 { 
-  lcd200.PWRCheck(); // if (g_dacoutslow=65535) or (vplus < POWERGOOD), by pass LD
+  lcd200.PWRCheck(); // if( ((g_dacoutslow == 65535) || (vplus < POWERGOOD)) && (abs(g_ioutset-g_ioutreal)<30) ), by pass LD
   lcd200.readMonitor();
   if(lcd200.g_com_lden)
   {
