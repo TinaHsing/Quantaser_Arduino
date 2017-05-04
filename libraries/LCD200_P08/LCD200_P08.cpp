@@ -118,11 +118,13 @@ bool LCD200::OpenShortVfCheck()
 //  }
 //  else 
 //  { 	
-	if(vf >vth2)
-		SetVCC(VCCHIGH);
-	else if(vf > vth1)
-	    SetVCC(VCCMEDIUM);
+
+//	if(vf >vth2)
+//		SetVCC(VCCHIGH);
+//	else if(vf > vth1)
+//	    SetVCC(VCCMEDIUM);
 	PWROnOff(HIGH);
+	
 	g_checkflag = 0;
 //  }
   
