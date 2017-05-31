@@ -48,7 +48,7 @@ void DTC03SMaster::WelcomeScreen()
 	lcd.print("DTC03S Ver.2.01");
 	lcd.GotoXY(0,ROWPIXEL0507*1);
 	lcd.print("Initializing...");
-	for (byte i=9; i>0; i--)
+	for (byte i=5; i>0; i--)
   {
     lcd.GotoXY(0,ROWPIXEL0507*2);
     lcd.print(i);
@@ -676,7 +676,8 @@ void DTC03SMaster::CursorState()
 				
 		if(g_cursorstate ==3 || g_cursorstate ==4) g_cursorstate =0;
 		g_oldcursorstate = g_cursorstate;
-		if ( g_tstart<7.01 && g_en_state==0 && g_scan==1 && g_trate==1 && p_EngFlag==0 ) {
+//		if ( g_tstart<7.01 && g_en_state==0 && g_scan==1 && g_trate==1 && p_EngFlag==0 ) {
+		if ( g_tstart<7.01 && g_scan==1 && p_EngFlag==0 ) {	
 			g_cursorstate = 5;	
 			p_EngFlag = 1;		
 			PrintEngBG();
@@ -691,7 +692,7 @@ void DTC03SMaster::CursorState()
 		}	
 
         if( (g_cursorstate==14) && g_scan) g_cursorstate = 6;
-        if( (g_cursorstate==14) && ~g_scan) {
+        if( (g_cursorstate==14) && !g_scan) {
         	g_cursorstate =0;
         	p_EngFlag = 0;
 			PrintBG();
@@ -838,7 +839,7 @@ void DTC03SMaster::UpdateParam()
 			case 0:
 				g_tstart += g_counter2*0.01;
 				g_tnow = g_tstart;
-				if(g_tstart > 99.00) g_tstart =99.00;
+				if(g_tstart > 150.00) g_tstart =150.00;
 				if(g_tstart < 7.00) g_tstart = 7.00;
 				if(g_en_state==0 ){ // EN switch OFF
 					g_vset = ReturnVset(g_tstart, 0);
@@ -858,7 +859,7 @@ void DTC03SMaster::UpdateParam()
 
 			case 1:
 				g_tend += g_counter2*0.01;
-				if(g_tend > 60.00) g_tend = 60.00;
+				if(g_tend > 150.00) g_tend = 150.00;
 				if(g_tend< 7.00) g_tend = 7.00;
 				PrintTend(); 
 				g_vend = ReturnVset(g_tend, 0);
@@ -885,7 +886,7 @@ void DTC03SMaster::UpdateParam()
 			
 			case 6:
 				g_tstart += g_counter2*0.01;
-				if(g_tstart > 99.00) g_tstart =99.00;
+				if(g_tstart > 150.00) g_tstart =150.00;
 				if(g_tstart < 7.00) g_tstart = 7.00;
 				g_vset = ReturnVset(g_tstart, 0);
 				I2CWriteData(I2C_COM_VSET);
