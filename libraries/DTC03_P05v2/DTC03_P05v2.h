@@ -117,7 +117,7 @@
 #define CHVMOD 1
 
 // define port manipulation address
-#define MOS_ON_OFF_STATUS_ADD (1 << NMOSC_IN)|(1<<NMOSH_IN)|(1<<FBSEL)
+#define MOS_ON_OFF_STATUS_ADD (1 << NMOSC_IN) | (1 << NMOSH_IN)
 
 //define calculation ration parameter
 #define CURRENTRatio 9.775 // code * 5000/1023/50/0.01= code * 9.997 (mA)

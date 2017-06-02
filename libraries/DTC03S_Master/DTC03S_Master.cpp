@@ -253,6 +253,7 @@ void DTC03SMaster::I2CReadData(unsigned char com)
     itecsign = temp[1] & REQMSK_ITECSIGN;
     g_errcode1 = temp[1] & REQMSK_ERR1;
     g_errcode2 = temp[1] & REQMSK_ERR2;
+    g_wakeup = temp[1] & REQMSK_WAKEUP;
     if(itecsign) g_itec = (-1)*(int)itectemp;
     else g_itec = (int)itectemp;
     break;
@@ -279,6 +280,7 @@ void DTC03SMaster::CheckStatus()
 					I2CReadData(I2C_COM_ITEC_ER);
 		            itec_f = float(g_itec)*CURRENTRatio;
 		            PrintItec(itec_f);
+		            if(!g_wakeup) I2CWriteAll();
 				}				
 				if (loopindex%3==1) {
 					I2CReadData(I2C_COM_PCB);
@@ -943,9 +945,10 @@ void DTC03SMaster::UpdateParam()
 			break;
 			
 			case 12:
-				g_fbcbase += g_counter2;
+				if( (int)(g_fbcbase+g_counter2)<0 ) g_fbcbase=0;
+				else g_fbcbase += g_counter2;				
 				if(g_fbcbase>44900) g_fbcbase=44900;//
-                if(g_fbcbase<16100) g_fbcbase=16100;//
+                if(g_fbcbase<1) g_fbcbase=0;//
                 I2CWriteData(I2C_COM_FBC);
                 PrintVfbc();
 				p_ee_change_state = EEADD_FBC_UPPER;

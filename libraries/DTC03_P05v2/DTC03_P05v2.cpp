@@ -88,8 +88,17 @@ void DTC03::SetVcc(unsigned char state)
 }
 void DTC03::SetMos(bool status, unsigned int fb_value)
 {
-	PORTD = (PORTD| MOS_ON_OFF_STATUS_ADD) & ((status << NMOSC_IN)|(!status<< NMOSH_IN)|(!status << FBSEL));
-	dacformos.ModeWrite(fb_value);
+	byte fb_byte;
+//	PORTD = (PORTD| MOS_ON_OFF_STATUS_ADD) & ((status << NMOSC_IN)|(!status<< NMOSH_IN)|(!status << FBSEL));
+//	dacformos.ModeWrite(fb_value);
+	fb_byte = ~(fb_value>>8);
+	analogWrite(NMOSH_IN, fb_byte );
+//	analogWrite(NMOSH_IN, 0 );
+//	Serial.print(fb_value);
+//	Serial.print(", ");
+//	Serial.print((fb_value>>8));
+//	Serial.print(", ");
+//	Serial.println(fb_byte);
 }
 void DTC03::SetMosOff()
 {
@@ -122,10 +131,11 @@ void DTC03::DynamicVcc()
     #else
     #endif
     
-	restec = CalculateR(RMEASUREVOUT,RMEASUREDELAY,RMEASUREAVGTIME,AVGTIME);
-    if (restec < g_r1_f ) SetVcc(VCCLOW);
-    else if(restec < g_r2_f ) SetVcc(VCCMEDIUM);
-    else SetVcc(VCCHIGH);
+//	restec = CalculateR(RMEASUREVOUT,RMEASUREDELAY,RMEASUREAVGTIME,AVGTIME);
+//    if (restec < g_r1_f ) SetVcc(VCCLOW);
+//    else if(restec < g_r2_f ) SetVcc(VCCMEDIUM);
+//    else SetVcc(VCCHIGH);
+    SetVcc(VCCHIGH);
 	
 }
 float DTC03::CalculateR(unsigned int fb_value, unsigned int stabletime, int ravgtime, int vavgtime)
@@ -233,6 +243,12 @@ void DTC03::ReadIsense()
   Itecarray[g_currentindex] = analogRead(ISENSE0);
   g_itecavgsum += Itecarray[g_currentindex]; 
   
+//  Serial.print(g_itecavgsum);
+//  Serial.print(' ');
+//  Serial.print(Itecarray[g_currentindex]);
+//  Serial.print(' ');
+//  Serial.println(analogRead(ISENSE0));
+  
   g_itecread = Itecarray[g_currentindex];
   g_currentindex ++;
   if(g_currentindex == AVGTIME) g_currentindex = 0;
@@ -265,10 +281,13 @@ void DTC03::CheckSensorType()
 void DTC03::CheckTemp()
 {
   g_Vtemp = (g_vpcbavgsum>>AVGPWR);
+//  Serial.print(g_Vtemp);
+//  Serial.print(' ');
+//  Serial.println(g_otp);
   if(g_Vtemp > g_otp) 
     {
-      g_errcode2 = 1;
-      g_en_state =0;
+//      g_errcode2 = 1;
+//      g_en_state =0;
     }
 }
 void DTC03::setVset() {
@@ -313,13 +332,21 @@ void DTC03::I2CRequest()
     else itecsign = 0;
     temp[0]=abs(itec);
     temp[1]=abs(itec) >> 8;
-       
+//    Serial.print(g_itecavgsum);
+//    Serial.print(' ');
+//    Serial.print(g_itecavgsum >> AVGPWR);
+//    Serial.print(' ');
+//    Serial.println(itec);  
+    Serial.println(analogRead(ISENSE0));
+    
     if(g_errcode1)  temp[1] |= REQMSK_ERR1;
     else temp[1] &= (~REQMSK_ERR1);//20161101 add
     if(g_errcode2)  temp[1] |= REQMSK_ERR2;
     else temp[1] &= (~REQMSK_ERR2);//
     if(itecsign) temp[1]|= REQMSK_ITECSIGN;
     else temp[1] &= (~REQMSK_ITECSIGN);//
+    if(g_wakeup) temp[1]|=REQMSK_WAKEUP;//B0100 0000
+    else temp[1] &= (~REQMSK_WAKEUP);
     break;
 
     case I2C_COM_PCB:

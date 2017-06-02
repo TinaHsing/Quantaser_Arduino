@@ -31,7 +31,7 @@
 #define REQMSK_ITECSIGN		0x04 //B0000 0100
 #define REQMSK_ERR1		 	0x10 //B0001 0000
 #define REQMSK_ERR2			0x20 //B0010 0000			
-
+#define REQMSK_WAKEUP   	0x40
 
 // first colume ki, second colume ls
 /*matrix modified on 168us 20161103*/

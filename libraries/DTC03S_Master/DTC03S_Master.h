@@ -83,7 +83,7 @@
 #define NOEE_VEND		9313
 #define NOEE_RATE		1
 #define NOEE_ILIM       50 // currntlimit,3A=50
-#define NOEE_FBC		22400
+#define NOEE_FBC		0
 #define NOEE_P          10
 #define NOEE_KI			0
 #define NOEE_LS			0
@@ -286,7 +286,7 @@ public:
 	unsigned int g_vact, g_fbcbase, g_tpcb, g_otp;
 	unsigned long g_tloop;
     unsigned char g_currentlim, g_r1, g_r2, g_tpidoff; 
-    bool g_errcode1, g_errcode2;
+    bool g_errcode1, g_errcode2, g_wakeup;
 
 
 private:
