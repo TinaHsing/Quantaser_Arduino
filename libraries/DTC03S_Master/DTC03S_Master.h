@@ -50,7 +50,7 @@
 #define COUNTERINCRE	50
 #define COUNTERSPEEDUP	200
 #define FINETUNEAMP 3
-#define SCANSAMPLERATE  15
+#define SCANSAMPLERATE  15 //15
 #define ILIMSTART 0.5
 #define ILIMSTEP 0.05
 
@@ -84,10 +84,10 @@
 #define NOEE_RATE		1
 #define NOEE_ILIM       50 // currntlimit,3A=50
 #define NOEE_FBC		0
-#define NOEE_P          10
-#define NOEE_KI			0
-#define NOEE_LS			0
-#define NOEE_kiindex    1
+#define NOEE_P          20
+#define NOEE_KI			196
+#define NOEE_LS			23
+#define NOEE_kiindex    34
 #define NOEE_TOTP       561 //120C
 #define NOEE_R1         10
 #define NOEE_R2         30
@@ -133,8 +133,11 @@
 #define TACT_COORD_X	6
 #define TACT_COORD_Y	36
 
+#define COUNTER_COORD_X	COLUMEPIXEL0507*13
+#define COUNTER_COORD_Y	0
 
-
+#define TRATE_COORD_X	COLUMEPIXEL0507*12
+#define TRATE_COORD_Y	ROWPIXELdef*4
 
 
 //-------ENG mode related-------
@@ -265,7 +268,7 @@ public:
 	void PrintR2();
 	void PrintTpidoff();
 	void PrintTotp();
-	
+	void PrintCounter(bool, unsigned int);
 		
 	void CheckStatus();
 	void CalculateRate();
@@ -281,6 +284,8 @@ public:
 	void setKpKiLs(float tin);
 	void Overshoot_Cancelation(float);
 	void checkOvershoot(float);
+	
+	
 	bool g_en_state;
 	int g_itec;
 	unsigned int g_vact, g_fbcbase, g_tpcb, g_otp;
@@ -291,7 +296,7 @@ public:
 
 private:
 	glcd lcd;
-	bool g_scan, g_heater, g_paramterupdate, p_en[2], p_scan[2], p_tnow_flag[2], p_curstatus0flag, p_rateflag, p_EngFlag;
+	bool g_scan, g_heater, g_paramterupdate, p_en[2], p_scan[2], p_tnow_flag[2], p_curstatus0flag, p_rateflag, p_EngFlag, p_resetCounterFlag;
 	bool p_ee_changed, p_enableFlag, p_overshoot_scan, p_overshoot_noscan, p_overshoot_cancel_Flag_scan, p_overshoot_cancel_Flag_noscan;
 	char g_counter, g_counter2;
 	unsigned char g_rateindex, g_trate, g_cursorstate,g_oldcursorstate, g_lastencoded, g_kiindex, g_p, p_ee_change_state;

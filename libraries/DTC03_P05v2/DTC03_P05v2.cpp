@@ -112,7 +112,11 @@ void DTC03::DynamicVcc()
     if(g_sensortype) digitalWrite(SENSOR_TYPE,g_sensortype);
     SetMosOff();
     BuildUpArray(1,1,1);
-    while(g_wakeup == 0) delay(1);
+    while(g_wakeup == 0) 
+	{
+//    	Serial.println(g_wakeup);
+    	delay(1);
+	}
     ReadIsense();
     g_isense0 = g_itecavgsum>>AVGPWR;
     g_r1_f = float(g_r1)*0.1;
@@ -405,7 +409,9 @@ void DTC03::I2CReceive()
     g_vset_limit = vset_upper<<8 | vset_lower;
     setVset();
 //    Serial.println("VSET:");
-//    Serial.println( ReturnTemp(g_vset_limit,0) );
+//    Serial.print( ReturnTemp(g_vset_limit,0),5);
+//    Serial.print(", ");
+//    Serial.println(g_vset_limit);
     break;
 
     

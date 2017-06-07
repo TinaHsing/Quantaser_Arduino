@@ -40,6 +40,7 @@ void DTC03SMaster::ParamInit()
 	p_overshoot_noscan = 0;
 	p_overshoot_cancel_Flag_scan = 1;
 	p_overshoot_cancel_Flag_noscan = 1;
+	p_resetCounterFlag = 1;
 }
 void DTC03SMaster::WelcomeScreen()
 {
@@ -363,6 +364,8 @@ void DTC03SMaster::PrintTend()
 	lcd.GotoXY(TEND_COORD_X2, TEND_COORD_Y);
 	if(g_tend < 9.991) lcd.print(" ");
 	lcd.print(g_tend,2);
+//	lcd.print(",");
+//	lcd.print(p_rate,4);
 	 
 }
 void DTC03SMaster::PrintTact(float tact)
@@ -493,7 +496,32 @@ void DTC03SMaster::PrintTotp()
   if (Topt_set < 99.5 ) lcd.print(" ");
   lcd.print(Topt_set,0);
 }
-
+void DTC03SMaster::PrintCounter(bool EN, unsigned int time)
+{
+	unsigned int t_init, counter, temp;
+	temp=millis();
+	if(p_resetCounterFlag==1)
+	{
+		t_init = time;
+		p_resetCounterFlag = 0;
+	}
+	p_resetCounterFlag = !EN;
+	if(EN)
+	{
+		lcd.SelectFont(SystemFont5x7);
+		
+		counter = temp-t_init;
+		if(counter>=1000) 
+		{			    			
+			
+			lcd.GotoXY(COUNTER_COORD_X, COUNTER_COORD_Y);
+			lcd.print(counter/1000);
+			lcd.GotoXY(TRATE_COORD_X, TRATE_COORD_Y);
+			lcd.print(g_tnow,5);
+//			delay(500);
+		}
+	}	
+}
 unsigned int DTC03SMaster::ReturnVset(float tset, bool type)
 {
   unsigned int vset;
@@ -547,18 +575,19 @@ void DTC03SMaster::CalculateRate()
 				g_tnow += p_rate;
 				if( (g_tnow+g_tfine) > g_tend) g_tnow = g_tend - g_tfine;								
 			}	
-		else 
+			else 
 			{
 				g_tnow -= p_rate;
 				if( (g_tnow+g_tfine) < g_tend) g_tnow = g_tend - g_tfine;				
 			}
 		p_rateflag = 1;	
+		
+		p_tlp = t_temp-p_trate;
+		I2CWriteData(I2C_COM_TEST);	
 	    }
 	    p_enableFlag = 1; // change to 1 only when EN ON && Scan ON && ~ENG mode 
 	}
-	//
-//	p_tlp = millis(); // use to check loop time, send p_tlp	
-//	I2CWriteData(I2C_COM_TEST);	
+
 	//
 	if (p_rateflag == 1) {
 		p_rateflag = 0;
@@ -566,6 +595,7 @@ void DTC03SMaster::CalculateRate()
 //		I2CWriteData(I2C_COM_TEST);// use to check rate update time
 		g_vset = ReturnVset(g_tnow+g_tfine, 0);
 	    I2CWriteData(I2C_COM_VSET);
+	    PrintCounter(1, t_temp);
 	}
 	
 	if ( (p_enableFlag==1) && (g_en_state==0) ) {
@@ -573,6 +603,7 @@ void DTC03SMaster::CalculateRate()
 		g_vset = ReturnVset(g_tstart, 0);
 	    I2CWriteData(I2C_COM_VSET);
 	    setKpKiLs(g_tstart);
+	    PrintCounter(0, t_temp);
 	}
 		
 }
@@ -603,36 +634,41 @@ void DTC03SMaster::checkOvershoot(float tact) {
 }
 
 void DTC03SMaster::setKpKiLs(float tin) {
-	if ( (tin>6.99) && (tin<=14.99) ) {
-		g_p = 3;
-		I2CWriteData(I2C_COM_CTR);
-		g_kiindex=25; //Time constamt: 3.5s		        
-		I2CWriteData(I2C_COM_KI);
-	}
-	else if( tin < 22.49) {
-		g_p = 6;
-		I2CWriteData(I2C_COM_CTR);
-		g_kiindex=22; //Time constamt: 2s		        
-		I2CWriteData(I2C_COM_KI);		
-	}
-//	else if( tin < 22.49) {
-//		g_p = 9;
+//	if ( (tin>6.99) && (tin<=14.99) ) {
+//		g_p = 3;
 //		I2CWriteData(I2C_COM_CTR);
-//		g_kiindex=14; //Time constamt: 1.2s		        
+//		g_kiindex=25; //Time constamt: 3.5s		        
+//		I2CWriteData(I2C_COM_KI);
+//	}
+//	else if( tin < 22.49) {
+//		g_p = 6;
+//		I2CWriteData(I2C_COM_CTR);
+//		g_kiindex=22; //Time constamt: 2s		        
 //		I2CWriteData(I2C_COM_KI);		
 //	}
-	else if( tin < 24.99) {
-		g_p = 11;
-		I2CWriteData(I2C_COM_CTR);
-		g_kiindex=13; //Time constamt: 1.1s		        
-		I2CWriteData(I2C_COM_KI);		
-	}
-	else {
-		g_p = 13;
-		I2CWriteData(I2C_COM_CTR);
-		g_kiindex=12; //Time constamt: 1s		        
-		I2CWriteData(I2C_COM_KI);
-	}
+////	else if( tin < 22.49) {
+////		g_p = 9;
+////		I2CWriteData(I2C_COM_CTR);
+////		g_kiindex=14; //Time constamt: 1.2s		        
+////		I2CWriteData(I2C_COM_KI);		
+////	}
+//	else if( tin < 24.99) {
+//		g_p = 11;
+//		I2CWriteData(I2C_COM_CTR);
+//		g_kiindex=13; //Time constamt: 1.1s		        
+//		I2CWriteData(I2C_COM_KI);		
+//	}
+//	else {
+//		g_p = 13;
+//		I2CWriteData(I2C_COM_CTR);
+//		g_kiindex=12; //Time constamt: 1s		        
+//		I2CWriteData(I2C_COM_KI);
+//	}
+
+//	g_p = 20;
+//	I2CWriteData(I2C_COM_CTR);
+//	g_kiindex=34; //Time constamt: 12s		        
+//	I2CWriteData(I2C_COM_KI);
 }
 
 void DTC03SMaster::UpdateEnable()//20161101
