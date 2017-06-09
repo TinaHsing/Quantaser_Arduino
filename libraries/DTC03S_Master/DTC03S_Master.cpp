@@ -32,7 +32,6 @@ void DTC03SMaster::ParamInit()
 	p_curstatus0flag = 0;
 	g_paramterupdate = 0;
 	p_rateflag = 0;
-	p_rateflag = 0;
 	p_loopcount = 0;
 	p_EngFlag = 0;
 	p_ee_changed = 0;
@@ -41,6 +40,7 @@ void DTC03SMaster::ParamInit()
 	p_overshoot_cancel_Flag_scan = 1;
 	p_overshoot_cancel_Flag_noscan = 1;
 	p_resetCounterFlag = 1;
+	p_timer_status=0;
 }
 void DTC03SMaster::WelcomeScreen()
 {
@@ -108,7 +108,7 @@ void DTC03SMaster::ReadEEPROM()
     g_tnow = g_tstart;
     g_tend = ReturnTemp(g_vend, 0);
 	g_trate = pgm_read_word_near(RateTable+g_rateindex);
-	p_rate = float(g_trate)*SCANSAMPLERATE/100000.0;
+//	p_rate = float(g_trate)*SCANSAMPLERATE/100000.0;
 }
 void DTC03SMaster::SaveEEPROM() {
 	
@@ -517,7 +517,7 @@ void DTC03SMaster::PrintCounter(bool EN, unsigned int time)
 			lcd.GotoXY(COUNTER_COORD_X, COUNTER_COORD_Y);
 			lcd.print(counter/1000);
 			lcd.GotoXY(TRATE_COORD_X, TRATE_COORD_Y);
-			lcd.print(g_tnow,5);
+			lcd.print(g_tnow,2);
 //			delay(500);
 		}
 	}	
@@ -570,6 +570,8 @@ void DTC03SMaster::CalculateRate()
 		
 		if ( (t_temp-p_trate) >= SCANSAMPLERATE ) {			
 			
+			p_tlp = t_temp-p_trate;
+			p_rate = float(g_trate)*p_tlp/100000.0;
 			if(g_tend > g_tstart) 
 			{
 				g_tnow += p_rate;
@@ -581,9 +583,8 @@ void DTC03SMaster::CalculateRate()
 				if( (g_tnow+g_tfine) < g_tend) g_tnow = g_tend - g_tfine;				
 			}
 		p_rateflag = 1;	
-		
-		p_tlp = t_temp-p_trate;
-		I2CWriteData(I2C_COM_TEST);	
+				
+//		I2CWriteData(I2C_COM_TEST);	
 	    }
 	    p_enableFlag = 1; // change to 1 only when EN ON && Scan ON && ~ENG mode 
 	}
@@ -607,6 +608,56 @@ void DTC03SMaster::CalculateRate()
 	}
 		
 }
+void DTC03SMaster::Timer()
+{
+	switch(p_timer_status) 
+	{
+		case 0:
+			// do nothing
+			break;
+		case 1:
+			if(g_tend > g_tstart) 
+			{
+				g_tnow += p_rate;
+				if( (g_tnow+g_tfine) > g_tend) g_tnow = g_tend - g_tfine;								
+			}	
+		    else 
+			{
+				g_tnow -= p_rate;
+				if( (g_tnow+g_tfine) < g_tend) g_tnow = g_tend - g_tfine;				
+			}
+		    g_vset = ReturnVset(g_tnow+g_tfine, 0);
+//	        I2CWriteData(I2C_COM_VSET);
+	        break;
+	    case 2:
+	    	g_vset = ReturnVset(g_tstart, 0);
+//	        I2CWriteData(I2C_COM_VSET);
+	    	break;
+		
+	}
+
+}
+//void DTC03SMaster::CalculateRate() // test timer, failed: timer interference with I2C
+//{
+//	unsigned int t_temp;
+//	
+//	t_temp = millis(); 
+//	if ( (g_en_state==1) && (g_scan==1) && (p_EngFlag==0)) {
+//		
+//		p_timer_status = 1;			
+//	    PrintCounter(1, t_temp);
+//	}
+//	if ( (g_en_state==1) && (g_scan==0) && (p_EngFlag==0)) { //temporary stop scan		
+//		p_timer_status = 0;	
+//		PrintCounter(0, t_temp);		
+//	}
+//	
+//	if ( (g_en_state==0) && (g_scan==1) && (p_EngFlag==0)  ) { // end of scan, Tset setting back to the Tstart value
+//		p_timer_status = 2;
+//		PrintCounter(0, t_temp);
+//	}
+//		
+//}
 void DTC03SMaster::Overshoot_Cancelation(float tact){
 	
 	checkOvershoot(tact);
@@ -909,7 +960,8 @@ void DTC03SMaster::UpdateParam()
 				if(g_rateindex <1) g_rateindex =1;
 				if(g_rateindex > MAXRATEINDEX) g_rateindex = MAXRATEINDEX;				
 				g_trate = pgm_read_word_near(RateTable+g_rateindex);
-				p_rate = float(g_trate)*SCANSAMPLERATE/100000.0; // g_trate/100 : k/s, SCANSAMPLERATE/1000 convertion from ms to s
+//				p_rate = float(g_trate)*SCANSAMPLERATE/100000.0; // g_trate/100 : k/s, SCANSAMPLERATE/1000 convertion from ms to s
+				
 				PrintRate(); 
 				p_ee_change_state = EEADD_RATE_INDEX;
 			break;

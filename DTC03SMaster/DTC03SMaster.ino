@@ -3,11 +3,12 @@
 #include <EEPROM.h>
 #include <DTC03_MS.h>
 #include <Wire.h>
-//test
-
+#include "Arduino.h"
 DTC03SMaster master;
 unsigned char vstep;
 float tstep, frate;
+
+
 void setup() {
   float tact;
   master.SetPinMode();
@@ -25,7 +26,7 @@ void setup() {
   master.CheckScan();
   master.PrintScan();
   attachInterrupt(digitalPinToInterrupt(ENC_B), CheckEncoder, RISING);
- 
+//  Timer1Init();
 }
 
 void loop() {
@@ -43,10 +44,28 @@ void loop() {
  master.SaveEEPROM();
  //
 // master.RuntestI2C();
- 
-
 }
+
 void CheckEncoder()
 {  
   master.Encoder();
 }
+//void Timer1Init()
+//{
+//  noInterrupts();
+//  TCCR1A = 0;
+//  TCCR1B = 0;
+//  TCNT1 = 0;
+//
+//  OCR1A = 6250; //10Hz=100ms update time
+//  TCCR1B |= (1 << WGM12);
+//  TCCR1B |= (1<<CS12);
+//  TIMSK1 |= (1<<OCIE1A);
+//  interrupts();
+//}
+//ISR(TIMER1_COMPA_vect)
+//{
+//  master.Timer();
+//}
+
+
