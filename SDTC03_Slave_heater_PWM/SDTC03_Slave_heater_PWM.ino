@@ -9,7 +9,7 @@
 #include <EEPROM.h>
 #include <DTC03_MS.h>
 #define PRINTLOOP 1
-#define PIDOUTPUTLIMIT 65535
+#define PIDOUTPUTLIMIT 52428
 
 DTC03 dtc;
 PID ipid, tpid;

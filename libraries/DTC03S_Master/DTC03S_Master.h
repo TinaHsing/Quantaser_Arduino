@@ -139,6 +139,9 @@
 #define TRATE_COORD_X	COLUMEPIXEL0507*12
 #define TRATE_COORD_Y	ROWPIXELdef*4
 
+#define TEST_COORD_X	COLUMEPIXEL0507*15
+#define TEST_COORD_Y	0
+
 
 //-------ENG mode related-------
 
@@ -269,6 +272,7 @@ public:
 	void PrintTpidoff();
 	void PrintTotp();
 	void PrintCounter(bool, unsigned int);
+	void PrintTest();
 		
 	void CheckStatus();
 	void CalculateRate();
@@ -298,7 +302,7 @@ public:
 private:
 	glcd lcd;
 	bool g_scan, g_heater, g_paramterupdate, p_en[2], p_scan[2], p_tnow_flag[2], p_curstatus0flag, p_rateflag, p_EngFlag, p_resetCounterFlag;
-	bool p_ee_changed, p_enableFlag, p_overshoot_scan, p_overshoot_noscan, p_overshoot_cancel_Flag_scan, p_overshoot_cancel_Flag_noscan;
+	bool p_ee_changed, p_enableFlag, p_overshoot_scan, p_overshoot_noscan, p_overshoot_cancel_Flag_scan, p_overshoot_cancel_Flag_noscan, testB;
 	char g_counter, g_counter2, p_timer_status;
 	unsigned char g_rateindex, g_trate, g_cursorstate,g_oldcursorstate, g_lastencoded, g_kiindex, g_p, p_ee_change_state;
 	unsigned int  g_vstart, g_vset, g_vend, p_loopcount, p_trate, p_tlp;

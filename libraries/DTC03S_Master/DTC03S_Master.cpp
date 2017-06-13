@@ -265,7 +265,14 @@ void DTC03SMaster::I2CReadData(unsigned char com)
   }
  delayMicroseconds(I2CSENDDELAY);//20161031
 }
-
+void DTC03SMaster::PrintTest()
+{
+	lcd.SelectFont(SystemFont5x7);
+	lcd.GotoXY(TEST_COORD_X, TEST_COORD_Y);
+	lcd.print(g_wakeup);
+	testB=!testB;
+	lcd.print(testB);	
+}
 void DTC03SMaster::CheckStatus()
 {
 		float tact, itec_f, tpcb_f;
@@ -281,6 +288,7 @@ void DTC03SMaster::CheckStatus()
 					I2CReadData(I2C_COM_ITEC_ER);
 		            itec_f = float(g_itec)*CURRENTRatio;
 		            PrintItec(itec_f);
+//		            PrintTest();
 		            if(!g_wakeup) I2CWriteAll();
 				}				
 				if (loopindex%3==1) {

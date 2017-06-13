@@ -341,7 +341,7 @@ void DTC03::I2CRequest()
 //    Serial.print(g_itecavgsum >> AVGPWR);
 //    Serial.print(' ');
 //    Serial.println(itec);  
-    Serial.println(analogRead(ISENSE0));
+//    Serial.println(analogRead(ISENSE0));
     
     if(g_errcode1)  temp[1] |= REQMSK_ERR1;
     else temp[1] &= (~REQMSK_ERR1);//20161101 add
