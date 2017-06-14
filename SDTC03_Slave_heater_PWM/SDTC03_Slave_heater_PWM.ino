@@ -9,7 +9,7 @@
 #include <EEPROM.h>
 #include <DTC03_MS.h>
 #define PRINTLOOP 1
-#define PIDOUTPUTLIMIT 52428
+#define PIDOUTPUTLIMIT 48000 //set MAX duty here, Itec must < 5A 
 
 DTC03 dtc;
 PID ipid, tpid;
@@ -29,8 +29,9 @@ void setup() {
   else digitalWrite(SENSOR_TYPE, LOW);
   dtc.CheckSensorType();
   dtc.CheckTemp();
-  ipid.Init(32768,32768,0x7FFFFFFF);
-  tpid.Init(32768,32768,0x7FFFFFFF);
+//  ipid.Init(32768,32768,0x7FFFFFFF);
+//  tpid.Init(32768,32768,0x7FFFFFFF);
+  tpid.Init(32768,32768,1,2,0 );
   dtc.dacforilim.ModeWrite(0);
   dtc.dacformos.ModeWrite(0);
 }
@@ -94,7 +95,7 @@ void loop() {
 //  }
   if (dtc.g_overshoot == 1){
     dtc.g_overshoot = 0;
-    tpid.g_errorsum = 0;
+//    tpid.g_errorsum >>= 1;
   }
   
   toutput=tpid.Compute(dtc.g_en_state, terr, dtc.g_p, dtc.g_ki, dtc.g_ls); 

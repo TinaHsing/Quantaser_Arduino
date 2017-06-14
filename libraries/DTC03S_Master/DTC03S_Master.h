@@ -87,7 +87,7 @@
 #define NOEE_P          30
 #define NOEE_KI			196
 #define NOEE_LS			23
-#define NOEE_kiindex    34
+#define NOEE_kiindex    12 //12: 1s; 34: 12s
 #define NOEE_TOTP       561 //120C
 #define NOEE_R1         10
 #define NOEE_R2         30
@@ -286,7 +286,7 @@ public:
 	void Timer();
 	void SaveEEPROM();
 	void RuntestI2C();
-	void setKpKiLs(float tin);
+	void setKpKiLs(unsigned char);
 	void Overshoot_Cancelation(float);
 	void checkOvershoot(float);
 	
@@ -304,7 +304,7 @@ private:
 	bool g_scan, g_heater, g_paramterupdate, p_en[2], p_scan[2], p_tnow_flag[2], p_curstatus0flag, p_rateflag, p_EngFlag, p_resetCounterFlag;
 	bool p_ee_changed, p_enableFlag, p_overshoot_scan, p_overshoot_noscan, p_overshoot_cancel_Flag_scan, p_overshoot_cancel_Flag_noscan, testB;
 	char g_counter, g_counter2, p_timer_status;
-	unsigned char g_rateindex, g_trate, g_cursorstate,g_oldcursorstate, g_lastencoded, g_kiindex, g_p, p_ee_change_state;
+	unsigned char g_rateindex, g_trate, g_cursorstate,g_oldcursorstate, g_lastencoded, g_kiindex, g_p, p_ee_change_state, p_kpkiLast;
 	unsigned int  g_vstart, g_vset, g_vend, p_loopcount, p_trate, p_tlp;
 	unsigned long loopindex, g_timer, g_tenc[3], g_tscan, g_tpush;
 	float g_tstart, g_tend, g_tnow, g_tfine, p_rate;
