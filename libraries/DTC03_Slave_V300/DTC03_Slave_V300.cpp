@@ -70,18 +70,18 @@ void DTC03::SetVcc(unsigned char state)
 	switch (state)
 	{
 		case VCCLOW:
-//			digitalWrite(VCC3,LOW); //use VCC3 only for P08, otherwise use VCC2
-			digitalWrite(VCC2,LOW);
+			digitalWrite(VCC3,LOW); //use VCC3 only for P08, otherwise use VCC2
+//			digitalWrite(VCC2,LOW);
  			digitalWrite(VCC1,LOW);
  		break;
  		case VCCMEDIUM:
-// 			digitalWrite(VCC3,LOW);
- 			digitalWrite(VCC2,LOW);
+ 			digitalWrite(VCC3,LOW);
+// 			digitalWrite(VCC2,LOW);
  			digitalWrite(VCC1,HIGH);
  		break;
  		case VCCHIGH:
-// 			digitalWrite(VCC3,HIGH);
- 	 		digitalWrite(VCC2,HIGH);
+ 			digitalWrite(VCC3,HIGH);
+// 	 		digitalWrite(VCC2,HIGH);
  			digitalWrite(VCC1,LOW);
  		break;
  		default:
