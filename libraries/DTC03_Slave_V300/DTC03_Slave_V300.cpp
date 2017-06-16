@@ -230,6 +230,7 @@ void DTC03::ReadVoltage(bool en_vmod)
     g_vact = Vactarray[g_vactindex];
     g_vactindex ++;
     if(g_vactindex == AVGTIME) g_vactindex = 0;
+    if(g_mod_status) setVset();
     interrupts();  
 }
 void DTC03::ReadIsense()
@@ -289,8 +290,13 @@ void DTC03::setVset() {
   
     if(vset_limit_long>65535) vset_limit_long=65535;
     else if (vset_limit_long<0) vset_limit_long=0;
-  
     g_vset_limitt = (unsigned int)vset_limit_long;
+    
+//    Serial.print(g_mod_status);
+//    Serial.print(", ");
+//    Serial.print(g_vset_limitt); 
+//    Serial.print(", ");
+//	Serial.println( ReturnTemp(g_vset_limitt,0),3); 
 }
 
 void DTC03::CurrentLimit()
