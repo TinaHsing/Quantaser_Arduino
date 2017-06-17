@@ -6,7 +6,7 @@
 // ===================================================
 
 // =====================DEBUGFLAG Table =================================
-//#define DEBUGFLAG01
+//#define DEBUGFLAG01 
 //#define DEBUGFLAG02 3
 //#define DEBUGFLAG03
 
@@ -186,4 +186,5 @@ private:
 	//unsigned int g_vbec, g_vbeh,g_vmod;
 	unsigned int Vactarray[AVGTIME], Itecarray[AVGTIME], Vpcbarray[AVGTIME], t_master;
     float g_ilimgain;
+    bool p_enterSetVFlag;
 };

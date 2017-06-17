@@ -59,6 +59,9 @@ void loop() {
   iteclimit=(long)dtc.g_iteclimitset<<ISENSE_GAIN;
   
   terr = (long)dtc.g_vact - (long)dtc.g_vset_limitt;
+//  Serial.print(dtc.g_vset_limitt);
+//  Serial.print(", ");
+//  Serial.println( dtc.ReturnTemp(dtc.g_vset_limitt,0),3); 
   toutput=tpid.Compute(dtc.g_en_state, terr, dtc.g_p, dtc.g_ki, dtc.g_ls); 
   
 //  iset2=abs(map( toutput,-65535,65535,-300<<ISENSE_GAIN,300<<ISENSE_GAIN));

@@ -221,16 +221,27 @@ void DTC03::ReadVoltage(bool en_vmod)
 	noInterrupts();
     g_vactavgsum -= Vactarray[g_vactindex];
     if (en_vmod == 0) Vactarray[g_vactindex] = ltc1865.Read(CHVACT);
-    else {
+    else 
+	{
     	Vactarray[g_vactindex] = ltc1865.Read(CHVMOD);
-    	g_vmod = ltc1865.Read(CHVACT);
+    	g_vmod = ltc1865.Read(CHVACT);		  	
 	}
     g_vactavgsum += Vactarray[g_vactindex]; 
   
     g_vact = Vactarray[g_vactindex];
     g_vactindex ++;
     if(g_vactindex == AVGTIME) g_vactindex = 0;
-    if(g_mod_status) setVset();
+    
+    if(g_mod_status) //when g_mod_status = 1
+	{
+		setVset(); //when enable MOD function, read Vmod every loop
+		p_enterSetVFlag = 1;
+	}
+    else //when g_mod_status = 0
+	{
+		g_vmod = g_vmodoffset; 
+		if(p_enterSetVFlag) setVset();
+	}
     interrupts();  
 }
 void DTC03::ReadIsense()
@@ -284,14 +295,17 @@ void DTC03::CheckTemp()
 void DTC03::setVset() {
 	long vmod, vset_limit_long;
 	
+	p_enterSetVFlag = 0;
 	vmod = long(g_vmod) - long(g_vmodoffset);
-	if (g_mod_status) vset_limit_long=(long)(g_vset_limit)+vmod;// in SDTC case, g_mod_status is alway 0
-    else vset_limit_long=(long)(g_vset_limit);
+    vset_limit_long=(long)(g_vset_limit)+vmod;// in SDTC case, g_mod_status is alway 0
   
     if(vset_limit_long>65535) vset_limit_long=65535;
     else if (vset_limit_long<0) vset_limit_long=0;
     g_vset_limitt = (unsigned int)vset_limit_long;
     
+    //below used to test Vmos function:
+    //1. disconnect Vmod BNC to check the correction of VmodOffset, 
+    //2. input Vmod, check if the Tset is what you expect. note: Vmod_set=Vmod_in/2
 //    Serial.print(g_mod_status);
 //    Serial.print(", ");
 //    Serial.print(g_vset_limitt); 
