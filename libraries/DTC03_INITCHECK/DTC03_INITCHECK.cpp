@@ -52,14 +52,14 @@ void DTC03::CheckInitValue(bool sw1, bool sw2, bool sw3)
 		Serial.println(FBCCHECK_LOW);
 		Serial.print("Vgs_high =");
 		Serial.println(FBCCHECK_HIGH);
-		Serial.print("current0 =");
-		Serial.println(izero);
+		
 		
 		if(sw2)
 		{
 			SetMosOff();	
 			izero = ReadIsense();
-							
+			Serial.print("current0 =");
+		    Serial.println(izero);				
 			////heating//////
 			Serial.println("heating :");
 			Serial.println("Vgs   , Itec");
@@ -89,6 +89,7 @@ void DTC03::CheckInitValue(bool sw1, bool sw2, bool sw3)
 					 itec_array[1] = itec_array[2];
 				}
 				i_step += 100;
+				if((FBCCHECK_LOW + i_step)>FBCCHECK_HIGH) i_step = 0;
 				i++;
 			}	
 		}	
@@ -125,6 +126,7 @@ void DTC03::CheckInitValue(bool sw1, bool sw2, bool sw3)
 				}
 				cal_R_value = FBCCHECK_LOW + i_step; //跳出while迴圈前的最後一個值為itec接近500mA之值 
 				i_step += 100;
+				if((FBCCHECK_LOW + i_step)>FBCCHECK_HIGH) i_step = 0;
 				i++;
 			}
 			SetMosOff();
