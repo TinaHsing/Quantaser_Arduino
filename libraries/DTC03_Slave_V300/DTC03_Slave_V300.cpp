@@ -149,7 +149,7 @@ float DTC03::CalculateR(unsigned int fb_value, unsigned int stabletime, int ravg
     Serial.println("n   vtec  itec   rtec ");//20161031
   #else
   #endif
-
+//  fb_value = 0;//test PID tuning
   SetMos(COOLING, fb_value);  // using cooling path and dac output = fb_value;
   BuildUpArray(0,1,0);    
   delay(stabletime);          // delay stabletime in ms
