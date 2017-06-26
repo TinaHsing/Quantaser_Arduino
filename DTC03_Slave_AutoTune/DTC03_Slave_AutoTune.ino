@@ -15,8 +15,8 @@
 /////Auto tune parameters//
 //#define INPUTGNDLEVEL 1352
 //#define OUTPUTGNDLEVEL 1814
-#define PNOISEBAND 70 //440
-#define NNOISEBAND 50 //430
+#define PNOISEBAND 110 //440
+#define NNOISEBAND 100 //430
 #define MAXLBACK 20
 #define MAXPEAKS 10
 
@@ -76,7 +76,7 @@ void loop() {
   dtc.CurrentLimit();
   iteclimit=(long)dtc.g_iteclimitset<<ISENSE_GAIN;
   
-  if(dtc.g_en_state) autotune(&input_auto, &output_auto , &kp_auto, &ki_auto, 10000); //Change the output Amp in the fifth parameter (30 right now)
+  if(dtc.g_en_state) autotune(&input_auto, &output_auto , &kp_auto, &ki_auto, 5000); //Change the output Amp in the fifth parameter (30 right now)
   
   terr = (long)dtc.g_vact - (long)dtc.g_vset_limitt;
 //  Serial.print(dtc.g_vset_limitt);
@@ -140,7 +140,8 @@ void autotune(int *in, unsigned int *out, int *kp, byte *ki, unsigned int Outste
 //      if ( (*in-Vact_offset) <NNOISEBAND) *out = Outstep;
       if ( abs(*in-Vact_offset) >PNOISEBAND) step_out = 0;  
       if ( abs(*in-Vact_offset) <NNOISEBAND) step_out = Outstep;
-      
+      Serial.print((float)(millis()-t_off)/1000,1);
+      Serial.print(", ");
       Serial.print(abs(*in-Vact_offset));
       Serial.print(", ");
       Serial.print(*in);
