@@ -163,7 +163,7 @@ public:
     void BuildUpArray(bool, bool, bool);
     void setVset();
 
-	unsigned int g_vact, g_vmod, g_fbc_base, g_Rmeas, g_isense0, g_currentabs,g_itecread;//
+	unsigned int g_vact, g_vact_MV, g_vmod, g_fbc_base, g_Rmeas, g_isense0, g_currentabs,g_itecread;//
     unsigned char g_p, g_ki, g_ls, g_currentlim, g_kiindex, g_tpidoffset;
     unsigned char g_r1, g_r2;;
 	unsigned long g_vactavgsum, g_itecavgsum, g_vpcbavgsum;

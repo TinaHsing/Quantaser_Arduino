@@ -227,7 +227,7 @@ void DTC03::ReadVoltage(bool en_vmod)
     	g_vmod = ltc1865.Read(CHVACT);		  	
 	}
     g_vactavgsum += Vactarray[g_vactindex]; 
-  
+  	g_vact_MV = g_vactavgsum >> AVGPWR;
     g_vact = Vactarray[g_vactindex];
     g_vactindex ++;
     if(g_vactindex == AVGTIME) g_vactindex = 0;
@@ -330,9 +330,9 @@ void DTC03::I2CRequest()
   switch(com)
   { 
     case I2C_COM_VACT:
-    vact=g_vactavgsum >> AVGPWR;
-    temp[0]=vact;
-    temp[1]=vact >> 8;
+//    vact=g_vactavgsum >> AVGPWR;
+    temp[0]=g_vact_MV;
+    temp[1]=g_vact_MV >> 8;
 //    Serial.println("1");
     break;
 
