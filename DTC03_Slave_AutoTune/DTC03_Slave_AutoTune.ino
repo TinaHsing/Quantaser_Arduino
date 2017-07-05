@@ -6,6 +6,7 @@
 #include <LTC1865.h>
 #include <DTC03_Slave_V300.h>
 #include <PID.h>
+//#include <AutoTune_V100.h>
 #include <EEPROM.h>
 #include <DTC03_MS.h>
 #define PRINTLOOP 1
@@ -19,10 +20,10 @@
 #define NOISEBAND 7
 #define MAXLBACK 15
 #define MAXPEAKS 5
-#define STEPD 100
+#define STEPD 1000
 #define T_THERESTHOLD 40
-#define ATUNE_BIAS 48200
-#define ATUNE_SAMPLING_TIME 0
+#define ATUNE_BIAS 52950
+#define ATUNE_SAMPLING_TIME 50
 #define MV_STATUS 0
 int lookback = MAXLBACK; // 3 <= loopback <= MAXLBACK
 unsigned int input_auto, output_auto=0, noise_Mid;
@@ -57,7 +58,7 @@ void setup() {
 //  tpid.Init(32768,32768,0x7FFFFFFF,0);
   dtc.dacforilim.ModeWrite(0);
   dtc.dacformos.ModeWrite(0);
-//  Serial.begin(9600);
+  Serial.begin(9600);
   Serial.print("Look back:");
   Serial.println(lookback);
   Serial.print("Noise band:");
@@ -100,8 +101,8 @@ void loop() {
   if (output>PIDOUTPUTLIMIT) output= PIDOUTPUTLIMIT;
   
   //-----searching ATUNE_BIAS-----//
-  if(toutput<=0) dtc.SetMos(HEATING,output);
-  else dtc.SetMos(COOLING,output);
+//  if(toutput<=0) dtc.SetMos(HEATING,output);
+//  else dtc.SetMos(COOLING,output);
 //  if(i==2000)
 //  {
 //    Serial.println(output);
@@ -109,20 +110,20 @@ void loop() {
 //  }
 //  i++;
 //---------for auto tune test-------------//
-//  if (!dtc.g_en_state) 
-//    {
-//      atune_flag = 1;
-//      init_flag = 1;
-//      output_bias(ATUNE_BIAS,0);
-//      t_off = millis();
-//      Vact_offset = dtc.g_vact;
-//      FindTtheresholdTimeFlag=1;
-//    }
-//    if(dtc.g_en_state)
-//    {
-//  //    if(FindTtheresholdTimeFlag) FindTtheresholdTime();
-//      if(atune_flag) autotune(&input_auto, &output_auto , &kp_auto, &ki_auto, STEPD); //Change the output Amp in the fifth parameter (30 right now)
-//    }
+  if (!dtc.g_en_state) 
+    {
+      atune_flag = 1;
+      init_flag = 1;
+      output_bias(ATUNE_BIAS,0);
+      t_off = millis();
+      Vact_offset = dtc.g_vact;
+      FindTtheresholdTimeFlag=1;
+    }
+    if(dtc.g_en_state)
+    {
+  //    if(FindTtheresholdTimeFlag) FindTtheresholdTime();
+      if(atune_flag) autotune(&input_auto, &output_auto , &kp_auto, &ki_auto, STEPD); //Change the output Amp in the fifth parameter (30 right now)
+    }
 //-------------end of auto tune test----------------------//
 
 }
@@ -144,10 +145,11 @@ void autotune(unsigned int *in, unsigned int *out, float *kp, float *ki, unsigne
 { 
   int lastinput[MAXLBACK],peaks[MAXPEAKS];
   int peakcount, peaktype, peakstemp,A;
-  bool justchanged,ismax,ismin;
-  unsigned long peaktime[MAXPEAKS],now,t1,Pu;
+  bool justchanged,ismax,ismin, relay_heating_flag=1, relay_cooling_flag=1;
+  unsigned long peaktime[MAXPEAKS],now,t1,Pu, relay_period[4];
   float Ku, ki2;
   unsigned int step_out;
+  unsigned char period_count;
     
   //Variable for simulation
   int i,j=0; 
@@ -156,6 +158,7 @@ void autotune(unsigned int *in, unsigned int *out, float *kp, float *ki, unsigne
 
   peakcount = -1;
   peaktype = 0;
+  period_count = 0;
   A=0;
   Pu=0;  
     for (i=0;i<MAXLBACK;i++) 
@@ -166,42 +169,72 @@ void autotune(unsigned int *in, unsigned int *out, float *kp, float *ki, unsigne
 
   while (peakcount < (MAXPEAKS-1)) // 迴圈執行至蒐集滿設定的peak數目為止 
   {
-      input_bias(in); // 讀取目前ADC值  
+      dtc.input_bias(in); // 讀取目前ADC值  
+      Serial.println(*in);
       now = millis();
       justchanged = false;
       // relay test//////////////////////////////////
-      if ( (int)(*in-noise_Mid) >NOISEBAND) 
+//      Serial.print((int)(*in-noise_Mid));  
+//      Serial.print(", ");
+      if ( (int)(*in-noise_Mid) >NOISEBAND) // cooling
       {
-        step_out = ATUNE_BIAS - Outstep/2;  //TEC
-//        step_out = ATUNE_BIAS + Outstep/2;  //Heater
+//        Serial.print("A, ");
+//        step_out = ATUNE_BIAS - Outstep/2;  //TEC
+        step_out = ATUNE_BIAS + Outstep/2;  //Heater
         init_flag = 0;
+        if(relay_cooling_flag) 
+        {         
+//          Serial.println("relay_cooling_flag: ");
+          RelaySwitchTime(relay_period, &period_count);
+          relay_heating_flag = 1;
+          relay_cooling_flag = 0;
+        }     
       }
-      else if ( (int)(*in-noise_Mid) <-NOISEBAND) 
+      else if ( (int)(*in-noise_Mid) <-NOISEBAND) //heating
       {
-        step_out = ATUNE_BIAS + Outstep/2; //TEC
-//        step_out = ATUNE_BIAS - Outstep/2;  
+//        Serial.print("B, ");
+//        step_out = ATUNE_BIAS + Outstep/2; //TEC
+        step_out = ATUNE_BIAS - Outstep/2;  
+        init_flag = 0;
+        if(relay_heating_flag) 
+        {
+//          Serial.println("relay_heating_flag: ");
+          RelaySwitchTime(relay_period, &period_count);
+          relay_heating_flag = 0;
+          relay_cooling_flag = 1;
+        }
       }
       else if (init_flag)
       {
-        step_out = ATUNE_BIAS + Outstep/2;
-//        step_out = ATUNE_BIAS - Outstep/2;
+//        Serial.print("C, ");
+        step_out = ATUNE_BIAS + Outstep/2; //heating initially
       }
       ///////////////atune data print-1/////////////////////////////////////
-      Serial.print((float)(now-t_off)/1000,3);
-      Serial.print(", ");
+//      Serial.print((float)(now-t_off)/1000,3);
+//      Serial.print(", ");
 //      Serial.print(*in);
 //      Serial.print(", ");
 //      Serial.print((int)noise_Mid);
 //      Serial.print(", ");
-      Serial.print((int)(*in-noise_Mid));     
-      Serial.print(", ");
+//      Serial.print((int)(*in-noise_Mid));  
+//      Serial.print(", ");
 
+//      if(j%1000==0)
+//      {
+//        Serial.print(*in);
+//        Serial.print(", ");
+//        Serial.print((int)noise_Mid);
+//        Serial.print(", ");
+//        Serial.print((int)(*in-noise_Mid));  
+//      }      
+//      Serial.print(", ");
+      j++;
       output_bias(step_out,1); //DAC output    
       ismax=true;
       ismin=true;
-      lookbackloop(*in, lastinput, lookback, &ismax, &ismin);
+//      lookbackloop(*in, lastinput, lookback, &ismax, &ismin);
       lastinput[0]=*in;
-      peakrecord(*in, &ismax, &ismin, &peaktype, &peakcount, peaks, &peakstemp, peaktime, now, &t1, &justchanged);  
+//      peakrecord(*in, &ismax, &ismin, &peaktype, &peakcount, peaks, &peakstemp, peaktime, now, &t1, &justchanged);  
       if(peakcount >=2 && justchanged ) 
       {
         parameter(&peakcount, peaks, peaktime, &A, &Pu);
@@ -234,18 +267,34 @@ void autotune(unsigned int *in, unsigned int *out, float *kp, float *ki, unsigne
       delay(ATUNE_SAMPLING_TIME);    
   } 
 }
+void RelaySwitchTime(unsigned long *relay_period, unsigned char *counter)
+{
+  relay_period[*counter]=millis();
+  *counter += 1;
+  Serial.print("period_count= ");
+  Serial.println(*counter);
+  if(*counter==4) 
+  {
+    *counter = 0;
+    Serial.print("Period = ");
+//    Serial.print(relay_period[0]);
+//    Serial.print(", ");
+//    Serial.print(relay_period[1]);
+//    Serial.print(", ");
+//    Serial.print(relay_period[2]);
+//    Serial.print(", ");
+    Serial.println(relay_period[3]-relay_period[1]);
+  }
+}
 void lookbackloop (int input,int *lastinput, int lookback, boolean *ismax, boolean *ismin) //如果在指定的lookback 數目裡有發現possible maxima(minima)的話*ismax(*ismin)才會是T, 否則為F
 {
   int i;
-//  Serial.print("input,");
-//  Serial.print(input);
+
   for (i=lookback-2;i >=0;i--) 
   {
      if(*ismax) *ismax= input>lastinput[i];
      if(*ismin) *ismin= input<lastinput[i];
-     lastinput[i+1]=lastinput[i];   
-//     Serial.print(",");
-//     Serial.print(lastinput[i]);    
+     lastinput[i+1]=lastinput[i];     
   }
   //////atune data print-3/////
   Serial.print(",");
@@ -341,24 +390,24 @@ void parameter(int *peakcount, int *peaks, unsigned long *peaktime, int *A, unsi
   
 }
 
-void input_bias(unsigned int *in) //read input from ADC and cancel the bias
-{
-  dtc.ReadVoltage(1);
-  if(MV_STATUS) *in = (int)dtc.g_vact_MV; //Read ADC value to *in
-  else *in = (int)dtc.g_vact;
-  
-}
+//void input_bias(unsigned int *in) //read input from ADC and cancel the bias
+//{
+//  dtc.ReadVoltage(1);
+//  if(MV_STATUS) *in = (int)dtc.g_vact_MV; //Read ADC value to *in
+//  else *in = (int)dtc.g_vact;
+//  
+//}
 void output_bias(unsigned int Out, bool mode)// adjust the output bias and write it to DAC
 {
   
 //  Out = Out +dtc.g_fbc_base;
 
-  dtc.SetMos(COOLING,Out);
+  dtc.SetMos(HEATING,Out);
   if(mode)
   {
     //////atune data print-2/////
-    Serial.print(Out);
-    Serial.print(", ");
+//    Serial.println(Out);
+//    Serial.print(", ");
   }
   else
   {
@@ -367,7 +416,7 @@ void output_bias(unsigned int Out, bool mode)// adjust the output bias and write
 //    Serial.println(dtc.g_vact);
     if(MV_STATUS) noise_Mid = dtc.g_vact_MV;
     else noise_Mid = dtc.g_vact;
-    
+//    Serial.println(noise_Mid);
 //    delay(500);
   }
   

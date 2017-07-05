@@ -1,3 +1,6 @@
+#ifndef DTC03_SLAVE_H
+#define DTC03_SLAVE_H
+
 #include <DTC03_MS.h>
 //#include <avr/pgmspace.h>
 
@@ -126,6 +129,14 @@
 #define T0INV 0.003354
 #define V_NOAD590 30000 
 
+//new for autotune//
+#define AUTUNE_MV_STATUS 0
+#define ATUNE_BIAS 50690
+#define NOISEBAND 7
+#define MAXLBACK 50
+#define MAXPEAKS 5
+#define OUTSTEP 1000
+
 const unsigned char PS_16 = (1<<ADPS2);
 const unsigned char PS_32 = (1<<ADPS2)|(1<<ADPS0);
 const unsigned char PS_128 = (1<<ADPS2)|(1<<ADPS1)|(1<<ADPS0);
@@ -162,29 +173,41 @@ public:
     float ReturnTemp(unsigned int, bool);
     void BuildUpArray(bool, bool, bool);
     void setVset();
+     
 
 	unsigned int g_vact, g_vact_MV, g_vmod, g_fbc_base, g_Rmeas, g_isense0, g_currentabs,g_itecread;//
     unsigned char g_p, g_ki, g_ls, g_currentlim, g_kiindex, g_tpidoffset;
     unsigned char g_r1, g_r2;;
 	unsigned long g_vactavgsum, g_itecavgsum, g_vpcbavgsum;
 	bool g_en_state, g_heating, g_errcode1, g_errcode2, g_sensortype, g_mod_status, g_wakeup;
-    bool g_overshoot;
+    bool g_overshoot, g_atune_flag;
 	unsigned int g_b_upper, g_b_lower,g_vset_limit, g_ilimdacout,g_vset_limitt, g_otp;
     unsigned int g_vmodoffset, g_i2ctest, g_Vtemp;//
     int g_iteclimitset;//
     AD5541 dacformos, dacforilim;
+    
+    // new for autotune//
+    void input_bias(unsigned int &);
+    void output_bias(unsigned int, bool);
+    void autotune(float *, float *);
+    void RelaySwitchTime(unsigned long *, int &, bool &);
+    void RelayMethod(unsigned int &, bool*, bool*, bool*, bool &, unsigned long*, int &, unsigned int &);
+    void AtunSamplingTime();
+    void lookbackloop (unsigned int &, unsigned int *, bool *, bool *);
+    void peakrecord (unsigned int &, bool *, bool *, int *, int *, unsigned int *, int *, unsigned long *, unsigned long , unsigned long *, bool *);
+    void parameter(int *, unsigned int *, unsigned long *, int *, unsigned long *);
 
 private:
-	//int ReadIsense();
 	int ReadVtec(int Avgtime);
-	//unsigned char g_currentindex, g_vbeh1, g_vbeh2, g_vbec1, g_vbec2, g_vactindex;
     unsigned char  g_vactindex, g_currentindex, g_vpcbindex;
 	LTC1865 ltc1865;
-	//AD5541 dacformos, dacforilim;
-	//int g_vmodoffset;
-	//unsigned int g_vset_limit,g_vbec, g_vbeh, g_b_upper, g_b_lower, g_ilimdacout, g_vmod;
-	//unsigned int g_vbec, g_vbeh,g_vmod;
+
 	unsigned int Vactarray[AVGTIME], Itecarray[AVGTIME], Vpcbarray[AVGTIME], t_master;
     float g_ilimgain;
     bool p_enterSetVFlag;
+    //new for autotune//
+    unsigned int p_noise_Mid, p_relayT, p_samplingTime;
+    
+   
 };
+#endif

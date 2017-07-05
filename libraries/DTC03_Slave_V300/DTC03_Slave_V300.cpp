@@ -36,6 +36,7 @@ void DTC03::ParamInit()
   g_vactindex = 0;
   g_vpcbindex = 0;
   g_ilimdacout = 65535;
+  g_atune_flag = 1;// 改成master接收 
 
   g_wakeup = 0;
   g_overshoot = 0;
@@ -522,3 +523,296 @@ float DTC03::ReturnTemp(unsigned int vact, bool type)
   return tact;
 }
 
+// new for autotune//
+
+void DTC03::autotune(float *kp, float *ki)
+{
+	int peakcount, peaktype, peakstemp,A , period_count;
+	bool justchanged,ismax,ismin, relay_heating_flag, relay_cooling_flag, find_period_flag, init_flag;
+	unsigned long peaktime[MAXPEAKS],now,t1,Pu, relay_period[4];
+	float Ku, ki2; 
+	unsigned int step_out, in, lastinput[MAXLBACK], peaks[MAXPEAKS];
+	
+	peakcount = -1;
+  	peaktype = 0;
+  	period_count = 0;
+  	init_flag = 1;
+  	relay_heating_flag = 1;
+  	relay_cooling_flag = 1;
+  	find_period_flag = 0;
+  	A=0;
+  	Pu=0; 
+	
+    while(!find_period_flag) 
+    {
+    	RelayMethod(in, &init_flag, &relay_heating_flag, &relay_cooling_flag, find_period_flag, relay_period, period_count, step_out);
+	}
+	Serial.print("Period = ");
+	Serial.println(p_relayT);
+	AtunSamplingTime();
+	for (int i=0;i<MAXLBACK;i++) 
+   	{
+	    ReadVoltage(1);     
+	    lastinput[i]=g_vact;; // initialize the lastinput array 
+   	} 
+	while (peakcount < (MAXPEAKS-1))
+	{
+		now = millis();
+		ismax=true;
+    	ismin=true;
+		RelayMethod(in, &init_flag, &relay_heating_flag, &relay_cooling_flag, find_period_flag, relay_period, period_count, step_out);
+		lookbackloop(in, lastinput, &ismax, &ismin);
+      	lastinput[0]=in;
+      	peakrecord(in, &ismax, &ismin, &peaktype, &peakcount, peaks, &peakstemp, peaktime, now, &t1, &justchanged); 
+      	if(peakcount >=2 && justchanged ) 
+	    {
+	        parameter(&peakcount, peaks, peaktime, &A, &Pu);
+	        Ku = 4*OUTSTEP/(A*3.14159);      
+	        *kp = 0.4*Ku;
+	        *ki = 480.0*Ku/(float)Pu; 
+	        ki2 = 1000.0*Ku/(float)Pu;
+	        if(peakcount == MAXPEAKS-1)
+	        {
+	          Serial.print("A=,");
+	          Serial.println(A);
+	          Serial.print("stepD=,");
+	          Serial.println(OUTSTEP);
+	          Serial.print("Ku=,");
+	          Serial.println(Ku);
+	          Serial.print("Pu=,");
+	          Serial.println(Pu);
+	          Serial.print("kp=,");
+	          Serial.println(*kp);
+	          Serial.print("ki=,");
+	          Serial.println(*ki);
+	          Serial.print("ki2=,");
+	          Serial.println(ki2);
+	          Serial.print("TC=,");
+	          Serial.println((float)1.0/(*ki),1); 
+	          Serial.print("Tc2=,");
+	          Serial.println(1.0/ki2,1);
+	        }
+	    }       
+      	delay(p_samplingTime);  
+	}
+
+
+	
+}
+void DTC03::AtunSamplingTime()
+{
+	if(60 <= p_relayT && p_relayT < 120) p_samplingTime = 600;
+	else if(30 <= p_relayT && p_relayT < 60) p_samplingTime = 300;
+	else if(15 <= p_relayT && p_relayT < 30) p_samplingTime = 150;
+	else if(8 <= p_relayT && p_relayT < 15) p_samplingTime = 75;
+	else if(4 <= p_relayT && p_relayT < 8) p_samplingTime = 38;
+	else if(2 <= p_relayT && p_relayT < 4) p_samplingTime = 19;
+	else if(1 <= p_relayT && p_relayT < 2) p_samplingTime = 10;
+	else p_samplingTime = 5;
+	Serial.print("p_samplingTime=");
+	Serial.println(p_samplingTime);
+}
+void DTC03::RelayMethod(unsigned int &in, bool *init_flag, bool *relay_heating_flag, bool *relay_cooling_flag, bool &find_period_flag, unsigned long *relay_period, int &period_count, unsigned int &step_out)
+{
+	
+	
+	
+	input_bias(in);
+//	Serial.print(in);
+//	Serial.print(", ");
+//	Serial.print(p_noise_Mid);
+//	Serial.print(", ");
+//	Serial.print((int)(in-p_noise_Mid));
+//	Serial.print(", ");
+	
+	if ( (int)(in-p_noise_Mid) >NOISEBAND) // cooling
+    {
+        step_out = ATUNE_BIAS + OUTSTEP/2;  //Heater
+        *init_flag = 0;
+        if(*relay_cooling_flag && !find_period_flag) 
+        {    
+		  RelaySwitchTime(relay_period, period_count, find_period_flag);  
+          *relay_heating_flag = 1;
+          *relay_cooling_flag = 0;
+        }     
+      }
+      else if ( (int)(in-p_noise_Mid) <-NOISEBAND) //heating
+      {
+        step_out = ATUNE_BIAS - OUTSTEP/2;  
+        *init_flag = 0;
+
+        if(*relay_heating_flag && !find_period_flag) 
+        {
+          RelaySwitchTime(relay_period, period_count, find_period_flag);
+          *relay_heating_flag = 0;
+          *relay_cooling_flag = 1;
+        }
+      }
+      else if (*init_flag)
+      {
+        step_out = ATUNE_BIAS + OUTSTEP/2; //heating initially
+      }
+      output_bias(step_out,1); 
+      delay(50);
+}
+void DTC03::RelaySwitchTime(unsigned long *relay_period, int &counter, bool &find_period_flag)
+{
+	relay_period[counter]=millis();
+  	counter += 1;
+//  	Serial.print("counter#");
+//	Serial.print(counter);
+//	Serial.print(", ");
+//	Serial.println(millis()) ;
+  	if(counter==4) 
+  	{   	
+//    	Serial.print("Period = ");
+//    	Serial.print(relay_period[0]);
+//    	Serial.print(", ");
+//    	Serial.print(relay_period[1]);
+//    	Serial.print(", ");
+//    	Serial.print(relay_period[2]);
+//    	Serial.print(", ");
+//    	Serial.print(relay_period[3]);
+//    	Serial.print(", ");
+//    	Serial.println(relay_period[3]-relay_period[1]);
+    	
+    	counter = 0;
+    	p_relayT = (relay_period[3]-relay_period[1])/1000;
+    	find_period_flag = 1;
+  	}
+  	
+}
+void DTC03::parameter(int *peakcount, unsigned int *peaks, unsigned long *peaktime, int *A, unsigned long *Pu) //peakcount should >=2
+{
+  int Atemp;
+  unsigned long Putemp;
+  Atemp = abs( (int)peaks[*peakcount]-(int)peaks[*peakcount-1]);
+  Putemp = peaktime[*peakcount]-peaktime[*peakcount-2];
+  
+  if (*A ==0) *A = (abs((int)peaks[*peakcount]-(int)peaks[*peakcount-1])+abs((int)peaks[*peakcount-1]-(int)peaks[*peakcount-2])) >>1;
+  else *A = (*A+Atemp) >>1;
+  
+  if (*Pu==0) *Pu = Putemp;
+  else *Pu = (*Pu+Putemp)>>1; 
+//  Serial.print("peakcount:");
+//  Serial.print(*peakcount);
+//  Serial.print(", Atemp:");
+//  Serial.print(Atemp);
+//  Serial.print(", Putemp:");
+//  Serial.println(Putemp);
+  
+  
+}
+void DTC03::peakrecord (unsigned int &input, bool *ismax, bool *ismin, int *peaktype, int *peakcount, unsigned int *peaks, int *peakstemp, unsigned long *peaktime, unsigned long now, unsigned long *t1, bool *justchanged)
+{
+  //當*ismax or *ismin為T時，紀錄peak之時間與振幅，只有第一次的*ismax or *ismin是T時才給定*peaktype值(1 or -1)，而當*peaktype變號時則代表發現peak了。
+  if(*ismax)
+  {
+      if(*peaktype == 0) 
+      {
+        *peaktype =1;
+      }
+      if(*peaktype ==-1) 
+      {
+        *peaktype = 1;
+        *peakcount+=1;
+        peaktime[*peakcount] = *t1;
+        peaks[*peakcount]=*peakstemp;
+        *justchanged = true;
+        //////atune data print-4/////
+//        Serial.print(", ");
+//        Serial.print("min #");
+//        Serial.print(*peakcount);
+//        Serial.print(", ");
+//        Serial.print(peaktime[*peakcount]);       
+//        Serial.print(", ");
+//        Serial.print(peaks[*peakcount]);  
+      }
+//      Serial.println();
+      *t1 = now;
+      *peakstemp = input;    
+  }
+  else if(*ismin)
+  {
+      if(*peaktype ==0) 
+      {
+        *peaktype =-1;        
+      }
+      if(*peaktype == 1) 
+      {
+        *peaktype = -1;
+        *peakcount +=1;
+        peaktime[*peakcount] = *t1;
+        peaks[*peakcount]=*peakstemp;
+        *justchanged = true;
+        //////atune data print-5/////
+//        Serial.print(", ");
+//        Serial.print("max #");
+//        Serial.print(*peakcount);
+//        Serial.print(", ");
+//        Serial.print(peaktime[*peakcount]);       
+//        Serial.print(", ");
+//        Serial.print(peaks[*peakcount]);        
+      }
+//      Serial.println();
+      *t1 = now;
+      *peakstemp = input;         
+  }   
+  else
+  {
+//    Serial.println();
+  }
+//	if (*peakcount == MAXPEAKS-1)
+//	{
+//        //////atune data print-final/////
+//        Serial.println("T/2,  A: ");
+//        for(int i=0;i<MAXPEAKS-1;i++)
+//        {              
+//          Serial.print((float)(peaktime[i+1]-peaktime[i])/1000,1);
+//          Serial.print(", ");
+//          Serial.println(abs((int)peaks[i+1]-(int)peaks[i]));
+//        }
+//    }
+}
+void DTC03::lookbackloop (unsigned int &input, unsigned int *lastinput, boolean *ismax, boolean *ismin) //如果在指定的lookback 數目裡有發現possible maxima(minima)的話*ismax(*ismin)才會是T, 否則為F
+{
+  for (int i=MAXLBACK-2;i >=0;i--) 
+  {
+     if(*ismax) *ismax= input>lastinput[i];
+     if(*ismin) *ismin= input<lastinput[i];
+     lastinput[i+1]=lastinput[i];     
+  }
+  //////atune data print-3/////
+//  Serial.print(",");
+//  if(*ismax) Serial.print("1");
+//  else if (*ismin) Serial.print("-1");
+//  else Serial.print("0");
+}
+
+void DTC03::input_bias(unsigned int &in_add)
+{
+	ReadVoltage(1);
+	in_add = (int)g_vact;
+}
+void DTC03::output_bias(unsigned int Out, bool mode)
+{
+	
+	SetMos(HEATING,Out);
+	if(mode)
+	{
+	    ////atune data print-2/////
+//	    Serial.print(", ");
+//	    Serial.println(Out);
+	    
+	}
+	else
+	{
+	//    Serial.print(Out);
+	//    Serial.print(", ");    
+	//    Serial.println(dtc.g_vact);
+	    if(AUTUNE_MV_STATUS) p_noise_Mid = g_vact_MV;
+	    else p_noise_Mid = g_vact;
+//	    Serial.println(p_noise_Mid);
+	//    delay(500);
+	}
+}
