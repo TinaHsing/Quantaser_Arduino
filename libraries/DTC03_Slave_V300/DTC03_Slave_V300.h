@@ -171,6 +171,7 @@ public:
     void ReadIsense();
     void ReadVpcb();
     float ReturnTemp(unsigned int, bool);
+    unsigned int ReturnVset(float tset, bool type);
     void BuildUpArray(bool, bool, bool);
     void setVset();
      
@@ -187,7 +188,7 @@ public:
     AD5541 dacformos, dacforilim;
     
     // new for autotune//
-    void input_bias(unsigned int &);
+    void input_bias(unsigned int &, bool);
     void output_bias(unsigned int, bool);
     void autotune(float *, float *);
     void RelaySwitchTime(unsigned long *, int &, bool &);
@@ -196,6 +197,7 @@ public:
     void lookbackloop (unsigned int &, unsigned int *, bool *, bool *);
     void peakrecord (unsigned int &, bool *, bool *, int *, int *, unsigned int *, int *, unsigned long *, unsigned long , unsigned long *, bool *);
     void parameter(int *, unsigned int *, unsigned long *, int *, unsigned long *);
+    void FindBiasCurrent();
 
 private:
 	int ReadVtec(int Avgtime);

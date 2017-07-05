@@ -522,7 +522,16 @@ float DTC03::ReturnTemp(unsigned int vact, bool type)
     tact = 1/(log((float)vact/RTHRatio)/BVALUE+T0INV)-273.15;
   return tact;
 }
-
+unsigned int DTC03Master::ReturnVset(float tset, bool type)
+{
+  unsigned int vset;
+  float temp;
+  if(type)
+    vset = (unsigned int)((tset+273.15)*129.8701);
+  else
+    vset = (unsigned int)RTHRatio*exp(-1*(float)g_bconst*(T0INV-1/(tset+273.15)));
+  return vset;
+}
 // new for autotune//
 
 void DTC03::autotune(float *kp, float *ki)
@@ -595,9 +604,6 @@ void DTC03::autotune(float *kp, float *ki)
 	    }       
       	delay(p_samplingTime);  
 	}
-
-
-	
 }
 void DTC03::AtunSamplingTime()
 {
@@ -617,7 +623,7 @@ void DTC03::RelayMethod(unsigned int &in, bool *init_flag, bool *relay_heating_f
 	
 	
 	
-	input_bias(in);
+	input_bias(in,0);
 //	Serial.print(in);
 //	Serial.print(", ");
 //	Serial.print(p_noise_Mid);
@@ -789,21 +795,20 @@ void DTC03::lookbackloop (unsigned int &input, unsigned int *lastinput, boolean 
 //  else Serial.print("0");
 }
 
-void DTC03::input_bias(unsigned int &in_add)
+void DTC03::input_bias(unsigned int &in_add, bool MV_ON)
 {
 	ReadVoltage(1);
-	in_add = (int)g_vact;
+	if(MV_ON) in_add = g_vact_MV;
+	else in_add = (int)g_vact;
 }
 void DTC03::output_bias(unsigned int Out, bool mode)
-{
-	
+{	
 	SetMos(HEATING,Out);
 	if(mode)
 	{
 	    ////atune data print-2/////
 //	    Serial.print(", ");
-//	    Serial.println(Out);
-	    
+//	    Serial.println(Out);	    
 	}
 	else
 	{
@@ -815,4 +820,22 @@ void DTC03::output_bias(unsigned int Out, bool mode)
 //	    Serial.println(p_noise_Mid);
 	//    delay(500);
 	}
+}
+void DTC03::FindBiasCurrent()
+{
+	unsigned int v_now, t_now, t_bias, v_bias;
+	input_bias(v_now);
+	t_now = ReturnTemp(v_now, 0);
+	t_bias = t_now + 1.5;
+	v_bias = ReturnVset(t_bias, 0);
+	
+	Serial.print("v_now: ");
+	Serial.print(v_now);
+	Serial.print(", ");
+	Serial.println(t_now);
+	Serial.print("v_bias: ");
+	Serial.print(v_bias);
+	Serial.print(", ");
+	Serial.println(t_bias);
+	
 }
