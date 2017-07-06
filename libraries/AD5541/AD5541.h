@@ -1,6 +1,5 @@
 #ifndef AD5541_H
 #define AD5541_H
-#endif
 class AD5541 {
 private:
 	unsigned char _adcsel;
@@ -12,3 +11,4 @@ public:
 	void NormalWrite(unsigned int dacvalue);
 
 };
+#endif

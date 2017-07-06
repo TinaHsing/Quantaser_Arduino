@@ -14,15 +14,15 @@ class Atune
 		
 		
 		Atune(); //constructor
-		void autotune();
+//		void autotune();
 		void input_bias();
-		void output_bias(unsigned int, bool);
-		void RelaySwitchTime(unsigned long *, unsigned char *);
+//		void output_bias(unsigned int, bool);
+//		void RelaySwitchTime(unsigned long *, unsigned char *);
 		
 		
 	private:
 		
-		unsigned int p_DAC_in;
+//		unsigned int p_DAC_in;
 };
 
 
