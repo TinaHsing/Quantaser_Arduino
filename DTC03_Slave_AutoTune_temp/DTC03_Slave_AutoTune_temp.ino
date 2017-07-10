@@ -4,8 +4,8 @@
 #include <Wire.h>
 #include <AD5541.h>
 #include <LTC1865.h>
-#include <DTC03_Slave_V300.h>
 #include <PID.h>
+#include <DTC03_Slave_V300.h>
 //#include <AutoTune_V100.h>
 #include <EEPROM.h>
 #include <DTC03_MS.h>
@@ -53,11 +53,14 @@ void setup() {
   Serial.begin(9600);
   Serial.print("Look back:");
   Serial.println(MAXLBACK);
+  Serial.print("MAXPEAKS:");
+  Serial.println(MAXPEAKS);
   Serial.print("Noise band:");
   Serial.println(NOISEBAND);
-
-  Serial.print("ATUNE_BIAS:");
-  Serial.println(ATUNE_BIAS);
+  Serial.print("FINDBIASARRAY:");
+  Serial.println(FINDBIASARRAY);
+  Serial.print("TBIAS:");
+  Serial.println(TBIAS);
 
 //  Serial.println("time, D, A");
   t_off = millis();
@@ -103,7 +106,7 @@ void loop() {
   if (!dtc.g_en_state) 
     {
       dtc.g_atune_flag = 1;//will receieve from master, dtc.g_atune_flag
-      dtc.output_bias(ATUNE_BIAS,0);
+//      dtc.output_bias(ATUNE_BIAS,0);
       t_off = millis();
      
     }
@@ -111,6 +114,7 @@ void loop() {
     {
 
       if(dtc.g_atune_flag) dtc.autotune(&kp_auto, &ki_auto); //Change the output Amp in the fifth parameter (30 right now)
+      else dtc.SetMos(COOLING,0);
     }
 //-------------end of auto tune test----------------------//
 

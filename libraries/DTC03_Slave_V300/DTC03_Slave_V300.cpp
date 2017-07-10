@@ -522,14 +522,14 @@ float DTC03::ReturnTemp(unsigned int vact, bool type)
     tact = 1/(log((float)vact/RTHRatio)/BVALUE+T0INV)-273.15;
   return tact;
 }
-unsigned int DTC03Master::ReturnVset(float tset, bool type)
+unsigned int DTC03::ReturnVset(float tset, bool type)
 {
   unsigned int vset;
   float temp;
   if(type)
     vset = (unsigned int)((tset+273.15)*129.8701);
   else
-    vset = (unsigned int)RTHRatio*exp(-1*(float)g_bconst*(T0INV-1/(tset+273.15)));
+    vset = (unsigned int)RTHRatio*exp(-1*(float)BVALUE*(T0INV-1/(tset+273.15)));
   return vset;
 }
 // new for autotune//
@@ -538,9 +538,10 @@ void DTC03::autotune(float *kp, float *ki)
 {
 	int peakcount, peaktype, peakstemp,A , period_count;
 	bool justchanged,ismax,ismin, relay_heating_flag, relay_cooling_flag, find_period_flag, init_flag;
+	uint8_t findBiasCurrentStatus;
 	unsigned long peaktime[MAXPEAKS],now,t1,Pu, relay_period[4];
 	float Ku, ki2; 
-	unsigned int step_out, in, lastinput[MAXLBACK], peaks[MAXPEAKS];
+	unsigned int step_out, in, lastinput[MAXLBACK], peaks[MAXPEAKS], v_bias_find, v_bias[FINDBIASARRAY], v_bias_relay;
 	
 	peakcount = -1;
   	peaktype = 0;
@@ -549,12 +550,23 @@ void DTC03::autotune(float *kp, float *ki)
   	relay_heating_flag = 1;
   	relay_cooling_flag = 1;
   	find_period_flag = 0;
+  	findBiasCurrentStatus = 0;
   	A=0;
   	Pu=0; 
-	
+  	
+  	int k=0;
+  	unsigned long ts;
+	while(findBiasCurrentStatus!=2) 
+	{
+		v_bias_relay = FindBiasCurrent(findBiasCurrentStatus, v_bias_find, v_bias, ts, k);
+	}
+	Serial.print("v_bias_relay= ");
+	Serial.println(v_bias_relay);
+//	output_bias(v_bias_relay,1);
+    input_bias(p_noise_Mid,1);
     while(!find_period_flag) 
     {
-    	RelayMethod(in, &init_flag, &relay_heating_flag, &relay_cooling_flag, find_period_flag, relay_period, period_count, step_out);
+    	RelayMethod(v_bias_relay, in, &init_flag, &relay_heating_flag, &relay_cooling_flag, find_period_flag, relay_period, period_count, step_out);
 	}
 	Serial.print("Period = ");
 	Serial.println(p_relayT);
@@ -569,7 +581,7 @@ void DTC03::autotune(float *kp, float *ki)
 		now = millis();
 		ismax=true;
     	ismin=true;
-		RelayMethod(in, &init_flag, &relay_heating_flag, &relay_cooling_flag, find_period_flag, relay_period, period_count, step_out);
+		RelayMethod(v_bias_relay, in, &init_flag, &relay_heating_flag, &relay_cooling_flag, find_period_flag, relay_period, period_count, step_out);
 		lookbackloop(in, lastinput, &ismax, &ismin);
       	lastinput[0]=in;
       	peakrecord(in, &ismax, &ismin, &peaktype, &peakcount, peaks, &peakstemp, peaktime, now, &t1, &justchanged); 
@@ -600,6 +612,7 @@ void DTC03::autotune(float *kp, float *ki)
 	          Serial.println((float)1.0/(*ki),1); 
 	          Serial.print("Tc2=,");
 	          Serial.println(1.0/ki2,1);
+	          g_atune_flag = 0;
 	        }
 	    }       
       	delay(p_samplingTime);  
@@ -618,11 +631,8 @@ void DTC03::AtunSamplingTime()
 	Serial.print("p_samplingTime=");
 	Serial.println(p_samplingTime);
 }
-void DTC03::RelayMethod(unsigned int &in, bool *init_flag, bool *relay_heating_flag, bool *relay_cooling_flag, bool &find_period_flag, unsigned long *relay_period, int &period_count, unsigned int &step_out)
-{
-	
-	
-	
+void DTC03::RelayMethod(unsigned int &v_bias_relay, unsigned int &in, bool *init_flag, bool *relay_heating_flag, bool *relay_cooling_flag, bool &find_period_flag, unsigned long *relay_period, int &period_count, unsigned int &step_out)
+{	
 	input_bias(in,0);
 //	Serial.print(in);
 //	Serial.print(", ");
@@ -633,7 +643,7 @@ void DTC03::RelayMethod(unsigned int &in, bool *init_flag, bool *relay_heating_f
 	
 	if ( (int)(in-p_noise_Mid) >NOISEBAND) // cooling
     {
-        step_out = ATUNE_BIAS + OUTSTEP/2;  //Heater
+        step_out = v_bias_relay + OUTSTEP/2;  //Heater
         *init_flag = 0;
         if(*relay_cooling_flag && !find_period_flag) 
         {    
@@ -644,7 +654,7 @@ void DTC03::RelayMethod(unsigned int &in, bool *init_flag, bool *relay_heating_f
       }
       else if ( (int)(in-p_noise_Mid) <-NOISEBAND) //heating
       {
-        step_out = ATUNE_BIAS - OUTSTEP/2;  
+        step_out = v_bias_relay - OUTSTEP/2;  
         *init_flag = 0;
 
         if(*relay_heating_flag && !find_period_flag) 
@@ -656,7 +666,7 @@ void DTC03::RelayMethod(unsigned int &in, bool *init_flag, bool *relay_heating_f
       }
       else if (*init_flag)
       {
-        step_out = ATUNE_BIAS + OUTSTEP/2; //heating initially
+        step_out = v_bias_relay + OUTSTEP/2; //heating initially
       }
       output_bias(step_out,1); 
       delay(50);
@@ -815,27 +825,101 @@ void DTC03::output_bias(unsigned int Out, bool mode)
 	//    Serial.print(Out);
 	//    Serial.print(", ");    
 	//    Serial.println(dtc.g_vact);
-	    if(AUTUNE_MV_STATUS) p_noise_Mid = g_vact_MV;
-	    else p_noise_Mid = g_vact;
+//	    if(AUTUNE_MV_STATUS) p_noise_Mid = g_vact_MV;
+//	    else p_noise_Mid = g_vact;
 //	    Serial.println(p_noise_Mid);
 	//    delay(500);
 	}
 }
-void DTC03::FindBiasCurrent()
+unsigned int DTC03::FindBiasCurrent(uint8_t &flag, unsigned int &v_bias_find, unsigned int (&v_bias)[FINDBIASARRAY], unsigned long &ts, int &k)
 {
-	unsigned int v_now, t_now, t_bias, v_bias;
-	input_bias(v_now);
-	t_now = ReturnTemp(v_now, 0);
-	t_bias = t_now + 1.5;
-	v_bias = ReturnVset(t_bias, 0);
+	unsigned int v_now;
+	float  t_now, t_bias;
+	long err, out, tout;
+	unsigned long te;
+	switch(flag)
+	{
+		case 0:
+			pid.Init(50000,32768,1,2,0 );
+			input_bias(v_now,0);
+			t_now = ReturnTemp(v_now,0);
+			t_bias = t_now + TBIAS;
+			v_bias_find = ReturnVset(t_bias, 0);
+			ts = millis();	
+			flag = 1;
+			
+//			Serial.print("begin:");
+//			Serial.print(v_now);
+//			Serial.print(", ");
+//			Serial.print(t_now,3);						
+//			Serial.print(",");
+//			Serial.print(v_bias_find);
+//			Serial.print(", ");
+//			Serial.print(t_bias,3);
+//			Serial.println("---------------");
+			
+		break;
+		case 1:
+			input_bias(v_now,1);
+			ReadIsense();
+//			Serial.print(v_now);
+//			Serial.print(", ");	
+//			input_bias(v_now,01;
+//			Serial.print(v_now);
+//			Serial.print(", ");	
+			
+//			Serial.println(k);		
+			err = (long)v_now - (long)v_bias_find; 
+			tout = pid.Compute(1, err, g_p, 0, 0);
+			out = (long)(abs(tout)+g_fbc_base);
+			v_bias[k%FINDBIASARRAY] = out;
+			if(tout<=0) SetMos(HEATING,out);
+  			else SetMos(COOLING,out);
+			te = millis();
+			if((te-ts)>=500)
+			{
+//				Serial.print(v_now);
+//				Serial.print(", ");
+//				Serial.print(ReturnTemp(v_now,0),3);						
+//				Serial.print(",");
+//				Serial.print(v_bias_find);
+//				Serial.print(", ");
+//				Serial.print(ReturnTemp(v_bias_find,0),3);
+//				Serial.print(", kp: ");
+//				Serial.print(g_p);
+//				Serial.print(", err: ");
+//				Serial.print(err);
+//				Serial.print(", tout: ");
+//				Serial.print(tout);
+//				Serial.print(", out: ");
+//				Serial.print(out);
+//				for(int i=0;i<FINDBIASARRAY;i++)
+//				{
+//					Serial.print(", ");
+//					Serial.print(v_bias[i]);
+//				}
+//				Serial.println();	
+				k++;
+				ts = te;
+			}
+			bool stable_flag = 1;
+			
+			for(int i=0; i<(FINDBIASARRAY-1); i++) 
+			{
+				if(stable_flag) stable_flag = ( abs(v_bias[i+1]-v_bias[i])<=10 );
+			}
+			if(stable_flag) 
+			{
+//				for(int i=0;i<FINDBIASARRAY;i++)
+//				{
+//					Serial.println(v_bias[i]);
+//				}
+				flag = 2;
+			}						
+			if(k==FINDBIASARRAY) k=0;
+			return(v_bias[FINDBIASARRAY-1]);
+		break;
+	}
 	
-	Serial.print("v_now: ");
-	Serial.print(v_now);
-	Serial.print(", ");
-	Serial.println(t_now);
-	Serial.print("v_bias: ");
-	Serial.print(v_bias);
-	Serial.print(", ");
-	Serial.println(t_bias);
 	
 }

@@ -2,6 +2,7 @@
 #define DTC03_SLAVE_H
 
 #include <DTC03_MS.h>
+
 //#include <avr/pgmspace.h>
 
 //========================Other Library version Request =================
@@ -136,6 +137,8 @@
 #define MAXLBACK 50
 #define MAXPEAKS 5
 #define OUTSTEP 1000
+#define FINDBIASARRAY 15
+#define TBIAS 1.5
 
 const unsigned char PS_16 = (1<<ADPS2);
 const unsigned char PS_32 = (1<<ADPS2)|(1<<ADPS0);
@@ -148,6 +151,8 @@ class PID;
 class DTC03
 {
 public:
+	AD5541 dacformos, dacforilim;
+	PID pid;
 	DTC03();
 	unsigned int InitVactArray();
     void SetPinMode();
@@ -185,19 +190,19 @@ public:
 	unsigned int g_b_upper, g_b_lower,g_vset_limit, g_ilimdacout,g_vset_limitt, g_otp;
     unsigned int g_vmodoffset, g_i2ctest, g_Vtemp;//
     int g_iteclimitset;//
-    AD5541 dacformos, dacforilim;
+    
     
     // new for autotune//
     void input_bias(unsigned int &, bool);
     void output_bias(unsigned int, bool);
     void autotune(float *, float *);
     void RelaySwitchTime(unsigned long *, int &, bool &);
-    void RelayMethod(unsigned int &, bool*, bool*, bool*, bool &, unsigned long*, int &, unsigned int &);
+    void RelayMethod(unsigned int &, unsigned int &, bool*, bool*, bool*, bool &, unsigned long*, int &, unsigned int &);
     void AtunSamplingTime();
     void lookbackloop (unsigned int &, unsigned int *, bool *, bool *);
     void peakrecord (unsigned int &, bool *, bool *, int *, int *, unsigned int *, int *, unsigned long *, unsigned long , unsigned long *, bool *);
     void parameter(int *, unsigned int *, unsigned long *, int *, unsigned long *);
-    void FindBiasCurrent();
+    unsigned int FindBiasCurrent(uint8_t &, unsigned int &, unsigned int (&)[FINDBIASARRAY], unsigned long &, int &);
 
 private:
 	int ReadVtec(int Avgtime);

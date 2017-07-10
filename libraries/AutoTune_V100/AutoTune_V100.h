@@ -2,7 +2,7 @@
 #define AUTOTUNE_H
 
 #include <Arduino.h>
-#include <DTC03_Slave_V300.h>
+//#include <DTC03_Slave_V300.h>
 
 class DTC03;
 //class AD5541;
@@ -10,7 +10,7 @@ class DTC03;
 class Atune
 {
 	public:		
-		DTC03 dtc;
+		DTC03 dtc2;
 		
 		
 		Atune(); //constructor
