@@ -8,25 +8,26 @@
 // =========receive Events Command and Address======
 //Write
 #define I2C_COM_INIT 	0x11
-#define I2C_COM_CTR 	0x12
-#define I2C_COM_KI	    0x13
-#define I2C_COM_VSET 	0x14
-#define I2C_COM_R1R2	0x15
-#define I2C_COM_FBC		0x16
-#define I2C_COM_OTP  	0x17
-#define	I2C_COM_VMOD	0x18
-#define	I2C_COM_TPIDOFF 0x19
-#define	I2C_COM_RMEAS   0x1A
-#define I2C_COM_WAKEUP  0x1B 
+#define I2C_COM_CTR 	I2C_COM_INIT+1
+#define I2C_COM_KI	    I2C_COM_CTR+1
+#define I2C_COM_VSET 	I2C_COM_KI+1
+#define I2C_COM_R1R2	I2C_COM_VSET+1
+#define I2C_COM_FBC		I2C_COM_R1R2+1
+#define I2C_COM_OTP  	I2C_COM_FBC+1
+#define	I2C_COM_VMOD	I2C_COM_OTP+1
+#define	I2C_COM_TPIDOFF I2C_COM_VMOD+1
+#define	I2C_COM_RMEAS   I2C_COM_TPIDOFF+1
+#define I2C_COM_WAKEUP  I2C_COM_RMEAS+1 
+#define	I2C_COM_ATUN    I2C_COM_WAKEUP+1
 
 //Read
-#define I2C_COM_ITEC_ER	0x1C
-#define I2C_COM_VACT	0x1D
-#define I2C_COM_PCB		0X1E
+#define I2C_COM_ITEC_ER	I2C_COM_ATUN+1
+#define I2C_COM_VACT	I2C_COM_ITEC_ER+1
+#define I2C_COM_PCB		I2C_COM_VACT+1
 
 
-#define I2C_COM_TEST1	0x1F
-#define I2C_COM_TEST2 	0x20
+#define I2C_COM_TEST1	I2C_COM_PCB+1
+#define I2C_COM_TEST2 	I2C_COM_TEST1+1
 
 //=========request Events Mask ============
 #define REQMSK_ENSTATE 		0x80
@@ -38,7 +39,9 @@
 #define REQMSK_ERR1		 	0x10
 #define REQMSK_ERR2			0x20
 #define REQMSK_WAKEUP   	0x40			//Tina 2017/2/15
-
+#define REQMSK_ATUNE_RUNTIMEERR	0X01
+#define REQMSK_ATUNE_DBR 		0X02
+#define REQMSK_ATUNE_DONE 		0X03
 
 // first colume ki, second colume ls
 const PROGMEM unsigned char kilstable420[] =

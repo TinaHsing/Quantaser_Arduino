@@ -28,6 +28,7 @@ void DTC03Master::ParamInit()
   g_tsetstep = 1.00;
   g_en_state = 0;
   g_countersensor = 0;
+  g_atune_status = 0;
   g_cursorstate=1;
   p_cursorStateCounter[0]=0;
   p_cursorStateCounter[1]=0;
@@ -44,6 +45,9 @@ void DTC03Master::ParamInit()
   g_wakeup = 1;
   p_vact_MV_sum=0;
   p_mvindex=0;
+  p_keyflag = 0;
+  g_atunDone = 0;
+  p_atunProcess_flag = 0;
   for (int i=0;i<MVTIME;i++) p_vact_array[i]=0;
 }
 void DTC03Master::WelcomeScreen()
@@ -186,6 +190,15 @@ void DTC03Master::SaveEEPROM() {
         }
 	}
 }
+void DTC03Master::PrintTestValue()
+{
+	lcd.SelectFont(SystemFont5x7);
+    lcd.GotoXY(Test1_COORD_X,Test1_COORD_Y);
+    lcd.print(g_atune_status);
+    lcd.print(p_keyflag);
+    lcd.print(test_at);
+    lcd.print(g_atunDone);
+}
 void DTC03Master::CheckStatus()
 {
 		float tact, itec_f, tpcb_f;
@@ -207,6 +220,13 @@ void DTC03Master::CheckStatus()
 		            tpcb_f = float(g_tpcb)/4.0-20.5;
 		            if(p_engModeFlag) PrintTpcb(tpcb_f);
 				}	
+				if (p_loopindex%300==3) {
+					I2CReadData(I2C_COM_ATUN);
+		            if(g_atunDone) PrintAtuneDone();
+				}
+//				if(p_loopindex%300==4) {
+//					PrintTestValue();
+//				}
 	    p_loopindex++;		       
 }
 void DTC03Master::vact_MV()
@@ -280,6 +300,12 @@ void DTC03Master::I2CWriteData(unsigned char com)
     		temp[1] = g_otp>>8;
     	break;
     	
+    case I2C_COM_ATUN:
+    	    temp[0] = g_atune_status;
+    	    temp[1] = 0;
+//    	    test_at++;
+    	break;
+    	
     case I2C_COM_WAKEUP:
     		temp[0] = 1;
     		temp[1] = 0; // overshoot cancelation, set 0 in DTC03
@@ -339,6 +365,12 @@ void DTC03Master::I2CReadData(unsigned char com)
     case I2C_COM_PCB:
         g_tpcb = (temp[1]<<8)|temp[0];
         break;
+        
+    case I2C_COM_ATUN:
+    	g_atunDone = temp[0] & REQMSK_ATUNE_DONE;
+    	g_runTimeflag = temp[0] & REQMSK_ATUNE_RUNTIMEERR;
+    	g_DBRflag = temp[0] & REQMSK_ATUNE_DBR;
+    	break;
   }
 }
 
@@ -381,6 +413,8 @@ void DTC03Master::BackGroundPrint()
   lcd.print(Text_B);
   lcd.GotoXY(VMOD_COORD_X, VMOD_COORD_Y);
   lcd.print(Text_MS);
+  lcd.GotoXY(ATUNE_COORD_X, ATUNE_COORD_Y);
+  lcd.print(Text_AT);
 }
 void DTC03Master::PrintNormalAll()
 {
@@ -390,6 +424,7 @@ void DTC03Master::PrintNormalAll()
 	PrintKi();
 	PrintB();
 	PrintModStatus();
+	PrintAtune();
 	//No need to add print Itec and Vact here, checkstatus() will do this
 }
 
@@ -503,6 +538,43 @@ void DTC03Master::PrintModStatus()
   lcd.GotoXY(VMOD_COORD_X2, VMOD_COORD_Y);
   if(g_mod_status == 0) lcd.print("OFF");
   else lcd.print(" ON"); 
+}
+void DTC03Master::PrintAtune()
+{
+	lcd.SelectFont(SystemFont5x7);
+	if(p_atunProcess_flag)
+	{
+		p_atunProcess_flag = 0;
+		lcd.GotoXY(P_COORD_X, P_COORD_Y);
+		lcd.print("Auto  ");
+		lcd.GotoXY(I_COORD_X, I_COORD_Y);
+		lcd.print("Tuning");
+		lcd.GotoXY(BCONST_COORD_X, BCONST_COORD_Y);
+		lcd.print("Is  In");
+		lcd.GotoXY(VMOD_COORD_X, VMOD_COORD_Y);
+		lcd.print("Progre");
+		lcd.GotoXY(ATUNE_COORD_X, ATUNE_COORD_Y);
+		lcd.print("ssing.");
+//		delay(1000);
+//		g_atunDone = 1;
+	}
+	else
+	{
+		lcd.GotoXY(ATUNE_COORD_X2, ATUNE_COORD_Y);
+        if(g_atune_status == 0) lcd.print("OFF");
+        else lcd.print(" ON");
+	}
+    
+}
+void DTC03Master::PrintAtuneDone()
+{
+		g_atunDone = 0;
+		g_atune_status = 0;
+		I2CWriteData(I2C_COM_ATUN);
+		g_cursorstate = 1;
+		BackGroundPrint();
+		PrintNormalAll();
+		
 }
 void DTC03Master::PrintEnable() 
 {
@@ -669,11 +741,12 @@ void DTC03Master::CursorState()
 		{
 	  		if (abs(t_temp-p_cursorStayTime) > CURSORSTATE_STAYTIME && p_tBlink_toggle )
 			{	
-				p_HoldCursortateFlag=0; 			
+				p_HoldCursortateFlag=0; 
+					
 	  			if( g_cursorstate==0 || g_cursorstate==1 ) g_cursorstate=2;
 		  		else g_cursorstate++;
 		  		
-		  		if( g_cursorstate>6 ) g_cursorstate=2;	  		
+		  		if( g_cursorstate>7 ) g_cursorstate=2;	  		
 		  		ShowCursor(0);//the index is not important
 		  		p_engmodeCounter++;
 				if(p_engmodeCounter > ENGCOUNTER) 
@@ -697,8 +770,13 @@ void DTC03Master::CursorState()
 		            else g_tsetstep = g_tsetstep/10.0;
 		            ShowCursor(0);
 				}
-		  		else //g_cursorstate=2~6
+		  		else //g_cursorstate=2~7
 				{
+					if(g_cursorstate==7 && g_atune_status) 	
+				    {
+					    p_keyflag = 1;
+				    	g_paramupdate = 1;					
+				    }	
 					p_HoldCursortateFlag=1;
 					p_timerResetFlag=1;
 				}								
@@ -814,6 +892,9 @@ void DTC03Master::ShowCursor(unsigned char state_old)
 		    	case 6:
 		    		lcd.GotoXY(VMOD_COORD_X-COLUMNPIXEL0507, VMOD_COORD_Y);		  		    
 		    	break;	
+		    	case 7:
+		    		lcd.GotoXY(ATUNE_COORD_X-COLUMNPIXEL0507, ATUNE_COORD_Y);		  		    
+		    	break;	
 			}
 			lcd.print(" ");		    
 		    break;
@@ -827,7 +908,7 @@ void DTC03Master::ShowCursor(unsigned char state_old)
 		    lcd.GotoXY(ILIM_COORD_X-COLUMNPIXEL0507, ILIM_COORD_Y);
 		    lcd.print(" ");
 		    lcd.SelectFont(SystemFont5x7);
-		    lcd.GotoXY(VMOD_COORD_X-COLUMNPIXEL0507, VMOD_COORD_Y);//
+		    lcd.GotoXY(ATUNE_COORD_X-COLUMNPIXEL0507, ATUNE_COORD_Y);//
 		    lcd.print(" ");
 		    break;
 		    
@@ -864,6 +945,15 @@ void DTC03Master::ShowCursor(unsigned char state_old)
 		    lcd.print(" ");
 		    lcd.SelectFont(SystemFont5x7);
 		    lcd.GotoXY(BCONST_COORD_X-COLUMNPIXEL0507, BCONST_COORD_Y);
+		    lcd.print(" ");
+		    break;
+		    
+		    case 7:
+		    lcd.SelectFont(SystemFont5x7, WHITE);
+		    lcd.GotoXY(ATUNE_COORD_X-COLUMNPIXEL0507, ATUNE_COORD_Y);
+		    lcd.print(" ");
+		    lcd.SelectFont(SystemFont5x7);
+		    lcd.GotoXY(VMOD_COORD_X-COLUMNPIXEL0507, VMOD_COORD_Y);
 		    lcd.print(" ");
 		    break;
 		
@@ -999,6 +1089,19 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
         I2CWriteData(I2C_COM_INIT);
         PrintModStatus(); 
         p_ee_change_state=EEADD_MODSTATUS;
+        break;
+        
+      case 7:
+        g_atune_status = g_countersensor;
+        if(g_atune_status && p_keyflag) 
+		{
+			p_keyflag = 0;
+			p_atunProcess_flag = 1;
+			I2CWriteData(I2C_COM_ATUN);
+		}
+        if(!g_atune_status) I2CWriteData(I2C_COM_ATUN);
+        PrintAtune(); 
+//        p_ee_change_state=EEADD_MODSTATUS;
         break;
 
       case 9:

@@ -38,6 +38,9 @@
 #define RMEASUREAVGTIME 10
 #define AVGTIME 64 // Note!!!! VACTAVGTIEM = 2 ^ VACTAVGPWR 
 #define AVGPWR 6 	// Note!!!! VACTAVGTIEM = 2 ^ VACTAVGPWR
+// new for autotune//
+#define ATUNEAVGTIME 4
+#define ATUNEAVGPWR 2
 
 #define BCONSTOFFSET 3500
 
@@ -139,7 +142,8 @@
 #define OUTSTEP 1000
 #define FINDBIASARRAY 15
 #define TBIAS 1.5
-
+#define RUNTIMELIMIT 1200000//20 min
+#define SAMPLINGTINE 1000 
 const unsigned char PS_16 = (1<<ADPS2);
 const unsigned char PS_32 = (1<<ADPS2)|(1<<ADPS0);
 const unsigned char PS_128 = (1<<ADPS2)|(1<<ADPS1)|(1<<ADPS0);
@@ -152,7 +156,7 @@ class DTC03
 {
 public:
 	AD5541 dacformos, dacforilim;
-	PID pid;
+	PID pid, ipid;
 	DTC03();
 	unsigned int InitVactArray();
     void SetPinMode();
@@ -193,16 +197,20 @@ public:
     
     
     // new for autotune//
-    void input_bias(unsigned int &, bool);
+    void input_bias(unsigned int &, uint8_t);
     void output_bias(unsigned int, bool);
-    void autotune(float *, float *);
+    int autotune(float *, float *);
     void RelaySwitchTime(unsigned long *, int &, bool &);
     void RelayMethod(unsigned int &, unsigned int &, bool*, bool*, bool*, bool &, unsigned long*, int &, unsigned int &);
     void AtunSamplingTime();
     void lookbackloop (unsigned int &, unsigned int *, bool *, bool *);
     void peakrecord (unsigned int &, bool *, bool *, int *, int *, unsigned int *, int *, unsigned long *, unsigned long , unsigned long *, bool *);
     void parameter(int *, unsigned int *, unsigned long *, int *, unsigned long *);
-    unsigned int FindBiasCurrent(uint8_t &, unsigned int &, unsigned int (&)[FINDBIASARRAY], unsigned long &, int &);
+    unsigned int FindBiasCurrent(float &, uint8_t &, unsigned int &, unsigned int (&)[FINDBIASARRAY], unsigned long &, unsigned long &, int &);
+    
+    unsigned long g_autunAactavgsum;
+    unsigned int g_atuneVact_MV;
+    bool g_atunDone, g_DBRflag, g_runTimeflag;
 
 private:
 	int ReadVtec(int Avgtime);
@@ -213,7 +221,7 @@ private:
     float g_ilimgain;
     bool p_enterSetVFlag;
     //new for autotune//
-    unsigned int p_noise_Mid, p_relayT, p_samplingTime;
+    unsigned int p_noise_Mid, p_relayT, p_samplingTime, AtuneActArray[ATUNEAVGTIME];
     
    
 };

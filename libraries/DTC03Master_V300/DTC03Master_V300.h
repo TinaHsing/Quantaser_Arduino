@@ -103,13 +103,17 @@
 #define I_COORD_X2		COLUMNPIXEL0507*16
 #define Text_I			"I:"
 #define BCONST_COORD_X 	COLUMNPIXEL0507*14
-#define BCONST_COORD_Y 	ROWPIXEL0507*6
+#define BCONST_COORD_Y 	ROWPIXEL0507*5
 #define BCONST_COORD_X2	COLUMNPIXEL0507*16
 #define Text_B			"B:"
 #define VMOD_COORD_X 	COLUMNPIXEL0507*14
-#define VMOD_COORD_Y 	ROWPIXEL0507*7
+#define VMOD_COORD_Y 	ROWPIXEL0507*6
 #define VMOD_COORD_X2 	COLUMNPIXEL0507*17
 #define Text_MS			"MS:"
+#define ATUNE_COORD_X 	COLUMNPIXEL0507*14
+#define ATUNE_COORD_Y 	ROWPIXEL0507*7
+#define ATUNE_COORD_X2 	COLUMNPIXEL0507*17
+#define Text_AT			"AT:"
 
 
 //==================ENG BG print coordinate definition=========
@@ -147,7 +151,7 @@
 #define Text_Tpcb 		 "Tpcb :"
 
 #define Test1_COORD_X    0
-#define Test1_COORD_Y    ROWPIXEL0507*2
+#define Test1_COORD_Y    ROWPIXEL0507*5
 #define Test2_COORD_X    COLUMNPIXEL0507*9
 #define Test2_COORD_Y    ROWPIXEL0507*2
 #define Test3_COORD_X    0
@@ -191,6 +195,8 @@ public:
 	void PrintKi();
 	void PrintB();
 	void PrintModStatus();
+	void PrintAtune();
+	void PrintAtuneDone();
 	void Encoder();
 	void CursorState();	
 	void UpdateParam();
@@ -209,6 +215,7 @@ public:
 	void PrintTotp();
 	void PrintTpcb(float);
 	void PrintEnable();
+	void PrintTestValue();
 	
 	void ShowCursor(unsigned char);
     void UpdateEnable();
@@ -223,11 +230,11 @@ public:
 	unsigned int g_vact,g_vact_MV, g_vset, g_tpcb, g_otp, g_Rmeas, g_bconst, g_fbcbase, g_vmodoffset;
 	unsigned char g_p, g_ki,g_ls,g_currentlim, g_tpidoff, g_r1, g_r2, g_kiindex, g_cursorstate;
 	int g_itec;
-	bool g_mod_status;	
+	bool g_mod_status, g_atune_status, g_atunDone, g_DBRflag, g_runTimeflag;	
     float g_tset;
     //------------------------------------
     bool g_sensortype, g_en_state;
-    int en_temp;
+    int en_temp, test_at=0;
     
 private:
 	glcd lcd;
@@ -237,7 +244,7 @@ private:
 	unsigned long  p_vact_MV_sum, p_mvindex;
 	unsigned char g_iarrayindex, g_varrayindex, g_lastencoded, p_engmodeCounter, p_ee_change_state;
     bool g_errcode1, g_errcode2, g_flag, g_paramupdate, g_countersensor, g_testgo, p_tBlink_toggle, p_engModeFlag, p_blinkTsetCursorFlag, g_wakeup;
-    bool p_ee_changed, p_HoldCursortateFlag, p_timerResetFlag;
+    bool p_ee_changed, p_HoldCursortateFlag, p_timerResetFlag, p_keyflag, p_atunProcess_flag;
     unsigned long g_tenc, p_loopindex;
 	float g_tsetstep;
 

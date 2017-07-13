@@ -31,13 +31,16 @@ void DTC03::ParamInit()
   g_errcode1 = 0;
   g_errcode2 = 0;
   g_vactavgsum = 0;
+  g_autunAactavgsum = 0;
   g_itecavgsum = 0;
   g_currentindex = 0;
   g_vactindex = 0;
   g_vpcbindex = 0;
+  g_atunDone = 0;
   g_ilimdacout = 65535;
-  g_atune_flag = 1;// 改成master接收 
-
+  g_atune_flag = 0;// 改成master接收 
+  g_runTimeflag = 0;
+  g_DBRflag = 0;
   g_wakeup = 0;
   g_overshoot = 0;
   ADCSRA &=~PS_128;
@@ -195,17 +198,28 @@ int DTC03::ReadVtec(int avgtime)
 }
 
 void DTC03::BuildUpArray(bool build_vact, bool build_itec, bool build_vpcb) {
-	unsigned char i;
 	
 	if (build_vact == 1) g_vactavgsum = 0;
 	if (build_itec == 1) g_itecavgsum = 0;
 	if (build_vpcb == 1) g_vpcbavgsum = 0;
 	
-	for (i=0; i<AVGTIME; i++) 
+	for (int i=0; i<AVGTIME; i++) 
 	{
 		if (build_vact == 1) {
 			Vactarray[i] = ltc1865.Read(CHVACT);
 			g_vactavgsum += Vactarray[i];
+			if(i<4) 
+			{
+//				Serial.print(i);
+//				Serial.print(", ");
+//				Serial.print(g_autunAactavgsum);
+//				Serial.print(", ");
+//				Serial.print( Vactarray[i]);
+//				Serial.print(", ");
+				AtuneActArray[i] =  Vactarray[i];
+				g_autunAactavgsum += AtuneActArray[i];
+//				Serial.println(g_autunAactavgsum);
+			}		
 		}		
 		if (build_itec == 1) {
 			Itecarray[i] = analogRead(ISENSE0);
@@ -221,16 +235,23 @@ void DTC03::ReadVoltage(bool en_vmod)
 {
 	noInterrupts();
     g_vactavgsum -= Vactarray[g_vactindex];
+    g_autunAactavgsum -= AtuneActArray[g_vactindex%ATUNEAVGTIME];  
+
     if (en_vmod == 0) Vactarray[g_vactindex] = ltc1865.Read(CHVACT);
     else 
 	{
     	Vactarray[g_vactindex] = ltc1865.Read(CHVMOD);
-    	g_vmod = ltc1865.Read(CHVACT);		  	
+    	AtuneActArray[g_vactindex%ATUNEAVGTIME] = Vactarray[g_vactindex];
+    	g_vmod = ltc1865.Read(CHVACT);	
+		  	
 	}
     g_vactavgsum += Vactarray[g_vactindex]; 
+    g_autunAactavgsum += AtuneActArray[g_vactindex%ATUNEAVGTIME];  
   	g_vact_MV = g_vactavgsum >> AVGPWR;
+  	g_atuneVact_MV = g_autunAactavgsum >> ATUNEAVGPWR;
     g_vact = Vactarray[g_vactindex];
     g_vactindex ++;
+    
     if(g_vactindex == AVGTIME) g_vactindex = 0;
     
     if(g_mod_status) //when g_mod_status = 1
@@ -255,9 +276,6 @@ void DTC03::ReadIsense()
   g_itecread = Itecarray[g_currentindex];
   g_currentindex ++;
   if(g_currentindex == AVGTIME) g_currentindex = 0;
-//  Serial.print(g_currentindex);
-//  Serial.print(", ");
-//  Serial.println(Itecarray[g_currentindex]);
   interrupts(); 
 }
 void DTC03::ReadVpcb() 
@@ -372,6 +390,19 @@ void DTC03::I2CRequest()
 //    Serial.print("Vopt: ");
 //    Serial.println(g_Vtemp);
     break;
+    
+    case I2C_COM_ATUN:
+    	temp[0] = 0;
+//    	temp[1] = 0;
+    	if(g_runTimeflag) temp[0] |= REQMSK_ATUNE_RUNTIMEERR;
+    	else temp[0] &= ~REQMSK_ATUNE_RUNTIMEERR;
+    	if(g_DBRflag) temp[0] |= REQMSK_ATUNE_DBR;
+    	else temp[0] &= ~REQMSK_ATUNE_DBR;
+    	if(g_atunDone) temp[0] |= REQMSK_ATUNE_DONE;
+    	else temp[0] &= ~REQMSK_ATUNE_DONE;
+//    	Serial.print("g_atunDone=");
+//    	Serial.println(g_atunDone);
+    break;
   }
   Wire.write(temp,2);
 }
@@ -474,6 +505,15 @@ void DTC03::I2CReceive()
 //    Serial.print("MOD offset");
 //    Serial.println(g_vmodoffset);
     break;
+    
+    case I2C_COM_ATUN:
+    	g_atune_flag = temp[0];
+    	g_atunDone = 0; 
+    	g_DBRflag = 0;
+    	g_runTimeflag = 0;
+//    	Serial.print("g_atune_flag=");
+//    	Serial.println(g_atune_flag);
+    	break;
 
     case I2C_COM_OTP:
     	g_otp = temp[1]<<8 | temp[0];
@@ -534,14 +574,15 @@ unsigned int DTC03::ReturnVset(float tset, bool type)
 }
 // new for autotune//
 
-void DTC03::autotune(float *kp, float *ki)
+int DTC03::autotune(float *kp, float *ki)
 {
 	int peakcount, peaktype, peakstemp,A , period_count;
 	bool justchanged,ismax,ismin, relay_heating_flag, relay_cooling_flag, find_period_flag, init_flag;
 	uint8_t findBiasCurrentStatus;
-	unsigned long peaktime[MAXPEAKS],now,t1,Pu, relay_period[4];
+	unsigned long peaktime[MAXPEAKS],now,t1,Pu, relay_period[4], runtime=0;
 	float Ku, ki2; 
 	unsigned int step_out, in, lastinput[MAXLBACK], peaks[MAXPEAKS], v_bias_find, v_bias[FINDBIASARRAY], v_bias_relay;
+	float t_leave;
 	
 	peakcount = -1;
   	peaktype = 0;
@@ -556,13 +597,30 @@ void DTC03::autotune(float *kp, float *ki)
   	
   	int k=0;
   	unsigned long ts;
+  	
+//  	delay(3000);
+//  	g_atune_flag = 0;
+//  	g_atunDone = 1;
+  	
+	
+//  	Serial.println(RUNTIMELIMIT);
 	while(findBiasCurrentStatus!=2) 
 	{
-		v_bias_relay = FindBiasCurrent(findBiasCurrentStatus, v_bias_find, v_bias, ts, k);
-	}
+		v_bias_relay = FindBiasCurrent(t_leave, findBiasCurrentStatus, v_bias_find, v_bias, ts, runtime, k);
+//		Serial.println(runtime);
+		if(runtime>RUNTIMELIMIT) 
+		{
+			Serial.println("Runtime time ERR!");
+			g_atune_flag = 0;
+			g_runTimeflag = 1;	
+			g_atunDone = 1;		
+			break;			
+		}
+	}	
+	if(!g_atune_flag) return(0); // for runtime err case
 	Serial.print("v_bias_relay= ");
 	Serial.println(v_bias_relay);
-//	output_bias(v_bias_relay,1);
+
     input_bias(p_noise_Mid,1);
     while(!find_period_flag) 
     {
@@ -571,6 +629,14 @@ void DTC03::autotune(float *kp, float *ki)
 	Serial.print("Period = ");
 	Serial.println(p_relayT);
 	AtunSamplingTime();
+	if(g_DBRflag) 
+	{
+		Serial.println("DBR case!");
+		g_atune_flag = 0;
+		g_atunDone = 1;
+	}
+	if(!g_atune_flag) return(0); // for DBR case
+	
 	for (int i=0;i<MAXLBACK;i++) 
    	{
 	    ReadVoltage(1);     
@@ -613,6 +679,7 @@ void DTC03::autotune(float *kp, float *ki)
 	          Serial.print("Tc2=,");
 	          Serial.println(1.0/ki2,1);
 	          g_atune_flag = 0;
+	          g_atunDone = 1;
 	        }
 	    }       
       	delay(p_samplingTime);  
@@ -626,14 +693,18 @@ void DTC03::AtunSamplingTime()
 	else if(8 <= p_relayT && p_relayT < 15) p_samplingTime = 75;
 	else if(4 <= p_relayT && p_relayT < 8) p_samplingTime = 38;
 	else if(2 <= p_relayT && p_relayT < 4) p_samplingTime = 19;
-	else if(1 <= p_relayT && p_relayT < 2) p_samplingTime = 10;
-	else p_samplingTime = 5;
-	Serial.print("p_samplingTime=");
-	Serial.println(p_samplingTime);
+//	else if(1 <= p_relayT && p_relayT < 2) p_samplingTime = 10;
+//	else p_samplingTime = 5; //DBR type, show flag and use fix parameters 
+    else g_DBRflag = 1;
+    if(!g_DBRflag)
+    {
+    	Serial.print("p_samplingTime=");
+	    Serial.println(p_samplingTime);
+	}
 }
 void DTC03::RelayMethod(unsigned int &v_bias_relay, unsigned int &in, bool *init_flag, bool *relay_heating_flag, bool *relay_cooling_flag, bool &find_period_flag, unsigned long *relay_period, int &period_count, unsigned int &step_out)
 {	
-	input_bias(in,0);
+	input_bias(in,1);
 //	Serial.print(in);
 //	Serial.print(", ");
 //	Serial.print(p_noise_Mid);
@@ -737,8 +808,8 @@ void DTC03::peakrecord (unsigned int &input, bool *ismax, bool *ismin, int *peak
         *justchanged = true;
         //////atune data print-4/////
 //        Serial.print(", ");
-//        Serial.print("min #");
-//        Serial.print(*peakcount);
+        Serial.print("min #");
+        Serial.println(*peakcount);
 //        Serial.print(", ");
 //        Serial.print(peaktime[*peakcount]);       
 //        Serial.print(", ");
@@ -763,8 +834,8 @@ void DTC03::peakrecord (unsigned int &input, bool *ismax, bool *ismin, int *peak
         *justchanged = true;
         //////atune data print-5/////
 //        Serial.print(", ");
-//        Serial.print("max #");
-//        Serial.print(*peakcount);
+        Serial.print("max #");
+        Serial.println(*peakcount);
 //        Serial.print(", ");
 //        Serial.print(peaktime[*peakcount]);       
 //        Serial.print(", ");
@@ -805,11 +876,23 @@ void DTC03::lookbackloop (unsigned int &input, unsigned int *lastinput, boolean 
 //  else Serial.print("0");
 }
 
-void DTC03::input_bias(unsigned int &in_add, bool MV_ON)
+void DTC03::input_bias(unsigned int &in_add, uint8_t MV_ON)
 {
 	ReadVoltage(1);
-	if(MV_ON) in_add = g_vact_MV;
-	else in_add = (int)g_vact;
+	switch(MV_ON)
+	{
+		case 0:
+			in_add = (int)g_vact;
+			break;
+		case 1:
+			in_add = g_atuneVact_MV;
+			break;
+		case 2:
+			in_add = g_vact_MV;
+			break;
+	}
+//	if(MV_ON) in_add = g_atuneVact_MV;
+//	else in_add = (int)g_vact;
 }
 void DTC03::output_bias(unsigned int Out, bool mode)
 {	
@@ -831,23 +914,25 @@ void DTC03::output_bias(unsigned int Out, bool mode)
 	//    delay(500);
 	}
 }
-unsigned int DTC03::FindBiasCurrent(uint8_t &flag, unsigned int &v_bias_find, unsigned int (&v_bias)[FINDBIASARRAY], unsigned long &ts, int &k)
+unsigned int DTC03::FindBiasCurrent(float &t_leave, uint8_t &flag, unsigned int &v_bias_find, unsigned int (&v_bias)[FINDBIASARRAY], unsigned long &ts, unsigned long &runtime, int &k)
 {
 	unsigned int v_now;
 	float  t_now, t_bias;
-	long err, out, tout;
+	long err, out, tout, iteclimit, iset, ierr, isense, ioutput;
 	unsigned long te;
 	switch(flag)
 	{
 		case 0:
-			pid.Init(50000,32768,1,2,0 );
+			pid.Init(32768,0,1,2,0 );
+			ipid.Init(32768,32768,g_ki,g_ls,7);
+			for(int i=0;i<FINDBIASARRAY;i++) v_bias[i]=0;
 			input_bias(v_now,0);
 			t_now = ReturnTemp(v_now,0);
+			t_leave = t_now;
 			t_bias = t_now + TBIAS;
-			v_bias_find = ReturnVset(t_bias, 0);
+			v_bias_find = ReturnVset(t_bias, 0);			
 			ts = millis();	
-			flag = 1;
-			
+			flag = 1;			
 //			Serial.print("begin:");
 //			Serial.print(v_now);
 //			Serial.print(", ");
@@ -862,6 +947,8 @@ unsigned int DTC03::FindBiasCurrent(uint8_t &flag, unsigned int &v_bias_find, un
 		case 1:
 			input_bias(v_now,1);
 			ReadIsense();
+			CurrentLimit();
+			iteclimit = (long)g_iteclimitset<<7;
 //			Serial.print(v_now);
 //			Serial.print(", ");	
 //			input_bias(v_now,01;
@@ -871,16 +958,37 @@ unsigned int DTC03::FindBiasCurrent(uint8_t &flag, unsigned int &v_bias_find, un
 //			Serial.println(k);		
 			err = (long)v_now - (long)v_bias_find; 
 			tout = pid.Compute(1, err, g_p, 0, 0);
-			out = (long)(abs(tout)+g_fbc_base);
-			v_bias[k%FINDBIASARRAY] = out;
+			iset=abs(tout*0.586);
+  			if(iset > iteclimit) iset=iteclimit;
+  			isense =abs(((long)(g_itecread)-(long)(g_isense0))<<7 );
+  			ierr = isense - iset;
+  			ioutput=ipid.Compute(1, ierr, 20, 10, 1);
+			
+			out = (long)(abs(ioutput)+g_fbc_base);
+			v_bias[k%FINDBIASARRAY] = v_now;
 			if(tout<=0) SetMos(HEATING,out);
   			else SetMos(COOLING,out);
+  			
+			
+			bool stable_flag = 0;
+			unsigned int v_bias_max, v_bias_min;
 			te = millis();
-			if((te-ts)>=500)
-			{
+			
+			if((te-ts)>=SAMPLINGTINE && (ReturnTemp(v_now,0)-t_leave)>0.1)
+//			if((te-ts)>=SAMPLINGTINE)
+			{	
+//				Serial.print("v_now=");	
+//                Serial.print(g_vact);
+//				Serial.print(", ");		
 //				Serial.print(v_now);
-//				Serial.print(", ");
+//				Serial.print(", ");	
+//				Serial.println(g_vact_MV);			
 //				Serial.print(ReturnTemp(v_now,0),3);						
+//				Serial.print(",");
+//				Serial.print("t_leave:");
+//				Serial.print(t_leave);
+//				Serial.print(",");
+//				Serial.print((ReturnTemp(v_now,0)-t_leave)>0.1);
 //				Serial.print(",");
 //				Serial.print(v_bias_find);
 //				Serial.print(", ");
@@ -899,25 +1007,42 @@ unsigned int DTC03::FindBiasCurrent(uint8_t &flag, unsigned int &v_bias_find, un
 //					Serial.print(v_bias[i]);
 //				}
 //				Serial.println();	
+
+				v_bias_max = v_bias[0];
+//				Serial.print(v_bias[0]);
+//				Serial.print(": ");	
+				for(int i=1; i<FINDBIASARRAY;i++)
+				{
+					if(v_bias[i] > v_bias_max) v_bias_max = v_bias[i];
+//					Serial.print(v_bias[i]);
+//					Serial.print(", ");					
+				}
+//				Serial.print(v_bias_max);
+				
+				v_bias_min = v_bias[0];
+				for(int i=1; i<FINDBIASARRAY;i++)
+				{
+					if(v_bias[i] < v_bias_min) v_bias_min = v_bias[i];
+//					Serial.print(v_bias[i]);
+//					Serial.print(", ");					
+				}
+//				Serial.print(", ");	
+//				Serial.println(v_bias_min);
+//				Serial.println(v_bias_max-v_bias_min);
+				if((v_bias_max - v_bias_min)==3) stable_flag=1;
+//				Serial.print("stable_flag=");
+//				Serial.println(stable_flag);
 				k++;
+				runtime = k*(te-ts);				
 				ts = te;
-			}
-			bool stable_flag = 1;
-			
-			for(int i=0; i<(FINDBIASARRAY-1); i++) 
-			{
-				if(stable_flag) stable_flag = ( abs(v_bias[i+1]-v_bias[i])<=10 );
-			}
-			if(stable_flag) 
-			{
-//				for(int i=0;i<FINDBIASARRAY;i++)
-//				{
-//					Serial.println(v_bias[i]);
-//				}
-				flag = 2;
-			}						
-			if(k==FINDBIASARRAY) k=0;
-			return(v_bias[FINDBIASARRAY-1]);
+			}			
+//			for(int i=0; i<(FINDBIASARRAY-1); i++) 
+//			{
+//				if(stable_flag) stable_flag = ( abs(v_bias[i+1]-v_bias[i])<=1 );
+//			}			
+			if(stable_flag) flag = 2;						
+//			if(k==FINDBIASARRAY) k=0;
+			return(out);
 		break;
 	}
 	
