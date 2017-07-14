@@ -48,6 +48,8 @@ void DTC03Master::ParamInit()
   p_keyflag = 0;
   g_atunDone = 0;
   p_atunProcess_flag = 0;
+  g_LCDlock_flag = 0;
+  g_kpkiFromAT = 0;
   for (int i=0;i<MVTIME;i++) p_vact_array[i]=0;
 }
 void DTC03Master::WelcomeScreen()
@@ -194,10 +196,10 @@ void DTC03Master::PrintTestValue()
 {
 	lcd.SelectFont(SystemFont5x7);
     lcd.GotoXY(Test1_COORD_X,Test1_COORD_Y);
-    lcd.print(g_atune_status);
-    lcd.print(p_keyflag);
-    lcd.print(test_at);
     lcd.print(g_atunDone);
+    lcd.print(g_runTimeflag);
+    lcd.print(g_DBRflag);
+
 }
 void DTC03Master::CheckStatus()
 {
@@ -222,9 +224,15 @@ void DTC03Master::CheckStatus()
 				}	
 				if (p_loopindex%300==3) {
 					I2CReadData(I2C_COM_ATUN);
-		            if(g_atunDone) PrintAtuneDone();
+				
+		            if(g_atunDone) 
+					{	            	
+		            	I2CReadData(I2C_COM_ATKpKi);
+		            	PrintAtuneDone();
+					}
 				}
-//				if(p_loopindex%300==4) {
+//				if(p_loopindex%300==4) 
+//				{
 //					PrintTestValue();
 //				}
 	    p_loopindex++;		       
@@ -303,7 +311,7 @@ void DTC03Master::I2CWriteData(unsigned char com)
     case I2C_COM_ATUN:
     	    temp[0] = g_atune_status;
     	    temp[1] = 0;
-//    	    test_at++;
+
     	break;
     	
     case I2C_COM_WAKEUP:
@@ -367,10 +375,18 @@ void DTC03Master::I2CReadData(unsigned char com)
         break;
         
     case I2C_COM_ATUN:
-    	g_atunDone = temp[0] & REQMSK_ATUNE_DONE;
     	g_runTimeflag = temp[0] & REQMSK_ATUNE_RUNTIMEERR;
+    	g_atunDone = temp[0] & REQMSK_ATUNE_DONE;  	
     	g_DBRflag = temp[0] & REQMSK_ATUNE_DBR;
     	break;
+    case I2C_COM_ATKpKi:
+    	g_p = temp[0];   	
+    	g_kiindex = temp[1];
+    	g_paramupdate = 1;
+    	g_cursorstate = 3;
+    	g_kpkiFromAT = 1;
+    	break;
+    
   }
 }
 
@@ -500,11 +516,18 @@ void DTC03Master::PrintP()
 {
   lcd.SelectFont(SystemFont5x7);
   lcd.GotoXY(P_COORD_X2, P_COORD_Y );
-  if(g_p<10)
-   lcd.print("  ");
-  else if (g_p<100)
-   lcd.print(" ");
-  lcd.print(g_p);
+  if(!g_runTimeflag)
+  {
+  	if(g_p<10) lcd.print("  ");  
+    else if (g_p<100) lcd.print(" ");      
+    lcd.print(g_p);
+  }
+  else
+  {
+  	lcd.print("RTE");
+//    g_runTimeflag = 0;
+  }
+  
 }
 void DTC03Master::PrintKi()
 {
@@ -544,17 +567,18 @@ void DTC03Master::PrintAtune()
 	lcd.SelectFont(SystemFont5x7);
 	if(p_atunProcess_flag)
 	{
+		g_LCDlock_flag = 1;
 		p_atunProcess_flag = 0;
 		lcd.GotoXY(P_COORD_X, P_COORD_Y);
-		lcd.print("Auto  ");
+		lcd.print(" ____  ");
 		lcd.GotoXY(I_COORD_X, I_COORD_Y);
-		lcd.print("Tuning");
+		lcd.print("|Auto|");
 		lcd.GotoXY(BCONST_COORD_X, BCONST_COORD_Y);
-		lcd.print("Is  In");
+		lcd.print("|Tune|");
 		lcd.GotoXY(VMOD_COORD_X, VMOD_COORD_Y);
-		lcd.print("Progre");
+		lcd.print("|....|");
 		lcd.GotoXY(ATUNE_COORD_X, ATUNE_COORD_Y);
-		lcd.print("ssing.");
+		lcd.print("|..  |");
 //		delay(1000);
 //		g_atunDone = 1;
 	}
@@ -568,10 +592,11 @@ void DTC03Master::PrintAtune()
 }
 void DTC03Master::PrintAtuneDone()
 {
+	    g_LCDlock_flag = 0;
 		g_atunDone = 0;
 		g_atune_status = 0;
-		I2CWriteData(I2C_COM_ATUN);
-		g_cursorstate = 1;
+		I2CWriteData(I2C_COM_ATUN); //after recieve g_atunDone from slave, send this to slave zero the three flag(g_atunDone, g_DBRflag and g_runTimeflag) 
+		
 		BackGroundPrint();
 		PrintNormalAll();
 		
@@ -719,24 +744,26 @@ void DTC03Master::CursorState()
 {
   unsigned long t1, d1;
   unsigned int t_temp;
-  if(analogRead(PUSHB)>HIGHLOWBOUNDRY)
+  if(!g_LCDlock_flag)
   {
-  	p_engmodeCounter=0;
-  }           
+  	if(analogRead(PUSHB)>HIGHLOWBOUNDRY)
+    {
+  	  p_engmodeCounter=0;
+    }           
   
-  if(analogRead(PUSHB)<=HIGHLOWBOUNDRY) //change cursorstate when push encoder switch  
-  {
-  	t_temp=millis();
+    if(analogRead(PUSHB)<=HIGHLOWBOUNDRY) //change cursorstate when push encoder switch  
+    {
+  	  t_temp=millis();
   	
-  	if( abs(t_temp-p_cursorStateCounter[0])<ACCUMULATE_TH ) //ACCUMULATE_TH=50
-	{
+  	  if( abs(t_temp-p_cursorStateCounter[0])<ACCUMULATE_TH ) //ACCUMULATE_TH=50
+	  {
   		p_cursorStateCounter[1]=t_temp-p_cursorStateCounter[0];
   		p_cursorStateCounter[2]+=p_cursorStateCounter[1]; 		
-	}
-  	else p_cursorStateCounter[2]=0;
+	  }  
+  	  else p_cursorStateCounter[2]=0;
   	
-  	if(!p_engModeFlag) //normal mode
-  	{
+  	  if(!p_engModeFlag) //normal mode
+  	  {
   		if ( p_cursorStateCounter[2]>LONGPRESSTIME ) //long press case:
 		{
 	  		if (abs(t_temp-p_cursorStayTime) > CURSORSTATE_STAYTIME && p_tBlink_toggle )
@@ -783,34 +810,35 @@ void DTC03Master::CursorState()
 				p_tcursorStateBounce=t_temp;
 			} 	  		
 		}
-	} 	
-  	else //eng mode
-	{		
-		if( abs(t_temp-p_tcursorStateBounce)> DEBOUNCE_WAIT )
-		{		    			
-			g_cursorstate++;
-		    if( p_cursorStateCounter[2]>LONGPRESSTIME ) 
-		    {
-			    g_cursorstate=1;
-			    p_engModeFlag=0;
-			    lcd.ClearScreen(0);
-			    BackGroundPrint();
-			    PrintNormalAll();			
-		    }
-		    if( g_cursorstate==9 ) 
-		    {
-			    PrintEngBG();
-			    PrintEngAll();
-			    g_cursorstate=10;
-		    }
-		    if( g_cursorstate>16 ) g_cursorstate=10;
-	  	    ShowCursor(0);
-	  	    p_tcursorStateBounce=t_temp;
-		}		
-	}
+	  } 	
+    	else //eng mode
+    	{		
+	    	if( abs(t_temp-p_tcursorStateBounce)> DEBOUNCE_WAIT )
+	    	{		    			
+		    	g_cursorstate++;
+		        if( p_cursorStateCounter[2]>LONGPRESSTIME ) 
+		        {
+			      g_cursorstate=1;
+			      p_engModeFlag=0;
+			      lcd.ClearScreen(0);
+			      BackGroundPrint();
+			      PrintNormalAll();			
+	     	    }
+		       if( g_cursorstate==9 ) 
+		       {
+			      PrintEngBG();
+			      PrintEngAll();
+			      g_cursorstate=10;
+		        }
+		       if( g_cursorstate>16 ) g_cursorstate=10;
+	  	       ShowCursor(0);
+	  	       p_tcursorStateBounce=t_temp;
+		   }		
+	    }
 //	I2CWriteData(I2C_COM_TEST2);
 	p_cursorStateCounter[0]	= t_temp;
-  }
+    }
+  }  
 }
 
 void DTC03Master::HoldCursortate() //put this method in loop
@@ -1056,16 +1084,22 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
       break;
 
       case 3:
-      	g_p += g_counter;
+      	if(!g_kpkiFromAT) g_p += g_counter; 
         if(g_p>150) g_p=150;
         if(g_p<1) g_p=1;    
         I2CWriteData(I2C_COM_CTR);
         PrintP();
         p_ee_change_state=EEADD_P;
-      break;
+        if(!g_kpkiFromAT) break;
+        else p_ee_changed = 1;
 
       case 4:
-      	g_kiindex += g_counter;
+      	if(!g_kpkiFromAT) g_kiindex += g_counter;
+      	else 
+		{
+			g_kpkiFromAT = 0;
+      		g_cursorstate = 1;
+		}
         if(g_kiindex>50) g_kiindex=50;
         if(g_kiindex<1) g_kiindex=1;      
         I2CWriteData(I2C_COM_KI);
@@ -1179,23 +1213,25 @@ void DTC03Master::Encoder()
   unsigned char encoded, sum, dt;
   unsigned long tenc;
   bool MSB, LSB;
-  tenc= millis();
-  dt = tenc - g_tenc;
-  if(dt < DEBOUNCETIME) return;
-  if(dt > COUNTRESETTIME) g_icount =0;
-  MSB = digitalRead(ENC_B);
-  LSB = digitalRead(ENC_A);
-  encoded = (MSB << 1)|LSB;
-  sum = (g_lastencoded << 2)| encoded;
-  if(g_icount%4==0)
+  if(!g_LCDlock_flag)
   {
-    g_paramupdate=1;// 20161031 when ineterrupt=4times g_paramupdate=1
-    if (sum == 0b1101 || sum == 0b0100 || sum == 0b0010 || sum == 0b1011) 
+  	tenc= millis();
+    dt = tenc - g_tenc;
+    if(dt < DEBOUNCETIME) return;
+    if(dt > COUNTRESETTIME) g_icount =0;
+    MSB = digitalRead(ENC_B);
+    LSB = digitalRead(ENC_A);
+    encoded = (MSB << 1)|LSB;
+    sum = (g_lastencoded << 2)| encoded;
+    if(g_icount%4==0)
     {
+      g_paramupdate=1;// 20161031 when ineterrupt=4times g_paramupdate=1
+      if (sum == 0b1101 || sum == 0b0100 || sum == 0b0010 || sum == 0b1011) 
+      {
 
-      g_counter = -1;
-      g_countersensor =1;
-    }
+        g_counter = -1;
+        g_countersensor =1;
+      }
     if (sum == 0b1110 || sum == 0b0111 || sum == 0b0001 || sum == 0b1000) 
     {
 
@@ -1206,6 +1242,8 @@ void DTC03Master::Encoder()
   g_lastencoded = encoded;
   g_tenc = tenc;
   g_icount++;
+  }
+  
 }
 
 

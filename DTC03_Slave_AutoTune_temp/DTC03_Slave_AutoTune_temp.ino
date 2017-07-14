@@ -96,23 +96,12 @@ void loop() {
     if (output>PIDOUTPUTLIMIT) output= PIDOUTPUTLIMIT;
     if(toutput<=0) dtc.SetMos(HEATING,output);
     else dtc.SetMos(COOLING,output);
-
-//    dtc.g_atunDone = 0;
-//    dtc.g_DBRflag = 0;
-//    dtc.g_runTimeflag = 0;  
   }
-  
-
-//---------for auto tune test-------------//
-    if(dtc.g_atune_flag)
-    {
-      dtc.autotune(&kp_auto, &ki_auto);
-    }
-//-------------end of auto tune test----------------------//
-
+  if(dtc.g_atune_flag)
+  {
+    dtc.autotune(kp_auto, ki_auto);
+  }
 }
-
-
 void ReceiveEvent(int howmany)
 {
   dtc.I2CReceive();

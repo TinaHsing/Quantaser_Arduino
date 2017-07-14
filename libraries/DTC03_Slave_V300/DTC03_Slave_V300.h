@@ -142,7 +142,7 @@
 #define OUTSTEP 1000
 #define FINDBIASARRAY 15
 #define TBIAS 1.5
-#define RUNTIMELIMIT 1200000//20 min
+#define RUNTIMELIMIT 1200000//1200000 : 20 min
 #define SAMPLINGTINE 1000 
 const unsigned char PS_16 = (1<<ADPS2);
 const unsigned char PS_32 = (1<<ADPS2)|(1<<ADPS0);
@@ -199,7 +199,7 @@ public:
     // new for autotune//
     void input_bias(unsigned int &, uint8_t);
     void output_bias(unsigned int, bool);
-    int autotune(float *, float *);
+    int autotune(float &, float &);
     void RelaySwitchTime(unsigned long *, int &, bool &);
     void RelayMethod(unsigned int &, unsigned int &, bool*, bool*, bool*, bool &, unsigned long*, int &, unsigned int &);
     void AtunSamplingTime();
@@ -207,10 +207,13 @@ public:
     void peakrecord (unsigned int &, bool *, bool *, int *, int *, unsigned int *, int *, unsigned long *, unsigned long , unsigned long *, bool *);
     void parameter(int *, unsigned int *, unsigned long *, int *, unsigned long *);
     unsigned int FindBiasCurrent(float &, uint8_t &, unsigned int &, unsigned int (&)[FINDBIASARRAY], unsigned long &, unsigned long &, int &);
+    uint8_t atunKiLs(float &);
+    uint8_t atunKp(float &);
     
     unsigned long g_autunAactavgsum;
     unsigned int g_atuneVact_MV;
     bool g_atunDone, g_DBRflag, g_runTimeflag;
+    uint8_t g_atune_kp, g_atune_ki;
 
 private:
 	int ReadVtec(int Avgtime);

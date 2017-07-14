@@ -400,9 +400,21 @@ void DTC03::I2CRequest()
     	else temp[0] &= ~REQMSK_ATUNE_DBR;
     	if(g_atunDone) temp[0] |= REQMSK_ATUNE_DONE;
     	else temp[0] &= ~REQMSK_ATUNE_DONE;
-//    	Serial.print("g_atunDone=");
-//    	Serial.println(g_atunDone);
+    	
+//    	Serial.print("slave=");
+//    	Serial.print(g_atunDone);
+//    	Serial.print(g_runTimeflag);
+//    	Serial.println(g_DBRflag);
     break;
+    
+    case I2C_COM_ATKpKi:
+    	temp[0] = g_atune_kp;
+    	temp[1] = g_atune_ki;
+//    	Serial.print("g_atune_kp:");
+//    	Serial.println(g_atune_kp);
+//    	Serial.print("g_atune_ki:");
+//    	Serial.println(g_atune_ki);
+    	break;
   }
   Wire.write(temp,2);
 }
@@ -445,8 +457,8 @@ void DTC03::I2CReceive()
     
 //    Serial.print("g_currentlim:");
 //    Serial.println(g_currentlim);
-//    Serial.print("p: ");
-//    Serial.println(g_p);
+    Serial.print("kp: ");
+    Serial.println(g_p);
     break;
 
     case I2C_COM_VSET:
@@ -468,10 +480,10 @@ void DTC03::I2CReceive()
     g_ls = temp[0];
     g_ki = temp[1];
     
-//    Serial.print("LSKI:");
-//    Serial.print(g_ls);
-//    Serial.print(", ");
-//    Serial.println(g_ki);
+    Serial.print("LSKI:");
+    Serial.print(g_ls);
+    Serial.print(", ");
+    Serial.println(g_ki);
     break;
 
     case I2C_COM_R1R2:
@@ -513,6 +525,8 @@ void DTC03::I2CReceive()
     	g_runTimeflag = 0;
 //    	Serial.print("g_atune_flag=");
 //    	Serial.println(g_atune_flag);
+//        Serial.println("flag recieve:");
+
     	break;
 
     case I2C_COM_OTP:
@@ -574,13 +588,13 @@ unsigned int DTC03::ReturnVset(float tset, bool type)
 }
 // new for autotune//
 
-int DTC03::autotune(float *kp, float *ki)
+int DTC03::autotune(float &kp, float &ki)
 {
 	int peakcount, peaktype, peakstemp,A , period_count;
 	bool justchanged,ismax,ismin, relay_heating_flag, relay_cooling_flag, find_period_flag, init_flag;
-	uint8_t findBiasCurrentStatus;
+	uint8_t findBiasCurrentStatus, p_def=10, ki_def=1, p_dbr=30, ki_dbr=7;
 	unsigned long peaktime[MAXPEAKS],now,t1,Pu, relay_period[4], runtime=0;
-	float Ku, ki2; 
+	float Ku, ki2, TC; 
 	unsigned int step_out, in, lastinput[MAXLBACK], peaks[MAXPEAKS], v_bias_find, v_bias[FINDBIASARRAY], v_bias_relay;
 	float t_leave;
 	
@@ -599,20 +613,21 @@ int DTC03::autotune(float *kp, float *ki)
   	unsigned long ts;
   	
 //  	delay(3000);
-//  	g_atune_flag = 0;
-//  	g_atunDone = 1;
-  	
-	
-//  	Serial.println(RUNTIMELIMIT);
+//  	float a=42.6, b=1.1/1.5;
+//  	g_atune_kp = atunKp(a);
+//	g_atune_ki = atunKiLs(b);
+//	g_atune_flag = 0;
+//	g_atunDone = 1;
 	while(findBiasCurrentStatus!=2) 
 	{
 		v_bias_relay = FindBiasCurrent(t_leave, findBiasCurrentStatus, v_bias_find, v_bias, ts, runtime, k);
-//		Serial.println(runtime);
 		if(runtime>RUNTIMELIMIT) 
 		{
 			Serial.println("Runtime time ERR!");
 			g_atune_flag = 0;
 			g_runTimeflag = 1;	
+			g_atune_kp = p_def;
+	        g_atune_ki = ki_def;
 			g_atunDone = 1;		
 			break;			
 		}
@@ -626,6 +641,7 @@ int DTC03::autotune(float *kp, float *ki)
     {
     	RelayMethod(v_bias_relay, in, &init_flag, &relay_heating_flag, &relay_cooling_flag, find_period_flag, relay_period, period_count, step_out);
 	}
+
 	Serial.print("Period = ");
 	Serial.println(p_relayT);
 	AtunSamplingTime();
@@ -633,6 +649,8 @@ int DTC03::autotune(float *kp, float *ki)
 	{
 		Serial.println("DBR case!");
 		g_atune_flag = 0;
+		g_atune_kp = p_dbr;
+	    g_atune_ki = ki_dbr;
 		g_atunDone = 1;
 	}
 	if(!g_atune_flag) return(0); // for DBR case
@@ -655,9 +673,12 @@ int DTC03::autotune(float *kp, float *ki)
 	    {
 	        parameter(&peakcount, peaks, peaktime, &A, &Pu);
 	        Ku = 4*OUTSTEP/(A*3.14159);      
-	        *kp = 0.4*Ku;
-	        *ki = 480.0*Ku/(float)Pu; 
+	        kp = 0.4*Ku;
+	        ki = 480.0*Ku/(float)Pu; 
 	        ki2 = 1000.0*Ku/(float)Pu;
+	        TC = 1.0/ki2/1.5;
+	        g_atune_kp = atunKp(Ku);
+	        g_atune_ki = atunKiLs(TC);
 	        if(peakcount == MAXPEAKS-1)
 	        {
 	          Serial.print("A=,");
@@ -669,15 +690,19 @@ int DTC03::autotune(float *kp, float *ki)
 	          Serial.print("Pu=,");
 	          Serial.println(Pu);
 	          Serial.print("kp=,");
-	          Serial.println(*kp);
+	          Serial.println(kp);
 	          Serial.print("ki=,");
-	          Serial.println(*ki);
+	          Serial.println(ki);
 	          Serial.print("ki2=,");
 	          Serial.println(ki2);
 	          Serial.print("TC=,");
-	          Serial.println((float)1.0/(*ki),1); 
+	          Serial.println((float)1.0/(ki),1); 
 	          Serial.print("Tc2=,");
 	          Serial.println(1.0/ki2,1);
+	          Serial.print("g_atune_kp=,");
+	          Serial.println(g_atune_kp);
+	          Serial.print("g_atune_ki=,");
+	          Serial.println(g_atune_ki);
 	          g_atune_flag = 0;
 	          g_atunDone = 1;
 	        }
@@ -711,7 +736,7 @@ void DTC03::RelayMethod(unsigned int &v_bias_relay, unsigned int &in, bool *init
 //	Serial.print(", ");
 //	Serial.print((int)(in-p_noise_Mid));
 //	Serial.print(", ");
-	
+	ReadIsense();
 	if ( (int)(in-p_noise_Mid) >NOISEBAND) // cooling
     {
         step_out = v_bias_relay + OUTSTEP/2;  //Heater
@@ -973,7 +998,7 @@ unsigned int DTC03::FindBiasCurrent(float &t_leave, uint8_t &flag, unsigned int 
 			bool stable_flag = 0;
 			unsigned int v_bias_max, v_bias_min;
 			te = millis();
-			
+				
 			if((te-ts)>=SAMPLINGTINE && (ReturnTemp(v_now,0)-t_leave)>0.1)
 //			if((te-ts)>=SAMPLINGTINE)
 			{	
@@ -1026,16 +1051,18 @@ unsigned int DTC03::FindBiasCurrent(float &t_leave, uint8_t &flag, unsigned int 
 //					Serial.print(v_bias[i]);
 //					Serial.print(", ");					
 				}
-//				Serial.print(", ");	
-//				Serial.println(v_bias_min);
-//				Serial.println(v_bias_max-v_bias_min);
+
+				Serial.println(v_bias_max-v_bias_min);
 				if((v_bias_max - v_bias_min)==3) stable_flag=1;
 //				Serial.print("stable_flag=");
 //				Serial.println(stable_flag);
-				k++;
-				runtime = k*(te-ts);				
-				ts = te;
-			}			
+				k++;				
+				runtime = k*(te-ts);
+				ts = te;	
+//				Serial.print("runtime:");
+//				Serial.println(runtime);						
+			}		
+				
 //			for(int i=0; i<(FINDBIASARRAY-1); i++) 
 //			{
 //				if(stable_flag) stable_flag = ( abs(v_bias[i+1]-v_bias[i])<=1 );
@@ -1044,7 +1071,183 @@ unsigned int DTC03::FindBiasCurrent(float &t_leave, uint8_t &flag, unsigned int 
 //			if(k==FINDBIASARRAY) k=0;
 			return(out);
 		break;
-	}
-	
-	
+	}	
 }
+uint8_t DTC03::atunKp(float &kp)
+{
+	int kp_temp;
+	
+	kp_temp = round(kp);
+	return(kp_temp);
+}
+uint8_t DTC03::atunKiLs(float &tc)
+{
+	int tc_temp, a, b;
+
+	if((int)(tc*10) <= 20)// input: 0.1~2.0
+	{
+		tc_temp = tc*10+2;
+		return(tc_temp);
+	} 
+	else if((int)(tc+0.5) <= 5)// input: 2.5~5.0
+	{
+		tc_temp = tc*10;
+		a = tc_temp/10; 
+		b = (tc-a)*10;
+		if(b<5) 
+		{
+			if((5-b)>b) tc_temp = a*10;
+			else tc_temp = a*10+5;			
+		}
+		else 
+		{
+			if((10-b)>(b-5)) tc_temp = a*10+5;
+			else tc_temp = (a+1)*10;
+		}
+		switch(tc_temp)
+		{
+			case 20:
+				tc_temp = 22;
+			break;	
+			case 25:
+				tc_temp = 23;
+			break;
+			case 30:
+				tc_temp = 24;
+			break;
+			case 35:
+				tc_temp = 25;
+			break;
+			case 40:
+				tc_temp = 26;
+			break;
+			case 45:
+				tc_temp = 27;
+			break;
+			case 50:
+				tc_temp = 28;
+			break;
+			case 55:
+				tc_temp = 28;
+			break;
+		}
+		return(tc_temp);
+	}
+	else
+	{
+		tc_temp = round(tc);
+		if(tc_temp==11) tc_temp=10;
+		else if(tc_temp==11) tc_temp=10;
+		else if(tc_temp==13) tc_temp=12;
+		else if(tc_temp==15) tc_temp=14;
+		else if(tc_temp==17) tc_temp=16;
+		else if(tc_temp==19) tc_temp=18;
+		else if(tc_temp==21 || tc_temp==22) tc_temp=20;
+		else if(tc_temp==23 || tc_temp==24 || tc_temp==26 || tc_temp==27) tc_temp=25;
+		else if(tc_temp==28 || tc_temp==29 || tc_temp==31 || tc_temp==32) tc_temp=30;
+		else if(tc_temp==33 || tc_temp==34 || tc_temp==36 || tc_temp==37) tc_temp=35;
+		else if(tc_temp==38 || tc_temp==39 || tc_temp==41 || tc_temp==42) tc_temp=40;
+		else if(tc_temp==43 || tc_temp==44 || tc_temp==46 || tc_temp==47) tc_temp=45;
+		else if(tc_temp==48 || tc_temp==49 || tc_temp==51 || tc_temp==52) tc_temp=50;
+		else if(tc_temp==53 || tc_temp==54 || tc_temp==56 || tc_temp==57) tc_temp=55;
+		else if(tc_temp==58 || tc_temp==59 || tc_temp==61 || tc_temp==62) tc_temp=60;
+		else if(tc_temp==63 || tc_temp==64 || tc_temp==66 || tc_temp==67) tc_temp=65;
+		else if(tc_temp==68 || tc_temp==69 || tc_temp==71 || tc_temp==72) tc_temp=70;
+		else if(tc_temp==73 || tc_temp==74 || tc_temp==76 || tc_temp==77) tc_temp=75;
+		else if(tc_temp==78 || tc_temp==79) tc_temp=80;		
+		switch(tc_temp)
+		{
+			case 6:
+				tc_temp = 29;
+			break;
+			case 7:
+				tc_temp = 30;
+			break;
+			case 8:
+				tc_temp = 31;
+			break;
+			case 9:
+				tc_temp = 32;
+			break;
+			case 10:
+				tc_temp = 33;
+			break;
+			case 12:
+				tc_temp = 34;
+			break;
+			case 14:
+				tc_temp = 35;
+			break;
+			case 16:
+				tc_temp = 36;
+			break;
+			case 18:
+				tc_temp = 37;
+			break;
+			case 20:
+				tc_temp = 38;
+			break;
+			case 25:
+				tc_temp = 39;
+			break;
+			case 30:
+				tc_temp = 40;
+			break;
+			case 35:
+				tc_temp = 41;
+			break;
+			case 40:
+				tc_temp = 42;
+			break;
+			case 45:
+				tc_temp = 43;
+			break;
+			case 50:
+				tc_temp = 44;
+			break;
+			case 55:
+				tc_temp = 45;
+			break;
+			case 60:
+				tc_temp = 46;
+			break;
+			case 65:
+				tc_temp = 47;
+			break;
+			case 70:
+				tc_temp = 48;
+			break;
+			case 75:
+				tc_temp = 49;
+			break;
+			case 80:
+				tc_temp = 50;
+			break;
+		}
+		return(tc_temp);
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

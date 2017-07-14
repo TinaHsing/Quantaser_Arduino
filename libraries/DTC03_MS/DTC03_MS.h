@@ -19,9 +19,9 @@
 #define	I2C_COM_RMEAS   I2C_COM_TPIDOFF+1
 #define I2C_COM_WAKEUP  I2C_COM_RMEAS+1 
 #define	I2C_COM_ATUN    I2C_COM_WAKEUP+1
-
+#define I2C_COM_ATKpKi	I2C_COM_ATUN+1
 //Read
-#define I2C_COM_ITEC_ER	I2C_COM_ATUN+1
+#define I2C_COM_ITEC_ER	I2C_COM_ATKpKi+1
 #define I2C_COM_VACT	I2C_COM_ITEC_ER+1
 #define I2C_COM_PCB		I2C_COM_VACT+1
 
@@ -41,7 +41,7 @@
 #define REQMSK_WAKEUP   	0x40			//Tina 2017/2/15
 #define REQMSK_ATUNE_RUNTIMEERR	0X01
 #define REQMSK_ATUNE_DBR 		0X02
-#define REQMSK_ATUNE_DONE 		0X03
+#define REQMSK_ATUNE_DONE 		0X04
 
 // first colume ki, second colume ls
 const PROGMEM unsigned char kilstable420[] =
@@ -180,31 +180,31 @@ const PROGMEM unsigned char kilstable230[] =
 21,	193,//2.5		23
 21,	161,//3			24
 21,	138,//3.5		25
-22,	241,//4
-22,	214,//4.5
-22,	193,//5
-22,	161,//6
-22,	138,//7
-23,	241,//8
-23,	214,//9
-23,	193,//10
-23,	161,//12
-23,	138,//14
-24,	241,//16
-24,	214,//18
-24,	193,//20
-24,	154,//25
-24,	129,//30
-25,	221,//35
-25,	193,//40
-25,	172,//45
-25,	154,//50
-25,	140,//55
-25,	129,//60
-26,	237,//65
-26,	221,//70
-26,	206,//75
-26,	193,//80
+22,	241,//4			26
+22,	214,//4.5		27
+22,	193,//5			28
+22,	161,//6			29
+22,	138,//7			30
+23,	241,//8			31
+23,	214,//9			32
+23,	193,//10		33
+23,	161,//12		34
+23,	138,//14		35
+24,	241,//16		36
+24,	214,//18		37
+24,	193,//20		38
+24,	154,//25		39
+24,	129,//30		40
+25,	221,//35		41
+25,	193,//40		42
+25,	172,//45		43
+25,	154,//50		44
+25,	140,//55		45
+25,	129,//60		46
+26,	237,//65		47
+26,	221,//70		48
+26,	206,//75		49
+26,	193,//80		50
 };
 const PROGMEM unsigned char kilstable168[] =
 {
