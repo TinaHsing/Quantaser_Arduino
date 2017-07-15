@@ -86,6 +86,7 @@ void DTC03Master::ReadEEPROM()
         g_vmodoffset = EEPROM.read(EEADD_MODOFF_UPPER)<<8 |  EEPROM.read(EEADD_MODOFF_LOWER);
         g_Rmeas = EEPROM.read(EEADD_RMEAS_UPPER)<<8 | EEPROM.read(EEADD_RMEAS_LOWER); 
         g_otp = EEPROM.read(EEADD_TOTP_UPPER)<<8 | EEPROM.read(EEADD_TOTP_LOWER);
+        g_p_atune = EEPROM.read(EEADD_PAP);
 	}
 	else
 	{
@@ -109,10 +110,12 @@ void DTC03Master::ReadEEPROM()
 		EEPROM.write(EEADD_RMEAS_LOWER, NOEE_RMEAS);
 		EEPROM.write(EEADD_TOTP_UPPER, NOEE_TOTP>>8);
 		EEPROM.write(EEADD_TOTP_LOWER, NOEE_TOTP);
+		EEPROM.write(EEADD_PAP, NOEE_PAP);
 
 		g_vset = NOEE_VSET;
 		g_currentlim = NOEE_ILIM;
 		g_p = NOEE_P;
+		g_p_atune = NOEE_PAP;
 		g_kiindex = NOEE_kiindex;
 		g_bconst = NOEE_BCONST;
 		g_mod_status = NOEE_MODSTATUS;
@@ -188,7 +191,11 @@ void DTC03Master::SaveEEPROM() {
 			case EEADD_RMEAS_UPPER:
                 EEPROM.write(EEADD_RMEAS_UPPER, g_Rmeas >>8);
                 EEPROM.write(EEADD_RMEAS_LOWER, g_Rmeas );
-                break;           
+                break;    
+				
+			case EEADD_PAP:
+                EEPROM.write(EEADD_PAP, g_p_atune);
+                break;         
         }
 	}
 }
@@ -310,7 +317,7 @@ void DTC03Master::I2CWriteData(unsigned char com)
     	
     case I2C_COM_ATUN:
     	    temp[0] = g_atune_status;
-    	    temp[1] = 0;
+    	    temp[1] = g_p_atune;
 
     	break;
     	
@@ -529,6 +536,13 @@ void DTC03Master::PrintP()
   }
   
 }
+void DTC03Master::PrintP_Atune()
+{
+  lcd.SelectFont(SystemFont5x7);
+  lcd.GotoXY(P_AT_COORD_X2, P_AT_COORD_Y );
+  if(g_p_atune<10) lcd.print(" ");  
+  lcd.print(g_p_atune);
+}
 void DTC03Master::PrintKi()
 {
   //unsigned int tconst;
@@ -672,6 +686,8 @@ void DTC03Master::PrintEngBG()
   lcd.print(Text_Totp);
   lcd.GotoXY(TPCB_COORD_X, TPCB_COORD_Y);
   lcd.print(Text_Tpcb);
+  lcd.GotoXY(P_AT_COORD_X, P_AT_COORD_Y);
+  lcd.print(Text_PAT);
 }
 void DTC03Master::PrintEngAll()
 {
@@ -682,6 +698,7 @@ void DTC03Master::PrintEngAll()
 	PrintVmod();
 	PrintRmeas();
 	PrintTotp();
+	PrintP_Atune();
 	CheckStatus();
 }
 void DTC03Master::PrintR1() //g_cursorstate=10
@@ -830,7 +847,7 @@ void DTC03Master::CursorState()
 			      PrintEngAll();
 			      g_cursorstate=10;
 		        }
-		       if( g_cursorstate>16 ) g_cursorstate=10;
+		       if( g_cursorstate>17 ) g_cursorstate=10;
 	  	       ShowCursor(0);
 	  	       p_tcursorStateBounce=t_temp;
 		   }		
@@ -990,7 +1007,7 @@ void DTC03Master::ShowCursor(unsigned char state_old)
 		    lcd.GotoXY(R1_COORD_X-COLUMNPIXEL0507, R1_COORD_Y);
 		    lcd.print(" ");
 		    lcd.SelectFont(SystemFont5x7);
-		    lcd.GotoXY(TOTP_COORD_X-COLUMNPIXEL0507, TOTP_COORD_Y);
+		    lcd.GotoXY(P_AT_COORD_X-COLUMNPIXEL0507, P_AT_COORD_Y);
 		    lcd.print(" ");
 		    break;
 		
@@ -1045,6 +1062,15 @@ void DTC03Master::ShowCursor(unsigned char state_old)
 		    lcd.print(" ");
 		    lcd.SelectFont(SystemFont5x7);
 		    lcd.GotoXY(RMEAS_COORD_X-COLUMNPIXEL0507, RMEAS_COORD_Y);
+		    lcd.print(" ");
+		    break;
+		    
+		    case 17:
+		    lcd.SelectFont(SystemFont5x7, WHITE);
+		    lcd.GotoXY(P_AT_COORD_X-COLUMNPIXEL0507, P_AT_COORD_Y);
+		    lcd.print(" ");
+		    lcd.SelectFont(SystemFont5x7);
+		    lcd.GotoXY(TOTP_COORD_X-COLUMNPIXEL0507, TOTP_COORD_Y);
 		    lcd.print(" ");
 		    break;
 		}
@@ -1205,6 +1231,14 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
 		I2CWriteData(I2C_COM_OTP);
         PrintTotp();  
         p_ee_change_state=EEADD_TOTP_UPPER;
+        
+       case 17:
+      	g_p_atune += g_counter;
+		if(g_p_atune>99) g_p_atune=99;
+        if(g_p_atune<1) g_p_atune=1;    
+        I2CWriteData(I2C_COM_ATUN);
+        PrintP_Atune();
+        p_ee_change_state=EEADD_PAP;
     }
   }
 }

@@ -213,7 +213,7 @@ public:
     unsigned long g_autunAactavgsum;
     unsigned int g_atuneVact_MV;
     bool g_atunDone, g_DBRflag, g_runTimeflag;
-    uint8_t g_atune_kp, g_atune_ki;
+    uint8_t g_atune_kp, g_atune_ki, g_p_atune;
 
 private:
 	int ReadVtec(int Avgtime);

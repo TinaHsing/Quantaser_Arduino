@@ -523,6 +523,9 @@ void DTC03::I2CReceive()
     	g_atunDone = 0; 
     	g_DBRflag = 0;
     	g_runTimeflag = 0;
+    	g_p_atune = temp[1];
+    	Serial.print("g_p_atune=");
+    	Serial.println(g_p_atune);
 //    	Serial.print("g_atune_flag=");
 //    	Serial.println(g_atune_flag);
 //        Serial.println("flag recieve:");
@@ -982,7 +985,7 @@ unsigned int DTC03::FindBiasCurrent(float &t_leave, uint8_t &flag, unsigned int 
 			
 //			Serial.println(k);		
 			err = (long)v_now - (long)v_bias_find; 
-			tout = pid.Compute(1, err, g_p, 0, 0);
+			tout = pid.Compute(1, err, g_p_atune, 0, 0);
 			iset=abs(tout*0.586);
   			if(iset > iteclimit) iset=iteclimit;
   			isense =abs(((long)(g_itecread)-(long)(g_isense0))<<7 );

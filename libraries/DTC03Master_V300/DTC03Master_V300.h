@@ -41,8 +41,8 @@
 //-----------EEPROM ADDRESS---------
 #define EEADD_VSET_UPPER	0
 #define EEADD_VSET_LOWER	1
-#define EEADD_BCONST_UPPER	19
-#define EEADD_BCONST_LOWER	20
+#define EEADD_BCONST_UPPER	2
+#define EEADD_BCONST_LOWER	3
 #define EEADD_MODSTATUS		4
 #define EEADD_currentlim 	5
 #define EEADD_FBC_UPPER		6
@@ -58,6 +58,7 @@
 #define EEADD_MODOFF_LOWER	16
 #define EEADD_RMEAS_UPPER	17
 #define EEADD_RMEAS_LOWER	18
+#define EEADD_PAP			19
 #define EEADD_DUMMY			100
 
 //----------NOEE Default value------
@@ -75,7 +76,7 @@
 #define NOEE_MODOFF     32500
 #define NOEE_RMEAS      55000
 #define NOEE_TOTP		561 //120C
-
+#define NOEE_PAP		10
 
 //=====================BG print coordinate definition=========
 #define TSET_COORD_X	0 
@@ -113,7 +114,7 @@
 #define ATUNE_COORD_X 	COLUMNPIXEL0507*14
 #define ATUNE_COORD_Y 	ROWPIXEL0507*7
 #define ATUNE_COORD_X2 	COLUMNPIXEL0507*17
-#define Text_AT			"AT:"
+#define Text_AT		    "AT:"
 
 
 //==================ENG BG print coordinate definition=========
@@ -149,6 +150,11 @@
 #define TPCB_COORD_X2 	 COLUMNPIXEL0507*9
 #define TPCB_COORD_Y 	 ROWPIXEL0507*7
 #define Text_Tpcb 		 "Tpcb :"
+#define P_AT_COORD_X 	 COLUMNPIXEL0507*13
+#define P_AT_COORD_X2 	 COLUMNPIXEL0507*18
+#define P_AT_COORD_Y 	 ROWPIXEL0507*0
+#define Text_PAT		 "P_AT:"
+
 
 #define Test1_COORD_X    0
 #define Test1_COORD_Y    ROWPIXEL0507*5
@@ -216,6 +222,7 @@ public:
 	void PrintAtune();
 	void PrintAtuneDone();
 	void PrintTestValue();
+	void PrintP_Atune();
 	
 	void ShowCursor(unsigned char);
     void UpdateEnable();
@@ -228,7 +235,7 @@ public:
 	
 	//working variable-------------------
 	unsigned int g_vact,g_vact_MV, g_vset, g_tpcb, g_otp, g_Rmeas, g_bconst, g_fbcbase, g_vmodoffset;
-	unsigned char g_p, g_ki,g_ls,g_currentlim, g_tpidoff, g_r1, g_r2, g_kiindex, g_cursorstate;
+	unsigned char g_p, g_ki,g_ls,g_currentlim, g_tpidoff, g_r1, g_r2, g_kiindex, g_cursorstate, g_p_atune;
 	int g_itec;
 	bool g_mod_status, g_atune_status, g_atunDone, g_DBRflag, g_runTimeflag, g_LCDlock_flag;	
     float g_tset;
