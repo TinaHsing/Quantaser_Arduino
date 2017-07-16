@@ -87,6 +87,7 @@ void DTC03Master::ReadEEPROM()
         g_Rmeas = EEPROM.read(EEADD_RMEAS_UPPER)<<8 | EEPROM.read(EEADD_RMEAS_LOWER); 
         g_otp = EEPROM.read(EEADD_TOTP_UPPER)<<8 | EEPROM.read(EEADD_TOTP_LOWER);
         g_p_atune = EEPROM.read(EEADD_PAP);
+        g_T_atune = EEPROM.read(EEADD_TBIAS);
 	}
 	else
 	{
@@ -111,6 +112,7 @@ void DTC03Master::ReadEEPROM()
 		EEPROM.write(EEADD_TOTP_UPPER, NOEE_TOTP>>8);
 		EEPROM.write(EEADD_TOTP_LOWER, NOEE_TOTP);
 		EEPROM.write(EEADD_PAP, NOEE_PAP);
+		EEPROM.write(EEADD_TBIAS, NOEE_TBIAS);
 
 		g_vset = NOEE_VSET;
 		g_currentlim = NOEE_ILIM;
@@ -126,7 +128,7 @@ void DTC03Master::ReadEEPROM()
 		g_vmodoffset = NOEE_MODOFF;
 		g_Rmeas = NOEE_RMEAS;
 		g_otp = NOEE_TOTP; 
-		
+		g_T_atune = EEADD_TBIAS;
 	}	
     g_tset = ReturnTemp(g_vset, 0); 
    
@@ -195,7 +197,11 @@ void DTC03Master::SaveEEPROM() {
 				
 			case EEADD_PAP:
                 EEPROM.write(EEADD_PAP, g_p_atune);
-                break;         
+                break;      
+				
+			case EEADD_TBIAS:
+                EEPROM.write(EEADD_TBIAS, g_T_atune);
+                break;   
         }
 	}
 }
@@ -316,7 +322,7 @@ void DTC03Master::I2CWriteData(unsigned char com)
     	break;
     	
     case I2C_COM_ATUN:
-    	    temp[0] = g_atune_status;
+    	    temp[0] = (g_T_atune << 1) | g_atune_status;
     	    temp[1] = g_p_atune;
 
     	break;
@@ -543,6 +549,14 @@ void DTC03Master::PrintP_Atune()
   if(g_p_atune<10) lcd.print(" ");  
   lcd.print(g_p_atune);
 }
+
+void DTC03Master::PrintTbias()
+{
+  lcd.SelectFont(SystemFont5x7);
+  lcd.GotoXY(TBIAS_COORD_X2, TBIAS_COORD_Y );
+  if(g_T_atune<10) lcd.print(" ");  
+  lcd.print(g_T_atune);
+}
 void DTC03Master::PrintKi()
 {
   //unsigned int tconst;
@@ -688,6 +702,8 @@ void DTC03Master::PrintEngBG()
   lcd.print(Text_Tpcb);
   lcd.GotoXY(P_AT_COORD_X, P_AT_COORD_Y);
   lcd.print(Text_PAT);
+  lcd.GotoXY(TBIAS_COORD_X, TBIAS_COORD_Y);
+  lcd.print(Text_TAT);
 }
 void DTC03Master::PrintEngAll()
 {
@@ -699,6 +715,7 @@ void DTC03Master::PrintEngAll()
 	PrintRmeas();
 	PrintTotp();
 	PrintP_Atune();
+	PrintTbias();
 	CheckStatus();
 }
 void DTC03Master::PrintR1() //g_cursorstate=10
@@ -847,7 +864,7 @@ void DTC03Master::CursorState()
 			      PrintEngAll();
 			      g_cursorstate=10;
 		        }
-		       if( g_cursorstate>17 ) g_cursorstate=10;
+		       if( g_cursorstate>18 ) g_cursorstate=10;
 	  	       ShowCursor(0);
 	  	       p_tcursorStateBounce=t_temp;
 		   }		
@@ -1007,7 +1024,7 @@ void DTC03Master::ShowCursor(unsigned char state_old)
 		    lcd.GotoXY(R1_COORD_X-COLUMNPIXEL0507, R1_COORD_Y);
 		    lcd.print(" ");
 		    lcd.SelectFont(SystemFont5x7);
-		    lcd.GotoXY(P_AT_COORD_X-COLUMNPIXEL0507, P_AT_COORD_Y);
+		    lcd.GotoXY(TBIAS_COORD_X-COLUMNPIXEL0507, TBIAS_COORD_Y);
 		    lcd.print(" ");
 		    break;
 		
@@ -1071,6 +1088,15 @@ void DTC03Master::ShowCursor(unsigned char state_old)
 		    lcd.print(" ");
 		    lcd.SelectFont(SystemFont5x7);
 		    lcd.GotoXY(TOTP_COORD_X-COLUMNPIXEL0507, TOTP_COORD_Y);
+		    lcd.print(" ");
+		    break;
+		    
+		    case 18:
+		    lcd.SelectFont(SystemFont5x7, WHITE);
+		    lcd.GotoXY(TBIAS_COORD_X-COLUMNPIXEL0507, TBIAS_COORD_Y);
+		    lcd.print(" ");
+		    lcd.SelectFont(SystemFont5x7);
+		    lcd.GotoXY(P_AT_COORD_X-COLUMNPIXEL0507, P_AT_COORD_Y);
 		    lcd.print(" ");
 		    break;
 		}
@@ -1231,6 +1257,7 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
 		I2CWriteData(I2C_COM_OTP);
         PrintTotp();  
         p_ee_change_state=EEADD_TOTP_UPPER;
+        break;
         
        case 17:
       	g_p_atune += g_counter;
@@ -1239,6 +1266,16 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
         I2CWriteData(I2C_COM_ATUN);
         PrintP_Atune();
         p_ee_change_state=EEADD_PAP;
+        break;
+        
+        case 18:
+      	g_T_atune += g_counter;
+		if(g_T_atune>99) g_T_atune=99;
+        if(g_T_atune<1) g_T_atune=1;    
+        I2CWriteData(I2C_COM_ATUN);
+        PrintTbias();
+        p_ee_change_state=EEADD_TBIAS;
+        break;
     }
   }
 }

@@ -59,6 +59,7 @@
 #define EEADD_RMEAS_UPPER	17
 #define EEADD_RMEAS_LOWER	18
 #define EEADD_PAP			19
+#define EEADD_TBIAS			20
 #define EEADD_DUMMY			100
 
 //----------NOEE Default value------
@@ -77,6 +78,7 @@
 #define NOEE_RMEAS      55000
 #define NOEE_TOTP		561 //120C
 #define NOEE_PAP		10
+#define NOEE_TBIAS		15
 
 //=====================BG print coordinate definition=========
 #define TSET_COORD_X	0 
@@ -154,6 +156,10 @@
 #define P_AT_COORD_X2 	 COLUMNPIXEL0507*18
 #define P_AT_COORD_Y 	 ROWPIXEL0507*0
 #define Text_PAT		 "P_AT:"
+#define TBIAS_COORD_X 	 COLUMNPIXEL0507*13
+#define TBIAS_COORD_X2 	 COLUMNPIXEL0507*18
+#define TBIAS_COORD_Y 	 ROWPIXEL0507*1
+#define Text_TAT		 "T_AT:"
 
 
 #define Test1_COORD_X    0
@@ -223,6 +229,7 @@ public:
 	void PrintAtuneDone();
 	void PrintTestValue();
 	void PrintP_Atune();
+	void PrintTbias();
 	
 	void ShowCursor(unsigned char);
     void UpdateEnable();
@@ -235,7 +242,7 @@ public:
 	
 	//working variable-------------------
 	unsigned int g_vact,g_vact_MV, g_vset, g_tpcb, g_otp, g_Rmeas, g_bconst, g_fbcbase, g_vmodoffset;
-	unsigned char g_p, g_ki,g_ls,g_currentlim, g_tpidoff, g_r1, g_r2, g_kiindex, g_cursorstate, g_p_atune;
+	unsigned char g_p, g_ki,g_ls,g_currentlim, g_tpidoff, g_r1, g_r2, g_kiindex, g_cursorstate, g_p_atune, g_T_atune;
 	int g_itec;
 	bool g_mod_status, g_atune_status, g_atunDone, g_DBRflag, g_runTimeflag, g_LCDlock_flag;	
     float g_tset;

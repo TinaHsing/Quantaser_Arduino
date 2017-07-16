@@ -141,7 +141,6 @@
 #define MAXPEAKS 5
 #define OUTSTEP 1000
 #define FINDBIASARRAY 15
-#define TBIAS 1.5
 #define RUNTIMELIMIT 1200000//1200000 : 20 min
 #define SAMPLINGTINE 1000 
 const unsigned char PS_16 = (1<<ADPS2);
@@ -213,7 +212,7 @@ public:
     unsigned long g_autunAactavgsum;
     unsigned int g_atuneVact_MV;
     bool g_atunDone, g_DBRflag, g_runTimeflag;
-    uint8_t g_atune_kp, g_atune_ki, g_p_atune;
+    uint8_t g_atune_kp, g_atune_ki, g_p_atune, g_T_atune;
 
 private:
 	int ReadVtec(int Avgtime);

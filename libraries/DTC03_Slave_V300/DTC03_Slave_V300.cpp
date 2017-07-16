@@ -423,7 +423,8 @@ void DTC03::I2CReceive()
   unsigned char temp[2], com, errcodeall, bconst_upper, bconst_lower, vset_upper, vset_lower;
   unsigned char fbc_lower, fbc_upper, vmodoffset_upper, vmodoffset_lower;
   unsigned long t1,t2,t_delta;//added
-
+  temp[0]=0;
+  temp[1]=0;	
   while(Wire.available() == 3)
   {
     t1=micros();
@@ -519,17 +520,20 @@ void DTC03::I2CReceive()
     break;
     
     case I2C_COM_ATUN:
-    	g_atune_flag = temp[0];
+    	g_atune_flag = temp[0] & REQMSK_ATUNE_STATUS; // temp[0] | 0x01;
     	g_atunDone = 0; 
     	g_DBRflag = 0;
     	g_runTimeflag = 0;
+    	g_T_atune = temp[0] >> 1;//0~127;
     	g_p_atune = temp[1];
     	Serial.print("g_p_atune=");
     	Serial.println(g_p_atune);
-//    	Serial.print("g_atune_flag=");
-//    	Serial.println(g_atune_flag);
-//        Serial.println("flag recieve:");
-
+    	Serial.print("g_T_atune=");
+    	Serial.println(g_T_atune);
+    	Serial.print("g_atune_flag=");
+    	Serial.println(g_atune_flag);
+//    	Serial.print("temp[0]=");
+//    	Serial.println(temp[0],BIN);
     	break;
 
     case I2C_COM_OTP:
@@ -957,7 +961,7 @@ unsigned int DTC03::FindBiasCurrent(float &t_leave, uint8_t &flag, unsigned int 
 			input_bias(v_now,0);
 			t_now = ReturnTemp(v_now,0);
 			t_leave = t_now;
-			t_bias = t_now + TBIAS;
+			t_bias = t_now + g_T_atune*0.1;
 			v_bias_find = ReturnVset(t_bias, 0);			
 			ts = millis();	
 			flag = 1;			
@@ -967,8 +971,8 @@ unsigned int DTC03::FindBiasCurrent(float &t_leave, uint8_t &flag, unsigned int 
 //			Serial.print(t_now,3);						
 //			Serial.print(",");
 //			Serial.print(v_bias_find);
-//			Serial.print(", ");
-//			Serial.print(t_bias,3);
+			Serial.print("t_bias=");
+			Serial.println(t_bias,1);
 //			Serial.println("---------------");
 			
 		break;

@@ -42,6 +42,7 @@
 #define REQMSK_ATUNE_RUNTIMEERR	0X01
 #define REQMSK_ATUNE_DBR 		0X02
 #define REQMSK_ATUNE_DONE 		0X04
+#define REQMSK_ATUNE_STATUS		0x01
 
 // first colume ki, second colume ls
 const PROGMEM unsigned char kilstable420[] =

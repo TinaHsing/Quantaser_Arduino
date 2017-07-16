@@ -60,8 +60,6 @@ void setup() {
   Serial.println(NOISEBAND);
   Serial.print("FINDBIASARRAY:");
   Serial.println(FINDBIASARRAY);
-  Serial.print("TBIAS:");
-  Serial.println(TBIAS);
   Serial.print("RUNTIMELIMIT:");
   Serial.println(RUNTIMELIMIT);
 //  Serial.println("time, D, A");
