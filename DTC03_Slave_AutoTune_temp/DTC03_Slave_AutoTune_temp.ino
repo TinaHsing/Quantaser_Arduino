@@ -52,17 +52,16 @@ void setup() {
   dtc.dacforilim.ModeWrite(0);
   dtc.dacformos.ModeWrite(0);
   
-  Serial.print("Look back:");
-  Serial.println(MAXLBACK);
-  Serial.print("MAXPEAKS:");
-  Serial.println(MAXPEAKS);
-  Serial.print("Noise band:");
-  Serial.println(NOISEBAND);
-  Serial.print("FINDBIASARRAY:");
-  Serial.println(FINDBIASARRAY);
-  Serial.print("RUNTIMELIMIT:");
-  Serial.println(RUNTIMELIMIT);
-//  Serial.println("time, D, A");
+//  Serial.print("Look back:");
+//  Serial.println(MAXLBACK);
+//  Serial.print("MAXPEAKS:");
+//  Serial.println(MAXPEAKS);
+//  Serial.print("Noise band:");
+//  Serial.println(NOISEBAND);
+//  Serial.print("FINDBIASARRAY:");
+//  Serial.println(FINDBIASARRAY);
+//  Serial.print("RUNTIMELIMIT:");
+//  Serial.println(RUNTIMELIMIT);
 
 }
 
@@ -94,6 +93,19 @@ void loop() {
     if (output>PIDOUTPUTLIMIT) output= PIDOUTPUTLIMIT;
     if(toutput<=0) dtc.SetMos(HEATING,output);
     else dtc.SetMos(COOLING,output);
+//    else dtc.SetMos(COOLING,0);
+//    if(tpid.g_index==0)
+//    {
+//      Serial.print("tout:");
+//      Serial.print(toutput);
+//      Serial.print(", ");
+//      Serial.print(iset);
+//      Serial.print(", ");
+//      Serial.print(isense);
+//      Serial.print(", ");
+//      Serial.println(ierr);
+////      Serial.print(", ");
+//    }
   }
   if(dtc.g_atune_flag)
   {

@@ -526,14 +526,13 @@ void DTC03::I2CReceive()
     	g_runTimeflag = 0;
     	g_T_atune = temp[0] >> 1;//0~127;
     	g_p_atune = temp[1];
-    	Serial.print("g_p_atune=");
-    	Serial.println(g_p_atune);
-    	Serial.print("g_T_atune=");
-    	Serial.println(g_T_atune);
-    	Serial.print("g_atune_flag=");
-    	Serial.println(g_atune_flag);
-//    	Serial.print("temp[0]=");
-//    	Serial.println(temp[0],BIN);
+//    	Serial.print("g_p_atune=");
+//    	Serial.println(g_p_atune);
+//    	Serial.print("g_T_atune=");
+//    	Serial.println(g_T_atune);
+//    	Serial.print("g_atune_flag=");
+//    	Serial.println(g_atune_flag);
+
     	break;
 
     case I2C_COM_OTP:
@@ -619,15 +618,18 @@ int DTC03::autotune(float &kp, float &ki)
   	int k=0;
   	unsigned long ts;
   	
-//  	delay(3000);
-//  	float a=42.6, b=1.1/1.5;
-//  	g_atune_kp = atunKp(a);
-//	g_atune_ki = atunKiLs(b);
-//	g_atune_flag = 0;
-//	g_atunDone = 1;
+
 	while(findBiasCurrentStatus!=2) 
 	{
 		v_bias_relay = FindBiasCurrent(t_leave, findBiasCurrentStatus, v_bias_find, v_bias, ts, runtime, k);
+		if(g_DBRflag) 
+		{
+			Serial.println("DBR case!");
+			g_atune_flag = 0;
+			g_atune_kp = p_dbr;
+		    g_atune_ki = ki_dbr;
+			g_atunDone = 1;
+		}
 		if(runtime>RUNTIMELIMIT) 
 		{
 			Serial.println("Runtime time ERR!");
@@ -840,8 +842,8 @@ void DTC03::peakrecord (unsigned int &input, bool *ismax, bool *ismin, int *peak
         *justchanged = true;
         //////atune data print-4/////
 //        Serial.print(", ");
-        Serial.print("min #");
-        Serial.println(*peakcount);
+//        Serial.print("min #");
+//        Serial.println(*peakcount);
 //        Serial.print(", ");
 //        Serial.print(peaktime[*peakcount]);       
 //        Serial.print(", ");
@@ -881,17 +883,7 @@ void DTC03::peakrecord (unsigned int &input, bool *ismax, bool *ismin, int *peak
   {
 //    Serial.println();
   }
-//	if (*peakcount == MAXPEAKS-1)
-//	{
-//        //////atune data print-final/////
-//        Serial.println("T/2,  A: ");
-//        for(int i=0;i<MAXPEAKS-1;i++)
-//        {              
-//          Serial.print((float)(peaktime[i+1]-peaktime[i])/1000,1);
-//          Serial.print(", ");
-//          Serial.println(abs((int)peaks[i+1]-(int)peaks[i]));
-//        }
-//    }
+
 }
 void DTC03::lookbackloop (unsigned int &input, unsigned int *lastinput, boolean *ismax, boolean *ismin) //如果在指定的lookback 數目裡有發現possible maxima(minima)的話*ismax(*ismin)才會是T, 否則為F
 {
@@ -965,15 +957,9 @@ unsigned int DTC03::FindBiasCurrent(float &t_leave, uint8_t &flag, unsigned int 
 			v_bias_find = ReturnVset(t_bias, 0);			
 			ts = millis();	
 			flag = 1;			
-//			Serial.print("begin:");
-//			Serial.print(v_now);
-//			Serial.print(", ");
-//			Serial.print(t_now,3);						
-//			Serial.print(",");
-//			Serial.print(v_bias_find);
+			g_dbrCounter_flag = 1;
 			Serial.print("t_bias=");
 			Serial.println(t_bias,1);
-//			Serial.println("---------------");
 			
 		break;
 		case 1:
@@ -981,13 +967,7 @@ unsigned int DTC03::FindBiasCurrent(float &t_leave, uint8_t &flag, unsigned int 
 			ReadIsense();
 			CurrentLimit();
 			iteclimit = (long)g_iteclimitset<<7;
-//			Serial.print(v_now);
-//			Serial.print(", ");	
-//			input_bias(v_now,01;
-//			Serial.print(v_now);
-//			Serial.print(", ");	
-			
-//			Serial.println(k);		
+		
 			err = (long)v_now - (long)v_bias_find; 
 			tout = pid.Compute(1, err, g_p_atune, 0, 0);
 			iset=abs(tout*0.586);
@@ -1007,75 +987,52 @@ unsigned int DTC03::FindBiasCurrent(float &t_leave, uint8_t &flag, unsigned int 
 			te = millis();
 				
 			if((te-ts)>=SAMPLINGTINE && (ReturnTemp(v_now,0)-t_leave)>0.1)
-//			if((te-ts)>=SAMPLINGTINE)
-			{	
-//				Serial.print("v_now=");	
-//                Serial.print(g_vact);
-//				Serial.print(", ");		
-//				Serial.print(v_now);
-//				Serial.print(", ");	
-//				Serial.println(g_vact_MV);			
-//				Serial.print(ReturnTemp(v_now,0),3);						
-//				Serial.print(",");
-//				Serial.print("t_leave:");
-//				Serial.print(t_leave);
-//				Serial.print(",");
-//				Serial.print((ReturnTemp(v_now,0)-t_leave)>0.1);
-//				Serial.print(",");
-//				Serial.print(v_bias_find);
-//				Serial.print(", ");
-//				Serial.print(ReturnTemp(v_bias_find,0),3);
-//				Serial.print(", kp: ");
-//				Serial.print(g_p);
-//				Serial.print(", err: ");
-//				Serial.print(err);
-//				Serial.print(", tout: ");
-//				Serial.print(tout);
-//				Serial.print(", out: ");
-//				Serial.print(out);
-//				for(int i=0;i<FINDBIASARRAY;i++)
-//				{
-//					Serial.print(", ");
-//					Serial.print(v_bias[i]);
-//				}
-//				Serial.println();	
 
+			{		
+				
+				if(g_dbrCounter_flag)
+				{
+					g_dbrCounter_flag = 0;
+					g_dbr_counter[0] = millis();
+				}
 				v_bias_max = v_bias[0];
-//				Serial.print(v_bias[0]);
-//				Serial.print(": ");	
 				for(int i=1; i<FINDBIASARRAY;i++)
 				{
-					if(v_bias[i] > v_bias_max) v_bias_max = v_bias[i];
-//					Serial.print(v_bias[i]);
-//					Serial.print(", ");					
+					if(v_bias[i] > v_bias_max) v_bias_max = v_bias[i];				
 				}
-//				Serial.print(v_bias_max);
 				
 				v_bias_min = v_bias[0];
 				for(int i=1; i<FINDBIASARRAY;i++)
 				{
-					if(v_bias[i] < v_bias_min) v_bias_min = v_bias[i];
-//					Serial.print(v_bias[i]);
-//					Serial.print(", ");					
+					if(v_bias[i] < v_bias_min) v_bias_min = v_bias[i];				
 				}
 
 				Serial.println(v_bias_max-v_bias_min);
 				if((v_bias_max - v_bias_min)==3) stable_flag=1;
-//				Serial.print("stable_flag=");
-//				Serial.println(stable_flag);
-				k++;				
+				if((v_bias_max - v_bias_min)<=15) 
+				{
+					g_dbr_counter[1] = millis();
+					unsigned long dbr_counter_tdiff = g_dbr_counter[1]-g_dbr_counter[0];					
+//					Serial.print("dbr_counter_tdiff=");
+//					Serial.println(dbr_counter_tdiff);
+					if(dbr_counter_tdiff < 20000) 
+					{
+						g_DBRflag=1;
+						flag = 2;
+						return(out);
+					}					
+				}
+				
+								
 				runtime = k*(te-ts);
+//				Serial.print("runtime=");
+//				Serial.println(runtime);
 				ts = te;	
-//				Serial.print("runtime:");
-//				Serial.println(runtime);						
+				k++;		
 			}		
 				
-//			for(int i=0; i<(FINDBIASARRAY-1); i++) 
-//			{
-//				if(stable_flag) stable_flag = ( abs(v_bias[i+1]-v_bias[i])<=1 );
-//			}			
+			
 			if(stable_flag) flag = 2;						
-//			if(k==FINDBIASARRAY) k=0;
 			return(out);
 		break;
 	}	

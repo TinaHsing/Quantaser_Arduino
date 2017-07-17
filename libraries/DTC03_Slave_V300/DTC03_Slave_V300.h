@@ -209,9 +209,9 @@ public:
     uint8_t atunKiLs(float &);
     uint8_t atunKp(float &);
     
-    unsigned long g_autunAactavgsum;
+    unsigned long g_autunAactavgsum, g_dbr_counter[2];
     unsigned int g_atuneVact_MV;
-    bool g_atunDone, g_DBRflag, g_runTimeflag;
+    bool g_atunDone, g_DBRflag, g_runTimeflag, g_dbrCounter_flag;
     uint8_t g_atune_kp, g_atune_ki, g_p_atune, g_T_atune;
 
 private:
