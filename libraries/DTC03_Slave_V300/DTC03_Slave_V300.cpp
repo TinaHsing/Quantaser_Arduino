@@ -149,11 +149,11 @@ float DTC03::CalculateR(unsigned int fb_value, unsigned int stabletime, int ravg
     Serial.print("Vtec0: ");
     Serial.println(vtec0);
     Serial.print("Vgs to R calculate =");
-  Serial.println(fb_value);
+  	Serial.println(fb_value);
     Serial.println("n   vtec  itec   rtec ");//20161031
   #else
   #endif
-  fb_value = 0;//test PID tuning
+//  fb_value = 0;//test PID tuning
   SetMos(COOLING, fb_value);  // using cooling path and dac output = fb_value;
   BuildUpArray(0,1,0);    
   delay(stabletime);          // delay stabletime in ms
@@ -868,8 +868,8 @@ void DTC03::peakrecord (unsigned int &input, bool *ismax, bool *ismin, int *peak
         *justchanged = true;
         //////atune data print-5/////
 //        Serial.print(", ");
-        Serial.print("max #");
-        Serial.println(*peakcount);
+//        Serial.print("max #");
+//        Serial.println(*peakcount);
 //        Serial.print(", ");
 //        Serial.print(peaktime[*peakcount]);       
 //        Serial.print(", ");
@@ -958,8 +958,8 @@ unsigned int DTC03::FindBiasCurrent(float &t_leave, uint8_t &flag, unsigned int 
 			ts = millis();	
 			flag = 1;			
 			g_dbrCounter_flag = 1;
-			Serial.print("t_bias=");
-			Serial.println(t_bias,1);
+//			Serial.print("t_bias=");
+//			Serial.println(t_bias,1);
 			
 		break;
 		case 1:
@@ -1007,7 +1007,7 @@ unsigned int DTC03::FindBiasCurrent(float &t_leave, uint8_t &flag, unsigned int 
 					if(v_bias[i] < v_bias_min) v_bias_min = v_bias[i];				
 				}
 
-				Serial.println(v_bias_max-v_bias_min);
+//				Serial.println(v_bias_max-v_bias_min);
 				if((v_bias_max - v_bias_min)==3) stable_flag=1;
 				if((v_bias_max - v_bias_min)<=15) 
 				{

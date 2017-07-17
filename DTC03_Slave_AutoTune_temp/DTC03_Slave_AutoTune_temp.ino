@@ -34,7 +34,7 @@ void setup() {
   Wire.begin(DTC03P05);
   Wire.onReceive(ReceiveEvent);
   Wire.onRequest(RequestEvent);
-  Serial.begin(9600);
+//  Serial.begin(9600);
   dtc.SetSPI();
   dtc.SetPinMode();
   dtc.ParamInit();
