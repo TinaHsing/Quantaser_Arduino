@@ -458,8 +458,8 @@ void DTC03::I2CReceive()
     
 //    Serial.print("g_currentlim:");
 //    Serial.println(g_currentlim);
-    Serial.print("kp: ");
-    Serial.println(g_p);
+//    Serial.print("kp: ");
+//    Serial.println(g_p);
     break;
 
     case I2C_COM_VSET:
@@ -481,10 +481,10 @@ void DTC03::I2CReceive()
     g_ls = temp[0];
     g_ki = temp[1];
     
-    Serial.print("LSKI:");
-    Serial.print(g_ls);
-    Serial.print(", ");
-    Serial.println(g_ki);
+//    Serial.print("LSKI:");
+//    Serial.print(g_ls);
+//    Serial.print(", ");
+//    Serial.println(g_ki);
     break;
 
     case I2C_COM_R1R2:
@@ -524,7 +524,7 @@ void DTC03::I2CReceive()
     	g_atunDone = 0; 
     	g_DBRflag = 0;
     	g_runTimeflag = 0;
-    	g_T_atune = temp[0] >> 1;//0~127;
+    	g_T_atune = temp[0] >> 1;//0~127 for 0~12.7 degree offset;
     	g_p_atune = temp[1];
 //    	Serial.print("g_p_atune=");
 //    	Serial.println(g_p_atune);
@@ -532,7 +532,16 @@ void DTC03::I2CReceive()
 //    	Serial.println(g_T_atune);
 //    	Serial.print("g_atune_flag=");
 //    	Serial.println(g_atune_flag);
-
+//    	Serial.print("temp[0]=");
+//    	Serial.println(temp[0], BIN);
+//    	Serial.print("REQMSK_ATUNE_STATUS=");
+//    	Serial.println(REQMSK_ATUNE_STATUS);
+    	break;
+    	
+    case I2C_COM_ATSTABLE:
+    	g_stableCode_atune = temp[0];
+//    	Serial.print("g_stableCode_atune:");
+//    	Serial.println(g_stableCode_atune);
     	break;
 
     case I2C_COM_OTP:
@@ -624,7 +633,7 @@ int DTC03::autotune(float &kp, float &ki)
 		v_bias_relay = FindBiasCurrent(t_leave, findBiasCurrentStatus, v_bias_find, v_bias, ts, runtime, k);
 		if(g_DBRflag) 
 		{
-			Serial.println("DBR case!");
+//			Serial.println("DBR case!");
 			g_atune_flag = 0;
 			g_atune_kp = p_dbr;
 		    g_atune_ki = ki_dbr;
@@ -632,7 +641,7 @@ int DTC03::autotune(float &kp, float &ki)
 		}
 		if(runtime>RUNTIMELIMIT) 
 		{
-			Serial.println("Runtime time ERR!");
+//			Serial.println("Runtime time ERR!");
 			g_atune_flag = 0;
 			g_runTimeflag = 1;	
 			g_atune_kp = p_def;
@@ -642,8 +651,8 @@ int DTC03::autotune(float &kp, float &ki)
 		}
 	}	
 	if(!g_atune_flag) return(0); // for runtime err case
-	Serial.print("v_bias_relay= ");
-	Serial.println(v_bias_relay);
+//	Serial.print("v_bias_relay= ");
+//	Serial.println(v_bias_relay);
 
     input_bias(p_noise_Mid,1);
     while(!find_period_flag) 
@@ -651,12 +660,12 @@ int DTC03::autotune(float &kp, float &ki)
     	RelayMethod(v_bias_relay, in, &init_flag, &relay_heating_flag, &relay_cooling_flag, find_period_flag, relay_period, period_count, step_out);
 	}
 
-	Serial.print("Period = ");
-	Serial.println(p_relayT);
+//	Serial.print("Period = ");
+//	Serial.println(p_relayT);
 	AtunSamplingTime();
 	if(g_DBRflag) 
 	{
-		Serial.println("DBR case!");
+//		Serial.println("DBR case!");
 		g_atune_flag = 0;
 		g_atune_kp = p_dbr;
 	    g_atune_ki = ki_dbr;
@@ -690,28 +699,31 @@ int DTC03::autotune(float &kp, float &ki)
 	        g_atune_ki = atunKiLs(TC);
 	        if(peakcount == MAXPEAKS-1)
 	        {
-	          Serial.print("A=,");
-	          Serial.println(A);
-	          Serial.print("stepD=,");
-	          Serial.println(OUTSTEP);
-	          Serial.print("Ku=,");
-	          Serial.println(Ku);
-	          Serial.print("Pu=,");
-	          Serial.println(Pu);
-	          Serial.print("kp=,");
-	          Serial.println(kp);
-	          Serial.print("ki=,");
-	          Serial.println(ki);
-	          Serial.print("ki2=,");
-	          Serial.println(ki2);
-	          Serial.print("TC=,");
-	          Serial.println((float)1.0/(ki),1); 
-	          Serial.print("Tc2=,");
-	          Serial.println(1.0/ki2,1);
-	          Serial.print("g_atune_kp=,");
-	          Serial.println(g_atune_kp);
-	          Serial.print("g_atune_ki=,");
-	          Serial.println(g_atune_ki);
+	        	#ifdef DEBUGFLAG01
+		          Serial.print("A=,");
+		          Serial.println(A);
+		          Serial.print("stepD=,");
+		          Serial.println(OUTSTEP);
+		          Serial.print("Ku=,");
+		          Serial.println(Ku);
+		          Serial.print("Pu=,");
+		          Serial.println(Pu);
+		          Serial.print("kp=,");
+		          Serial.println(kp);
+		          Serial.print("ki=,");
+		          Serial.println(ki);
+		          Serial.print("ki2=,");
+		          Serial.println(ki2);
+		          Serial.print("TC=,");
+		          Serial.println((float)1.0/(ki),1); 
+		          Serial.print("Tc2=,");
+		          Serial.println(1.0/ki2,1);
+		          Serial.print("g_atune_kp=,");
+		          Serial.println(g_atune_kp);
+		          Serial.print("g_atune_ki=,");
+		          Serial.println(g_atune_ki);
+	         	#else
+    			#endif
 	          g_atune_flag = 0;
 	          g_atunDone = 1;
 	        }
@@ -1008,7 +1020,7 @@ unsigned int DTC03::FindBiasCurrent(float &t_leave, uint8_t &flag, unsigned int 
 				}
 
 //				Serial.println(v_bias_max-v_bias_min);
-				if((v_bias_max - v_bias_min)==3) stable_flag=1;
+				if((v_bias_max - v_bias_min)==g_stableCode_atune) stable_flag=1;
 				if((v_bias_max - v_bias_min)<=15) 
 				{
 					g_dbr_counter[1] = millis();

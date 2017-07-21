@@ -56,7 +56,8 @@ void DTC03Master::WelcomeScreen()
 {
   lcd.SelectFont(SystemFont5x7);
   lcd.GotoXY(0,0);
-  lcd.print("DTC03 Ver.3.01");
+//  lcd.print("DTC03 Ver.3.01");
+  lcd.print("DTC03 Ver.3.02"); // 3.02 for autotune
   lcd.GotoXY(0,ROWPIXEL0507*1);
   lcd.print("Initializing");
   for (byte i=5; i>0; i--)
@@ -88,6 +89,7 @@ void DTC03Master::ReadEEPROM()
         g_otp = EEPROM.read(EEADD_TOTP_UPPER)<<8 | EEPROM.read(EEADD_TOTP_LOWER);
         g_p_atune = EEPROM.read(EEADD_PAP);
         g_T_atune = EEPROM.read(EEADD_TBIAS);
+        g_stableCode_atune = EEPROM.read(EEADD_ATSTABLE);
 	}
 	else
 	{
@@ -113,6 +115,7 @@ void DTC03Master::ReadEEPROM()
 		EEPROM.write(EEADD_TOTP_LOWER, NOEE_TOTP);
 		EEPROM.write(EEADD_PAP, NOEE_PAP);
 		EEPROM.write(EEADD_TBIAS, NOEE_TBIAS);
+		EEPROM.write(EEADD_ATSTABLE, NOEE_ATSTABLE);
 
 		g_vset = NOEE_VSET;
 		g_currentlim = NOEE_ILIM;
@@ -128,7 +131,8 @@ void DTC03Master::ReadEEPROM()
 		g_vmodoffset = NOEE_MODOFF;
 		g_Rmeas = NOEE_RMEAS;
 		g_otp = NOEE_TOTP; 
-		g_T_atune = EEADD_TBIAS;
+		g_T_atune = NOEE_TBIAS;
+		g_stableCode_atune = NOEE_ATSTABLE;
 	}	
     g_tset = ReturnTemp(g_vset, 0); 
    
@@ -202,6 +206,10 @@ void DTC03Master::SaveEEPROM() {
 			case EEADD_TBIAS:
                 EEPROM.write(EEADD_TBIAS, g_T_atune);
                 break;   
+                
+            case EEADD_ATSTABLE:
+                EEPROM.write(EEADD_ATSTABLE, g_stableCode_atune);
+                break;  
         }
 	}
 }
@@ -324,14 +332,17 @@ void DTC03Master::I2CWriteData(unsigned char com)
     case I2C_COM_ATUN:
     	    temp[0] = (g_T_atune << 1) | g_atune_status;
     	    temp[1] = g_p_atune;
-
     	break;
     	
     case I2C_COM_WAKEUP:
     		temp[0] = 1;
     		temp[1] = 0; // overshoot cancelation, set 0 in DTC03
     	break;
-    
+    	
+    case I2C_COM_ATSTABLE:
+    	    temp[0] = g_stableCode_atune;
+    	break;	
+      
     case I2C_COM_TEST1:
         temp[0]=p_temp;
         temp[1]=p_temp>>8;
@@ -542,21 +553,7 @@ void DTC03Master::PrintP()
   }
   
 }
-void DTC03Master::PrintP_Atune()
-{
-  lcd.SelectFont(SystemFont5x7);
-  lcd.GotoXY(P_AT_COORD_X2, P_AT_COORD_Y );
-  if(g_p_atune<10) lcd.print(" ");  
-  lcd.print(g_p_atune);
-}
 
-void DTC03Master::PrintTbias()
-{
-  lcd.SelectFont(SystemFont5x7);
-  lcd.GotoXY(TBIAS_COORD_X2, TBIAS_COORD_Y );
-  if(g_T_atune<10) lcd.print(" ");  
-  lcd.print(g_T_atune);
-}
 void DTC03Master::PrintKi()
 {
   //unsigned int tconst;
@@ -626,8 +623,7 @@ void DTC03Master::PrintAtuneDone()
 		I2CWriteData(I2C_COM_ATUN); //after recieve g_atunDone from slave, send this to slave zero the three flag(g_atunDone, g_DBRflag and g_runTimeflag) 
 		
 		BackGroundPrint();
-		PrintNormalAll();
-		
+		PrintNormalAll();		
 }
 void DTC03Master::PrintEnable() 
 {
@@ -704,6 +700,8 @@ void DTC03Master::PrintEngBG()
   lcd.print(Text_PAT);
   lcd.GotoXY(TBIAS_COORD_X, TBIAS_COORD_Y);
   lcd.print(Text_TAT);
+  lcd.GotoXY(ATSTABLE_COORD_X, ATSTABLE_COORD_Y);
+  lcd.print(Text_SAT);
 }
 void DTC03Master::PrintEngAll()
 {
@@ -716,6 +714,7 @@ void DTC03Master::PrintEngAll()
 	PrintTotp();
 	PrintP_Atune();
 	PrintTbias();
+	PrintATStable();
 	CheckStatus();
 }
 void DTC03Master::PrintR1() //g_cursorstate=10
@@ -773,6 +772,29 @@ void DTC03Master::PrintTpcb(float tpcb)
   lcd.GotoXY(TPCB_COORD_X2, TPCB_COORD_Y);
   if (tpcb < 100.0 ) lcd.print(" ");
   lcd.print(tpcb,0);
+}
+void DTC03Master::PrintP_Atune()
+{
+  lcd.SelectFont(SystemFont5x7);
+  lcd.GotoXY(P_AT_COORD_X2, P_AT_COORD_Y );
+  if(g_p_atune<10) lcd.print(" ");  
+  lcd.print(g_p_atune);
+}
+
+void DTC03Master::PrintTbias()
+{
+  lcd.SelectFont(SystemFont5x7);
+  lcd.GotoXY(TBIAS_COORD_X2, TBIAS_COORD_Y );
+  if(g_T_atune<10) lcd.print(" ");  
+  lcd.print(g_T_atune);
+}
+
+void DTC03Master::PrintATStable()
+{
+  lcd.SelectFont(SystemFont5x7);
+  lcd.GotoXY(ATSTABLE_COORD_X2, ATSTABLE_COORD_Y );
+  if(g_stableCode_atune<10) lcd.print(" ");  
+  lcd.print(g_stableCode_atune);
 }
 void DTC03Master::CursorState()
 {
@@ -864,7 +886,7 @@ void DTC03Master::CursorState()
 			      PrintEngAll();
 			      g_cursorstate=10;
 		        }
-		       if( g_cursorstate>18 ) g_cursorstate=10;
+		       if( g_cursorstate>19 ) g_cursorstate=10;
 	  	       ShowCursor(0);
 	  	       p_tcursorStateBounce=t_temp;
 		   }		
@@ -1024,7 +1046,7 @@ void DTC03Master::ShowCursor(unsigned char state_old)
 		    lcd.GotoXY(R1_COORD_X-COLUMNPIXEL0507, R1_COORD_Y);
 		    lcd.print(" ");
 		    lcd.SelectFont(SystemFont5x7);
-		    lcd.GotoXY(TBIAS_COORD_X-COLUMNPIXEL0507, TBIAS_COORD_Y);
+		    lcd.GotoXY(ATSTABLE_COORD_X-COLUMNPIXEL0507, ATSTABLE_COORD_Y);
 		    lcd.print(" ");
 		    break;
 		
@@ -1097,6 +1119,15 @@ void DTC03Master::ShowCursor(unsigned char state_old)
 		    lcd.print(" ");
 		    lcd.SelectFont(SystemFont5x7);
 		    lcd.GotoXY(P_AT_COORD_X-COLUMNPIXEL0507, P_AT_COORD_Y);
+		    lcd.print(" ");
+		    break;
+		    
+		    case 19:
+		    lcd.SelectFont(SystemFont5x7, WHITE);
+		    lcd.GotoXY(ATSTABLE_COORD_X-COLUMNPIXEL0507, ATSTABLE_COORD_Y);
+		    lcd.print(" ");
+		    lcd.SelectFont(SystemFont5x7);
+		    lcd.GotoXY(TBIAS_COORD_X-COLUMNPIXEL0507, TBIAS_COORD_Y);
 		    lcd.print(" ");
 		    break;
 		}
@@ -1275,6 +1306,15 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
         I2CWriteData(I2C_COM_ATUN);
         PrintTbias();
         p_ee_change_state=EEADD_TBIAS;
+        break;
+        
+        case 19:
+      	g_stableCode_atune += g_counter;
+		if(g_stableCode_atune>99) g_stableCode_atune=99;
+        if(g_stableCode_atune<1) g_stableCode_atune=1;    
+        I2CWriteData(I2C_COM_ATSTABLE);
+        PrintATStable();
+        p_ee_change_state=EEADD_ATSTABLE;
         break;
     }
   }
