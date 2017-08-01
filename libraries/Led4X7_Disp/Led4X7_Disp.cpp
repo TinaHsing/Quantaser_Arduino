@@ -88,6 +88,8 @@ void led4X7_disp::print(float number) { //use delay
       delay(dt);
       n[0] = number*10;
       SetDisplay(n[0], 0);
+      //// below to test only one digit -> position zero///// 
+//      SetDisplay(number, 0);
       delay(dt);
     break;
   }	
