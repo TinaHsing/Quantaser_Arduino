@@ -26,11 +26,11 @@ float kp_auto,ki_auto;
 ///////////////////////////
 DTC03 dtc;
 PID ipid, tpid;
-
+byte is=0, js=0;
 unsigned int i=0 ;
 unsigned long loop_time[5];
 void setup() {
-//  Serial.begin(9600);
+  Serial.begin(9600);
   Wire.begin(DTC03P05);
   Wire.onReceive(ReceiveEvent);
   Wire.onRequest(RequestEvent);
@@ -62,7 +62,6 @@ void setup() {
 //  Serial.println(FINDBIASARRAY);
 //  Serial.print("RUNTIMELIMIT:");
 //  Serial.println(RUNTIMELIMIT);
-
 }
 
 void loop() {
@@ -111,6 +110,8 @@ void loop() {
   {
     dtc.autotune(kp_auto, ki_auto);
   }
+//  dtc.CheckSerial();
+  CheckSerial();
 }
 void ReceiveEvent(int howmany)
 {
@@ -119,4 +120,25 @@ void ReceiveEvent(int howmany)
 void RequestEvent()
 { 
   dtc.I2CRequest();
+}
+void CheckSerial()
+{
+  unsigned int in;
+//  Serial.begin(9600);
+  if(Serial.available()>0)
+    {
+      in = Serial.read();
+      switch(in)
+      {
+        case '1':
+          Serial.println(is<<8 | js);
+          js++;
+          break;
+         case '2':
+          Serial.println(is<<8 | js);
+          is++;
+          break;
+    }  
+  }
+//  Serial.end();
 }

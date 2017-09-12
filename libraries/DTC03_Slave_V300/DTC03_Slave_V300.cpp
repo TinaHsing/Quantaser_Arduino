@@ -57,7 +57,7 @@ void DTC03::SetPinMode()
   pinMode(TEMP_SENSOR,INPUT);
   pinMode(VCC1,OUTPUT);
   pinMode(VCC2,OUTPUT);
-  pinMode(VCC3,OUTPUT);
+//  pinMode(VCC3,OUTPUT);
 }
 void DTC03::SetSPI()
 {
@@ -742,11 +742,11 @@ void DTC03::AtunSamplingTime()
 //	else if(1 <= p_relayT && p_relayT < 2) p_samplingTime = 10;
 //	else p_samplingTime = 5; //DBR type, show flag and use fix parameters 
     else g_DBRflag = 1;
-    if(!g_DBRflag)
-    {
-    	Serial.print("p_samplingTime=");
-	    Serial.println(p_samplingTime);
-	}
+//    if(!g_DBRflag)
+//    {
+//    	Serial.print("p_samplingTime=");
+//	    Serial.println(p_samplingTime);
+//	}
 }
 void DTC03::RelayMethod(unsigned int &v_bias_relay, unsigned int &in, bool *init_flag, bool *relay_heating_flag, bool *relay_cooling_flag, bool &find_period_flag, unsigned long *relay_period, int &period_count, unsigned int &step_out)
 {	
@@ -1204,7 +1204,27 @@ uint8_t DTC03::atunKiLs(float &tc)
 	}
 }
 
-
+void DTC03::CheckSerial()
+{
+	unsigned int in;
+//	Serial.begin(9600);
+	if(Serial.available()>0)
+  	{
+	    in = Serial.read();
+	    switch(in)
+	    {
+	      case '1':
+	        Serial.println(is<<8 | js);
+	        js++;
+	        break;
+	       case '2':
+	        Serial.println(is<<8 | js);
+	        is++;
+	        break;
+		}  
+	}
+//	Serial.end();
+}
 
 
 

@@ -10,7 +10,7 @@
 // ===================================================
 
 // =====================DEBUGFLAG Table =================================
-//#define DEBUGFLAG01 
+#define DEBUGFLAG01 
 //#define DEBUGFLAG02 3
 //#define DEBUGFLAG03
 
@@ -208,7 +208,11 @@ public:
     unsigned int FindBiasCurrent(float &, uint8_t &, unsigned int &, unsigned int (&)[FINDBIASARRAY], unsigned long &, unsigned long &, int &);
     uint8_t atunKiLs(float &);
     uint8_t atunKp(float &);
+    // new for serial command//
+    void CheckSerial();
     
+    unsigned int is, js;
+    //
     unsigned long g_autunAactavgsum, g_dbr_counter[2];
     unsigned int g_atuneVact_MV;
     bool g_atunDone, g_DBRflag, g_runTimeflag, g_dbrCounter_flag;
@@ -216,6 +220,7 @@ public:
 
 private:
 	int ReadVtec(int Avgtime);
+	
     unsigned char  g_vactindex, g_currentindex, g_vpcbindex;
 	LTC1865 ltc1865;
 
@@ -224,6 +229,7 @@ private:
     bool p_enterSetVFlag;
     //new for autotune//
     unsigned int p_noise_Mid, p_relayT, p_samplingTime, AtuneActArray[ATUNEAVGTIME];
+    
     
    
 };
