@@ -122,14 +122,24 @@ long PID::Compute(bool en, long errin, unsigned char kp, unsigned char ki, unsig
 		
 		g_index++;
 		t1= micros();
+//		Serial.print(g_index);
+//		Serial.print(", ");
+//		Serial.println(PIDDEBUGFLAG);
 		if(g_index == PIDDEBUGFLAG )
 		{
 			g_index = 0;
+<<<<<<< HEAD
+		    Serial.print(kp);
+			Serial.print(",");
+//			Serial.print(errin);
+//			Serial.print(",");
+=======
 <<<<<<< HEAD
 			Serial.print(errin);
 			Serial.print(",");
 		    Serial.print(kp);
 			Serial.print(",");			
+>>>>>>> master
             //Serial.print(g_errorsum);
             //Serial.print(",");
             
@@ -151,6 +161,15 @@ long PID::Compute(bool en, long errin, unsigned char kp, unsigned char ki, unsig
 			Serial.print(",");			
             Serial.print(g_ki);
 			Serial.print(",");
+<<<<<<< HEAD
+			Serial.println(ls);
+//			Serial.print(",");
+//			Serial.print(p_term);
+//			Serial.print(",");
+//			Serial.print(g_i_term);
+//			Serial.print(",");
+//			Serial.println(output);
+=======
 			Serial.print(g_ls);
 			Serial.print(",");
 			Serial.print(p_term);
@@ -161,6 +180,7 @@ long PID::Compute(bool en, long errin, unsigned char kp, unsigned char ki, unsig
 			Serial.print(g_out);
 			Serial.print(",");
 			Serial.println(en);
+>>>>>>> master
 //			Serial.print(",");
 //			Serial.print((long) g_errorlimit,HEX);
 //			Serial.print(",");
