@@ -574,14 +574,15 @@ void DTC03SMaster::CalculateRate()
 	unsigned int t_temp;
 	
 	t_temp = millis(); 
-	if ( (g_en_state==1) && (g_scan==1) && (p_EngFlag==0)) {
+	if ( (g_en_state==1) && (g_scan==1) && (p_EngFlag==0)) 
+	{
 		
 		if(p_overshoot_cancel_Flag_scan) setKpKiLs(1);	
-		if ( (t_temp-p_trate) >= SCANSAMPLERATE ) {			
-			
+		if ( (t_temp-p_trate) >= SCANSAMPLERATE ) 
+		{						
 			p_tlp = t_temp-p_trate;
 			if (p_tlp > SCANSAMPLERATE*2) p_tlp=0;
-			p_rate = float(g_trate)*p_tlp/100000.0;
+			p_rate = float(g_trate)*p_tlp/100000.0; // (g_trate/100)*(1/1000)*p_tlp : (convert g_trate index to scan rate k/s)*(1s/1000ms)*(dt) = dTemp 
 			if(g_tend > g_tstart) 
 			{
 				g_tnow += p_rate;
@@ -592,7 +593,7 @@ void DTC03SMaster::CalculateRate()
 				g_tnow -= p_rate;
 				if( (g_tnow+g_tfine) < g_tend) g_tnow = g_tend - g_tfine;				
 			}
-		p_rateflag = 1;					
+		    p_rateflag = 1;					
 	    }
 	    p_enableFlag = 1; // change to 1 only when EN ON && Scan ON && ~ENG mode 
 	}
@@ -602,7 +603,8 @@ void DTC03SMaster::CalculateRate()
 		setKpKiLs(2);
 	}
 	
-	if (p_rateflag == 1) {
+	if (p_rateflag == 1) 
+	{
 		p_rateflag = 0;
 		p_trate = t_temp; 
 //		I2CWriteData(I2C_COM_TEST);// use to check rate update time
@@ -611,7 +613,8 @@ void DTC03SMaster::CalculateRate()
 	    PrintCounter(1, t_temp);
 	}
 	
-	if ( (p_enableFlag==1) && (g_en_state==0) ) {
+	if ( (p_enableFlag==1) && (g_en_state==0) ) 
+	{
 		p_enableFlag = 0;
 		g_vset = ReturnVset(g_tstart, 0);
 	    I2CWriteData(I2C_COM_VSET);
