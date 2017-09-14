@@ -1,4 +1,9 @@
-#include <DTC03_MS.h>
+//#include <DTC03_MS.h>
+//#include <Wire.h>
+#include <SPI.h>
+#include <LTC1865.h>
+//#include <EEPROM.h>
+#include <AD5541.h>
 //#include <avr/pgmspace.h>
 
 //========================Other Library version Request =================
@@ -7,8 +12,9 @@
 
 // =====================DEBUGFLAG Table =================================
 #define DEBUGFLAG01
-//#define DEBUGFLAG02 1
+//#define DEBUGFLAG02 3
 //#define DEBUGFLAG03
+#define INITIAL_VALUE_CHECK 
 
 #ifdef DTCDEBUG01
 	#define DEBUGFLAG01 // Show initial setup information in Serial monitor
@@ -29,7 +35,7 @@
 
 //=====================Freqently update define ==========================
 // ========User can copy below define to main function ==================
-#define RMEASUREVOUT 28400 //20161031, 55000
+#define RMEASUREVOUT 55000 //20161031
 #define RMEASUREDELAY 3000 //20161031
 #define RMEASUREAVGTIME 10
 #define VACTAVGTIME 64 // Note!!!! VACTAVGTIEM = 2 ^ VACTAVGPWR 
@@ -44,6 +50,8 @@
 #define ILIMDACOUTSTART 500		// define the current limit start current 500mA
 #define ILIMDACSTEP 50  		// define the current limit step current 50mA
 #define LIMCOUNTER 10
+#define FBCCHECK_LOW 35000
+#define FBCCHECK_HIGH 60000
 
 //=================end of Frequently update define======================
 
@@ -57,15 +65,16 @@
 #define NOEE_VSET 13524 //vset_lim =@Bconst=3988
 #define NOEE_ILIM 32 // currntlimit,3A=50
 //#define NOEE_VBEH1 215 // DACout max=215*
-//#define NOEE_VBEH2	19 // DACout minus step=19*
+//#define NOEE_R2	19 // DACout minus step=19*
 //#define NOEE_VBEC1	215
-#define NOEE_VBEH1 6 // R1, 0.6ohm
-#define NOEE_VBEH2	1 // R2, 1ohm
-#define NOEE_VBEC1	2 //Tpid offset 2000
+#define NOEE_R1 6 // R1, 0.6ohm
+#define NOEE_R2	16 // R2, 1ohm
+#define NOEE_PIDOFFSET	2 //Tpid offset 2000
 #define NOEE_VBEC2	19
-#define NOEE_FBC 21000
+#define NOEE_FBC 22500 //45000
 #define NOEE_DUMMY 104
-#define NOEE_OFFSET 32494
+#define NOEE_OFFSET 32393
+
 
 // The address of EEPROM
 #define EEADD_P 				0
@@ -77,9 +86,9 @@
 #define EEADD_Sensor_type 		8
 #define EEADD_B_upper 			9
 #define EEADD_B_lower 			10
-#define EEADD_VBE_H1 			11
-#define EEADD_VBE_H2			12
-#define EEADD_VBE_C1			13
+#define EEADD_R1		     	11
+#define EEADD_R2			    12
+#define EEADD_PIDOFFSET			13
 #define EEADD_VBE_C2			14
 #define EEADD_FBC_base_upper 	15
 #define EEADD_FBC_base_lower 	16
@@ -129,7 +138,7 @@
 #define RTHRatio 25665 //(Isen*R0)*65535/vref concert Isense*R0 to 16bit ADC code
 #define T0INV 0.003354
 #define V_NOAD590 30000 
-#define V_OVERTEMP 481 // 150 degree 680
+#define V_OVERTEMP 481 // 90 degree
 
 const unsigned char PS_16 = (1<<ADPS2);
 const unsigned char PS_32 = (1<<ADPS2)|(1<<ADPS0);
@@ -148,43 +157,43 @@ public:
 	void ParamInit();
 	void DynamicVcc();
 	void SetVcc(unsigned char state);
+	void ReadEEPROMnew();
     void SetMos(bool heating, unsigned int fb_value);
     void SetMosOff();
 	float CalculateR(unsigned int fb_value, unsigned int stabletime, int ravgtime, int vavgtime);
 	unsigned int InitVactArray();
-	void ReadEEPROMnew();
-	void ReadEEPROM();
+//	void ReadEEPROM();
 	void CheckSensorType();
 	void CheckTemp();
 	void ReadVoltage();
 	void VsetSlow();
-	void CurrentLimitGain(bool heating);
+//	void CurrentLimitGain(bool heating);
 	void CurrentLimit();
 	void I2CRequest();
 	void I2CReceive();
 	void SaveEEPROM();
     int ReadIsense();//
+    void CheckInitValue(bool, bool, bool);
 
 	unsigned int g_vact, g_vset, g_fbc_base, g_isense0,Vactarray[VACTAVGTIME], Itecarray[ITECAVGTIME],g_currentabs,g_itecread;//
-    unsigned char g_p, g_ki, g_ls, g_currentlim, g_ee_change_state,g_kiindex, g_limcounter,g_currentindex, g_vbec1, g_vbec2, g_vbeh1, g_vbeh2, g_tpidoffset;
+    unsigned char g_p, g_ki, g_ls, g_currentlim, g_ee_change_state,g_kiindex, g_limcounter,g_currentindex, g_tpidoffset, g_r1, g_r2;
 	unsigned long g_vactavgsum, g_itecavgsum;
 	bool g_en_state, g_heating, g_errcode1, g_errcode2, g_sensortype, g_mod_status, g_ee_changed;
     unsigned int g_b_upper, g_b_lower,g_vset_limit, g_ilimdacout,g_vset_limitt,g_vmod;
     unsigned int g_vmodoffset;//
     int g_iteclimitset;//
-    float g_r1, g_r2;
     AD5541 dacformos, dacforilim;
 
 private:
 	//int ReadIsense();
 	int ReadVtec(int Avgtime);
 	//unsigned char g_currentindex, g_vbeh1, g_vbeh2, g_vbec1, g_vbec2, g_vactindex;
-    unsigned char  g_vactindex;
+    unsigned char  g_vactindex, g_vbec2;
 	LTC1865 ltc1865;
 	//AD5541 dacformos, dacforilim;
 	//int g_vmodoffset;
 	//unsigned int g_vset_limit,g_vbec, g_vbeh, g_b_upper, g_b_lower, g_ilimdacout, g_vmod;
 	//unsigned int g_vbec, g_vbeh,g_vmod;
-	unsigned int g_vbec, g_vbeh;
+//	unsigned int g_vbec, g_vbeh;
     float g_ilimgain;
 };
