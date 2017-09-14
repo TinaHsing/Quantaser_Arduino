@@ -50,6 +50,68 @@ void DTC03Master::WelcomeScreen()
   }
   lcd.ClearScreen(0);//0~255 means ratio of black  
 }
+void DTC03Master::I2CWriteData(unsigned char com)
+{
+  unsigned char temp[2];
+  switch(com)
+  {
+    case I2C_COM_INIT:
+    temp[0]= g_bconst - BCONSTOFFSET;
+    temp[1]= (g_bconst - BCONSTOFFSET) >> 8;
+    if(g_en_state) temp[1] |= REQMSK_ENSTATE;
+//    if(g_sensortype) temp[1]|= REQMSK_SENSTYPE; //20161113 mark
+	if(g_mod_status) temp[1]|= REQMSK_SENSTYPE; //20161113
+    
+    break;
+
+    case I2C_COM_CTR:
+    temp[0]= g_currentlim;
+    temp[1]= g_p;
+    break;
+
+    case I2C_COM_VSET:
+    temp[0]=g_vset;
+    temp[1]=g_vset>>8;
+    break;
+
+    case I2C_COM_KIINDEX:
+    temp[0]=g_kiindex;
+    temp[1]=0;
+    break;
+
+    case I2C_COM_VBEH:
+    temp[0] = g_r1;
+    temp[1] = g_r2;
+    break;
+
+    case I2C_COM_VBEC:
+    temp[0] = g_tpidoff;
+    temp[1] = g_vbec2;
+    break;
+
+    case I2C_COM_FBC:
+    temp[0] = g_fbcbase;
+    temp[1] = g_fbcbase>>8;//
+    break;
+
+    case I2C_COM_VMOD:
+    temp[0] = g_vmodoffset;
+    temp[1] = g_vmodoffset >>8;
+    break;
+    
+    case I2C_COM_KI:
+    temp[0]=pgm_read_word_near(kilstable+g_kiindex*2);
+    temp[1]=pgm_read_word_near(kilstable+g_kiindex*2+1);
+    break;
+
+  }
+  Wire.beginTransmission(DTC03P05);//20161031 add
+  Wire.write(com);//
+  Wire.write(temp, 2);//
+  Wire.endTransmission();//
+  delayMicroseconds(I2CSENDDELAY);//
+
+}
 void DTC03Master::I2CReadData(unsigned char com)
 {
   unsigned char temp[2], b_upper, b_lower;
@@ -406,70 +468,6 @@ void DTC03Master::CursorState()
      }
   
   }
-}
-
-
-void DTC03Master::I2CWriteData(unsigned char com)
-{
-  unsigned char temp[2];
-  switch(com)
-  {
-    case I2C_COM_INIT:
-    temp[0]= g_bconst - BCONSTOFFSET;
-    temp[1]= (g_bconst - BCONSTOFFSET) >> 8;
-    if(g_en_state) temp[1] |= REQMSK_ENSTATE;
-//    if(g_sensortype) temp[1]|= REQMSK_SENSTYPE; //20161113 mark
-	if(g_mod_status) temp[1]|= REQMSK_SENSTYPE; //20161113
-    
-    break;
-
-    case I2C_COM_CTR:
-    temp[0]= g_currentlim;
-    temp[1]= g_p;
-    break;
-
-    case I2C_COM_VSET:
-    temp[0]=g_vset;
-    temp[1]=g_vset>>8;
-    break;
-
-    case I2C_COM_KIINDEX:
-    temp[0]=g_kiindex;
-    temp[1]=0;
-    break;
-
-    case I2C_COM_VBEH:
-    temp[0] = g_r1;
-    temp[1] = g_r2;
-    break;
-
-    case I2C_COM_VBEC:
-    temp[0] = g_tpidoff;
-    temp[1] = g_vbec2;
-    break;
-
-    case I2C_COM_FBC:
-    temp[0] = g_fbcbase;
-    temp[1] = g_fbcbase>>8;//
-    break;
-
-    case I2C_COM_VMOD:
-    temp[0] = g_vmodoffset;
-    temp[1] = g_vmodoffset >>8;
-    break;
-    
-    case I2C_COM_KI:
-    temp[0]=pgm_read_word_near(kilstable+g_kiindex*2);
-    temp[1]=pgm_read_word_near(kilstable+g_kiindex*2+1);
-    break;
-
-  }
-  Wire.beginTransmission(DTC03P05);//20161031 add
-  Wire.write(com);//
-  Wire.write(temp, 2);//
-  Wire.endTransmission();//
-  delayMicroseconds(I2CSENDDELAY);//
-
 }
 unsigned int DTC03Master::ReturnVset(float tset, bool type)
 {

@@ -29,6 +29,16 @@ void PID::Init( long long p_limit, long long i_limit, unsigned char ki, unsigned
 	g_index=0;
 	g_p_limit = p_limit;
     g_i_limit = i_limit;//20171107
+<<<<<<< HEAD
+    g_errorlimit = error_limit;
+    #ifdef DEBUGFLAG01
+		Serial.println("====================comput print detail=============");
+		Serial.print("loopcount to show:");
+		Serial.println(PIDDEBUGFLAG);
+		Serial.println("errin, kp, ki, ls, p_term, i_term, output");
+	#else
+	#endif
+=======
     g_errorlimit = (g_i_limit<<ls)/ki;
     Serial.print("g_errorlimit: ");
     Serial.print((unsigned long)g_i_limit);
@@ -46,6 +56,7 @@ void PID::Init( long long p_limit, long long i_limit, unsigned char ki, unsigned
 //		Serial.println("kp, errin, errorsum, ki, ls, p_term, i_term, output");
 //	#else
 //	#endif
+>>>>>>> master
 }
 long PID::Compute(bool en, long errin, unsigned char kp, unsigned char ki, unsigned char ls)
 {
@@ -58,21 +69,31 @@ long PID::Compute(bool en, long errin, unsigned char kp, unsigned char ki, unsig
 //	g_errorlimit = (g_i_limit<<ls)/ki;
 //	
 	if(en)
+<<<<<<< HEAD
+	{
+        g_errorsum+=errin; 
+		if(g_errorsum > g_errorlimit) g_errorsum = g_errorlimit ;
+		else if(g_errorsum < (-1)*g_errorlimit) g_errorsum = (-1)*g_errorlimit ;
+=======
 	{	
 		if(ki != ki_temp) g_errorlimit =  (g_i_limit<<ls)/ki;
 //		g_errorlimit =  (g_i_limit<<ls)/ki;
         g_errorsum+=errin;
 		if(g_errorsum >= g_errorlimit) g_errorsum = g_errorlimit ;
 		else if(g_errorsum <= (-1)*g_errorlimit) g_errorsum = (-1)*g_errorlimit ;
+>>>>>>> master
 		p_term = kp * errin;
 		
-        //if (g_errorsum>0)g_i_term = (g_errorsum >>ls)*ki;//20161105 divieded first to avoid 
-		//else if (g_errorsum<0)g_i_term = (-1)*long((abs(g_errorsum)>>ls)*ki);//20161105
         
+<<<<<<< HEAD
+        g_i_term = (long)(((long long)(g_errorsum)*(long long)(ki))>>ls);//20161105 divieded first to avoid 
+                
+=======
         i_term = (long)(((long long)(g_errorsum)*(long long)(ki))>>ls);//20161105 divieded first to avoid 
         
         //esumki=(long long)(g_errorsum)*(long long)(ki);//
         
+>>>>>>> master
         if(p_term > g_p_limit) p_term = g_p_limit;
 		else if(p_term < (-1)*g_p_limit) p_term = (-1)*g_p_limit ;
 		
@@ -104,6 +125,26 @@ long PID::Compute(bool en, long errin, unsigned char kp, unsigned char ki, unsig
 		if(g_index == PIDDEBUGFLAG )
 		{
 			g_index = 0;
+<<<<<<< HEAD
+			Serial.print(errin);
+			Serial.print(",");
+		    Serial.print(kp);
+			Serial.print(",");			
+            //Serial.print(g_errorsum);
+            //Serial.print(",");
+            
+//            Serial.print(long(g_errorsum>>32),HEX);
+//            Serial.print(",");
+//            Serial.print(long(g_errorsum),HEX);
+//            Serial.print(",");
+            
+            //Serial.print(long(esumki),HEX);//
+            //Serial.print(",");//
+            //Serial.print(long(esumki>>32),HEX);//
+            //Serial.print(",");//
+            
+            Serial.print(ki);
+=======
 			Serial.print(g_errin);
 			Serial.print(",");			
 		    Serial.print(g_kp);
@@ -113,6 +154,7 @@ long PID::Compute(bool en, long errin, unsigned char kp, unsigned char ki, unsig
 			Serial.print(g_ls);
 			Serial.print(",");
 			Serial.print(p_term);
+>>>>>>> master
 			Serial.print(",");
 			Serial.print(i_term);
 			Serial.print(",");

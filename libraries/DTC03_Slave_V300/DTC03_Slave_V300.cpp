@@ -31,16 +31,24 @@ void DTC03::ParamInit()
   g_errcode1 = 0;
   g_errcode2 = 0;
   g_vactavgsum = 0;
+<<<<<<< HEAD
+=======
   g_autunAactavgsum = 0;
+>>>>>>> master
   g_itecavgsum = 0;
   g_currentindex = 0;
   g_vactindex = 0;
   g_vpcbindex = 0;
+<<<<<<< HEAD
+  g_ilimdacout = 65535;
+
+=======
   g_atunDone = 0;
   g_ilimdacout = 65535;
   g_atune_flag = 0;// 改成master接收 
   g_runTimeflag = 0;
   g_DBRflag = 0;
+>>>>>>> master
   g_wakeup = 0;
   g_overshoot = 0;
   ADCSRA &=~PS_128;
@@ -57,7 +65,11 @@ void DTC03::SetPinMode()
   pinMode(TEMP_SENSOR,INPUT);
   pinMode(VCC1,OUTPUT);
   pinMode(VCC2,OUTPUT);
+<<<<<<< HEAD
+  pinMode(VCC3,OUTPUT);
+=======
 //  pinMode(VCC3,OUTPUT);
+>>>>>>> master
 }
 void DTC03::SetSPI()
 {
@@ -74,17 +86,26 @@ void DTC03::SetVcc(unsigned char state)
 	switch (state)
 	{
 		case VCCLOW:
+<<<<<<< HEAD
+=======
 //			digitalWrite(VCC3,LOW); //use VCC3 only for P08, otherwise use VCC2
+>>>>>>> master
 			digitalWrite(VCC2,LOW);
  			digitalWrite(VCC1,LOW);
  		break;
  		case VCCMEDIUM:
+<<<<<<< HEAD
+=======
 // 			digitalWrite(VCC3,LOW);
+>>>>>>> master
  			digitalWrite(VCC2,LOW);
  			digitalWrite(VCC1,HIGH);
  		break;
  		case VCCHIGH:
+<<<<<<< HEAD
+=======
 // 			digitalWrite(VCC3,HIGH);
+>>>>>>> master
  	 		digitalWrite(VCC2,HIGH);
  			digitalWrite(VCC1,LOW);
  		break;
@@ -107,7 +128,11 @@ void DTC03::SetMosOff()
 void DTC03::DynamicVcc()
 {
     float restec, g_r1_f, g_r2_f;
+<<<<<<< HEAD
+    if(!g_sensortype) digitalWrite(SENSOR_TYPE,LOW);
+=======
     if(g_sensortype) digitalWrite(SENSOR_TYPE,LOW);
+>>>>>>> master
     SetMosOff();
     BuildUpArray(1,1,1);
     while(g_wakeup == 0) delay(1);
@@ -131,10 +156,18 @@ void DTC03::DynamicVcc()
     #else
     #endif
     
+<<<<<<< HEAD
+//	restec = CalculateR(g_Rmeas,RMEASUREDELAY,RMEASUREAVGTIME,AVGTIME);
+//    if (restec < g_r1_f ) SetVcc(VCCLOW);
+//    else if(restec < g_r2_f ) SetVcc(VCCMEDIUM);
+//    else SetVcc(VCCHIGH);
+    SetVcc(VCCLOW);
+=======
 	restec = CalculateR(g_Rmeas,RMEASUREDELAY,RMEASUREAVGTIME,AVGTIME);
     if (restec < g_r1_f ) SetVcc(VCCLOW);
     else if(restec < g_r2_f ) SetVcc(VCCMEDIUM);
     else SetVcc(VCCHIGH);
+>>>>>>> master
 	
 }
 float DTC03::CalculateR(unsigned int fb_value, unsigned int stabletime, int ravgtime, int vavgtime)
@@ -149,11 +182,19 @@ float DTC03::CalculateR(unsigned int fb_value, unsigned int stabletime, int ravg
     Serial.print("Vtec0: ");
     Serial.println(vtec0);
     Serial.print("Vgs to R calculate =");
+<<<<<<< HEAD
+  Serial.println(fb_value);
+    Serial.println("n   vtec  itec   rtec ");//20161031
+  #else
+  #endif
+
+=======
   	Serial.println(fb_value);
     Serial.println("n   vtec  itec   rtec ");//20161031
   #else
   #endif
 //  fb_value = 0;//test PID tuning
+>>>>>>> master
   SetMos(COOLING, fb_value);  // using cooling path and dac output = fb_value;
   BuildUpArray(0,1,0);    
   delay(stabletime);          // delay stabletime in ms
@@ -198,16 +239,26 @@ int DTC03::ReadVtec(int avgtime)
 }
 
 void DTC03::BuildUpArray(bool build_vact, bool build_itec, bool build_vpcb) {
+<<<<<<< HEAD
+	unsigned char i;
+=======
+>>>>>>> master
 	
 	if (build_vact == 1) g_vactavgsum = 0;
 	if (build_itec == 1) g_itecavgsum = 0;
 	if (build_vpcb == 1) g_vpcbavgsum = 0;
 	
+<<<<<<< HEAD
+	for (i=0; i<AVGTIME; i++) 
+=======
 	for (int i=0; i<AVGTIME; i++) 
+>>>>>>> master
 	{
 		if (build_vact == 1) {
 			Vactarray[i] = ltc1865.Read(CHVACT);
 			g_vactavgsum += Vactarray[i];
+<<<<<<< HEAD
+=======
 			if(i<4) 
 			{
 //				Serial.print(i);
@@ -220,6 +271,7 @@ void DTC03::BuildUpArray(bool build_vact, bool build_itec, bool build_vpcb) {
 				g_autunAactavgsum += AtuneActArray[i];
 //				Serial.println(g_autunAactavgsum);
 			}		
+>>>>>>> master
 		}		
 		if (build_itec == 1) {
 			Itecarray[i] = analogRead(ISENSE0);
@@ -235,6 +287,18 @@ void DTC03::ReadVoltage(bool en_vmod)
 {
 	noInterrupts();
     g_vactavgsum -= Vactarray[g_vactindex];
+<<<<<<< HEAD
+    if (en_vmod == 0) Vactarray[g_vactindex] = ltc1865.Read(CHVACT);
+    else {
+    	Vactarray[g_vactindex] = ltc1865.Read(CHVMOD);
+    	g_vmod = ltc1865.Read(CHVACT);
+	}
+    g_vactavgsum += Vactarray[g_vactindex]; 
+  
+    g_vact = Vactarray[g_vactindex];
+    g_vactindex ++;
+    if(g_vactindex == AVGTIME) g_vactindex = 0;
+=======
     g_autunAactavgsum -= AtuneActArray[g_vactindex%ATUNEAVGTIME];  
 
     if (en_vmod == 0) Vactarray[g_vactindex] = ltc1865.Read(CHVACT);
@@ -264,6 +328,7 @@ void DTC03::ReadVoltage(bool en_vmod)
 		g_vmod = g_vmodoffset; 
 		if(p_enterSetVFlag) setVset();
 	}
+>>>>>>> master
     interrupts();  
 }
 void DTC03::ReadIsense()
@@ -276,6 +341,12 @@ void DTC03::ReadIsense()
   g_itecread = Itecarray[g_currentindex];
   g_currentindex ++;
   if(g_currentindex == AVGTIME) g_currentindex = 0;
+<<<<<<< HEAD
+//  Serial.print(g_currentindex);
+//  Serial.print(", ");
+//  Serial.println(Itecarray[g_currentindex]);
+=======
+>>>>>>> master
   interrupts(); 
 }
 void DTC03::ReadVpcb() 
@@ -294,7 +365,11 @@ void DTC03::CheckSensorType()
 {
 //  if(g_sensortype) digitalWrite(SENSOR_TYPE, HIGH); // High for AD590, Low for NTC
 //  else digitalWrite(SENSOR_TYPE, LOW);
+<<<<<<< HEAD
+  if(g_vact==65535)
+=======
   if((g_sensortype && g_vact < V_NOAD590)|(g_sensortype ==0 && g_vact==65535))
+>>>>>>> master
     {
       g_errcode1=1;
       g_en_state = 0;
@@ -314,6 +389,16 @@ void DTC03::CheckTemp()
 void DTC03::setVset() {
 	long vmod, vset_limit_long;
 	
+<<<<<<< HEAD
+	vmod = long(g_vmod) - long(g_vmodoffset);
+	if (g_mod_status) vset_limit_long=(long)(g_vset_limit)+vmod;// in SDTC case, g_mod_status is alway 0
+    else vset_limit_long=(long)(g_vset_limit);
+  
+    if(vset_limit_long>65535) vset_limit_long=65535;
+    else if (vset_limit_long<0) vset_limit_long=0;
+  
+    g_vset_limitt = (unsigned int)vset_limit_long;
+=======
 	p_enterSetVFlag = 0;
 	vmod = long(g_vmod) - long(g_vmodoffset);
     vset_limit_long=(long)(g_vset_limit)+vmod;// in SDTC case, g_mod_status is alway 0
@@ -330,6 +415,7 @@ void DTC03::setVset() {
 //    Serial.print(g_vset_limitt); 
 //    Serial.print(", ");
 //	Serial.println( ReturnTemp(g_vset_limitt,0),3); 
+>>>>>>> master
 }
 
 void DTC03::CurrentLimit()
@@ -349,9 +435,15 @@ void DTC03::I2CRequest()
   switch(com)
   { 
     case I2C_COM_VACT:
+<<<<<<< HEAD
+    vact=g_vactavgsum >> AVGPWR;
+    temp[0]=vact;
+    temp[1]=vact >> 8;
+=======
 //    vact=g_vactavgsum >> AVGPWR;
     temp[0]=g_vact_MV;
     temp[1]=g_vact_MV >> 8;
+>>>>>>> master
 //    Serial.println("1");
     break;
 
@@ -390,6 +482,8 @@ void DTC03::I2CRequest()
 //    Serial.print("Vopt: ");
 //    Serial.println(g_Vtemp);
     break;
+<<<<<<< HEAD
+=======
     
     case I2C_COM_ATUN:
     	temp[0] = 0;
@@ -415,6 +509,7 @@ void DTC03::I2CRequest()
 //    	Serial.print("g_atune_ki:");
 //    	Serial.println(g_atune_ki);
     	break;
+>>>>>>> master
   }
   Wire.write(temp,2);
 }
@@ -423,8 +518,12 @@ void DTC03::I2CReceive()
   unsigned char temp[2], com, errcodeall, bconst_upper, bconst_lower, vset_upper, vset_lower;
   unsigned char fbc_lower, fbc_upper, vmodoffset_upper, vmodoffset_lower;
   unsigned long t1,t2,t_delta;//added
+<<<<<<< HEAD
+
+=======
   temp[0]=0;
   temp[1]=0;	
+>>>>>>> master
   while(Wire.available() == 3)
   {
     t1=micros();
@@ -458,7 +557,11 @@ void DTC03::I2CReceive()
     
 //    Serial.print("g_currentlim:");
 //    Serial.println(g_currentlim);
+<<<<<<< HEAD
+//    Serial.print("p: ");
+=======
 //    Serial.print("kp: ");
+>>>>>>> master
 //    Serial.println(g_p);
     break;
 
@@ -468,11 +571,14 @@ void DTC03::I2CReceive()
     g_vset_limit = vset_upper<<8 | vset_lower;
     setVset();
 //    Serial.print("VSET:");
+<<<<<<< HEAD
+=======
 //    Serial.print(", ");
 //    Serial.print(vset_upper);
 //    Serial.print(", ");
 //    Serial.print(vset_lower);
 //    Serial.print(", ");
+>>>>>>> master
 //    Serial.println( ReturnTemp(g_vset_limit,0),3);
     break;
 
@@ -518,6 +624,8 @@ void DTC03::I2CReceive()
 //    Serial.print("MOD offset");
 //    Serial.println(g_vmodoffset);
     break;
+<<<<<<< HEAD
+=======
     
     case I2C_COM_ATUN:
     	g_atune_flag = temp[0] & REQMSK_ATUNE_STATUS; // temp[0] | 0x01;
@@ -543,6 +651,7 @@ void DTC03::I2CReceive()
 //    	Serial.print("g_stableCode_atune:");
 //    	Serial.println(g_stableCode_atune);
     	break;
+>>>>>>> master
 
     case I2C_COM_OTP:
     	g_otp = temp[1]<<8 | temp[0];
@@ -566,11 +675,18 @@ void DTC03::I2CReceive()
     break;
     
    
+<<<<<<< HEAD
+    case I2C_COM_TEST1:  
+//		Serial.print(F("t1:"));
+//    	Serial.println(temp[0]);		
+
+=======
     case I2C_COM_TEST1:  		
 //    	t_master = (temp[1] << 8) | temp[0];
 //    	Serial.println(t_master);
 //    	Serial.print(", ");
 //    	Serial.println(temp[1],HEX);
+>>>>>>> master
     break;
     case I2C_COM_TEST2:  		
 //    	t_master = (temp[1] << 8) | temp[0];
@@ -591,6 +707,8 @@ float DTC03::ReturnTemp(unsigned int vact, bool type)
     tact = 1/(log((float)vact/RTHRatio)/BVALUE+T0INV)-273.15;
   return tact;
 }
+<<<<<<< HEAD
+=======
 unsigned int DTC03::ReturnVset(float tset, bool type)
 {
   unsigned int vset;
@@ -1246,4 +1364,5 @@ void DTC03::CheckSerial()
 
 
 
+>>>>>>> master
 
