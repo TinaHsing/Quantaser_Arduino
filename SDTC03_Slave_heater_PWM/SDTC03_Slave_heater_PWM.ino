@@ -93,7 +93,8 @@ void loop() {
 //     terr = (long)dtc.g_vact - (long)dtc.g_vset_limitt;      
 //    } 
 //  }
-  if (dtc.g_overshoot == 1){
+  if (dtc.g_overshoot == 1)
+  {
     dtc.g_overshoot = 0;
 //    tpid.g_errorsum >>= 1;
   }
