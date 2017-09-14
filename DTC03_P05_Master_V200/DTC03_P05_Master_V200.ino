@@ -48,8 +48,9 @@ void loop() {
     master.CheckStatus();
     //delay(400);//20161103
   }
+  master.blinkTsetCursor();
   master.CursorState();
-  master.ShowCursor();
+//  master.ShowCursor();
   master.UpdateParam();
   master.UpdateEnable();//
 

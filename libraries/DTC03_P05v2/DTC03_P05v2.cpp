@@ -449,6 +449,20 @@ void DTC03::I2CReceive()
 //    	Serial.print(", ");
 //    	Serial.println(temp[1],HEX);
     break;
+    
+    case I2C_COM_TEST1:
+
+    Serial.print("p_temp:");
+	Serial.println(temp[1]<<8 | temp[0]);
+    break;
+    
+    case I2C_COM_TEST2:
+    
+    Serial.print("g_cursorstate:");
+	Serial.println(temp[0]);
+//	Serial.print("p_tBlink_toggle:");
+//	Serial.println(temp[1]);
+    break;
   }
  }
 
