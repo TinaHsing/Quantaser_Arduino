@@ -17,10 +17,11 @@ PID ipid, tpid;
 unsigned int i=0;
 unsigned long loop_time[5];
 void setup() {
+  Serial.begin(9600);
   Wire.begin(DTC03P05);
   Wire.onReceive(ReceiveEvent);
   Wire.onRequest(RequestEvent);
-//  Serial.begin(9600);
+
   dtc.SetSPI();
   dtc.SetPinMode();
   dtc.ParamInit();
