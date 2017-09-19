@@ -30,9 +30,7 @@ void setup() {
   else digitalWrite(SENSOR_TYPE, LOW);
   dtc.CheckSensorType();
   dtc.CheckTemp();
-//  ipid.Init(32768,32768,0x7FFFFFFF);
-//  tpid.Init(32768,32768,0x7FFFFFFF);
-  tpid.Init(32768,32768,1,2,0 );
+  tpid.Init(32768, 32768, dtc.g_ki, dtc.g_ls, 0 );
   dtc.dacforilim.ModeWrite(0);
   dtc.dacformos.ModeWrite(0);
 }
@@ -60,39 +58,14 @@ void loop() {
   dtc.ReadVoltage(1);
   dtc.ReadIsense();
   dtc.ReadVpcb();
-//  dtc.CheckSensorType();
-  dtc.CheckTemp();
 
-//  isense =abs((int)(dtc.g_itecread)-(int)(dtc.g_isense0));
-//  ierr = isense - dtc.g_iteclimitset; 
+  dtc.CheckTemp();
   terr = (long)dtc.g_vact - (long)dtc.g_vset_limitt;
 //  if (i%2000==0) {
 //    Serial.print(dtc.ReturnTemp(dtc.g_vact,0));
 //    Serial.print(", ");
 //    Serial.println(dtc.ReturnTemp(dtc.g_vset_limitt,0));
 //    Serial.println(dtc.g_overshoot);
-//  }
-//  if(ierr > -20) 
-//  {
-//    ioutput=ipid.Compute(dtc.g_en_state, ierr, 58, 1, 2);//kp=58,ki=1,ls=2, 20161116
-//        
-//    while(abs(ioutput)<(abs(toutput)+pidoffset)) //run current limit
-//    {
-//     output = (long)(abs(ioutput)+dtc.g_fbc_base);
-//     if (output>PIDOUTPUTLIMIT) output= PIDOUTPUTLIMIT;
-//     if(toutput<=0) dtc.SetMos(HEATING,output);
-//     else dtc.SetMos(COOLING,output);
-//
-//     ioutput=ipid.Compute(dtc.g_en_state, ierr, 58, 1, 2); 
-//     tpid.g_errorsum=0; // 1112@Adam
-//     toutput=tpid.Compute(dtc.g_en_state, terr, dtc.g_p, 0, 0); // 1112@Adam, only compare to Pterm     
-////     dtc.CurrentLimit();// get dtc.g_iteclimitset
-//     
-//     isense =abs((int)(dtc.g_itecread)-(int)(dtc.g_isense0));
-//     ierr = isense - dtc.g_iteclimitset;
-//     dtc.ReadVoltage(1);
-//     terr = (long)dtc.g_vact - (long)dtc.g_vset_limitt;      
-//    } 
 //  }
   if (dtc.g_overshoot == 1)
   {
@@ -101,7 +74,7 @@ void loop() {
   }
   
   toutput=tpid.Compute(dtc.g_en_state, terr, dtc.g_p, dtc.g_ki, dtc.g_ls); 
-  output = (long)(abs(toutput)+dtc.g_fbc_base);
+  output = (long)(abs(toutput)+dtc.g_fbc_base)>>1;
   if(output>PIDOUTPUTLIMIT) output=PIDOUTPUTLIMIT;//
   if (toutput<=0) dtc.SetMos(HEATING,output);
   else if (toutput>0) dtc.SetMos(HEATING,0);  
