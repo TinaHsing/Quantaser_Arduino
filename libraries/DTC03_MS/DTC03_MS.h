@@ -4,26 +4,8 @@
 #include <avr/io.h>
 #include <avr/pgmspace.h>//
 // ==========DTC03_P05 I2C slave address ======
-#define DTC03P05 		  0x07
-#define DTC03P05_2 		  0x08
-#define LCD200ADD         0x06
-#define PZTDRF     		  0x09
+#define DTC03P05 		0x07
 // =========receive Events Command and Address======
-<<<<<<< HEAD
-//DTC03
-//Write
-#define I2C_COM_INIT 	0x11
-#define I2C_COM_CTR 	0x12
-#define I2C_COM_KI	    0x13
-#define I2C_COM_VSET 	0x14
-#define I2C_COM_R1R2	0x15
-#define I2C_COM_FBC		0x16
-#define I2C_COM_OTP  	0x17
-#define	I2C_COM_VMOD	0x18
-#define	I2C_COM_TPIDOFF 0x19
-#define	I2C_COM_RMEAS   0x1A
-#define I2C_COM_WAKEUP  0x1B 
-=======
 //Write
 #define I2C_COM_INIT 	0x11
 #define I2C_COM_CTR 	I2C_COM_INIT+1
@@ -38,30 +20,7 @@
 #define	I2C_COM_ATUN    I2C_COM_RMEAS+1
 #define I2C_COM_ATSTABLE I2C_COM_ATUN+1
 #define I2C_COM_WAKEUP  I2C_COM_ATSTABLE+1 
->>>>>>> master
 
-//Read
-#define I2C_COM_ITEC_ER	0x1C
-#define I2C_COM_VACT	0x1D
-#define I2C_COM_PCB		0X1E
-
-//LCD200
-//write
-#define LCD200_COM_LDEN	 0x1F
-#define LCD200_COM_IOUT  0x20
-#define LCD200_COM_VFTH1 0x21
-#define LCD200_COM_VFTH2 0x22
-//read
-#define LCD200_COM_IIN   0x23
-#define LCD200_COM_ERR 	 0x24
-//PZTDRF
-//write
-#define PZTDRF_COM_EN	 0x25
-//read
-#define PZTDRF_COM_VPZT	 0x26
-
-#define I2C_COM_TEST1	PZTDRF_COM_VPZT+1
-#define I2C_COM_TEST2 	PZTDRF_COM_VPZT+2
 
 
 //Read
@@ -74,7 +33,6 @@
 #define I2C_COM_TEST2 	I2C_COM_TEST1+1
 
 //=========request Events Mask ============
-//DTC03
 #define REQMSK_ENSTATE 		0x80
 #define REQMSK_SENSTYPE		0x40
 #define REQMSK_BUPPER		0x07
@@ -84,122 +42,6 @@
 #define REQMSK_ERR1		 	0x10
 #define REQMSK_ERR2			0x20
 #define REQMSK_WAKEUP   	0x40			//Tina 2017/2/15
-<<<<<<< HEAD
-//LCD200
-#define LCD200_ERRMASK_LDOPEN 	0x01
-#define LCD200_ERRMASK_LDSHORT 	0x02
-#define LCD200_ERRMASK_OUTERR	0x04
-
-
-// first colume ki, second colume ls
-const PROGMEM unsigned char kilstable420[] =
-{ 
-0,   0, //dummy		index
-0,   0, //0			1
-14,	138, //0.05		2
-15,	138,//0.1		3
-16,	138,//0.2		4
-17,	184,//0.3		5
-17,	138,//0.4		6
-18,	220,//0.5		7
-18,	184,//0.6		8
-18,	157,//0.7		9
-18,	138,//0.8		10
-19,	245,//0.9		11
-19,	220,//1			12
-19,	200,//1.1		13
-19,	184,//1.2		14
-19,	169,//1.3		15
-19,	157,//1.4		16
-19,	147,//1.5		17
-19,	138,//1.6		18
-19,	130,//1.7		19
-20,	245,//1.8		20
-20,	232,//1.9		21
-20,	220,//2			22
-20,	176,//2.5		23
-20,	147,//3			24
-21,	252,//3.5		25
-21,	220,//4
-21,	196,//4.5
-21,	176,//5
-21,	147,//6
-22,	252,//7
-22,	220,//8
-22,	196,//9
-22,	176,//10
-22,	147,//12
-23,	252,//14
-23,	220,//16
-23,	196,//18
-23,	176,//20
-23,	141,//25
-24,	235,//30
-24,	201,//35
-24,	176,//40
-24,	157,//45
-24,	141,//50
-24,	128,//55
-25,	235,//60
-25,	217,//65
-25,	201,//70
-25,	188,//75
-25,	176,//80
-};
-const PROGMEM unsigned char kilstable280[] =
-{ 
-0,   0, //dummy		index
-0,   0, //0			1
-15,	184, //0.05		2
-16,	184,//0.1		3
-17,	184,//0.2		4
-18,	245,//0.3		5
-18,	184,//0.4		6
-18,	147,//0.5		7
-19,	245,//0.6		8
-19,	210,//0.7		9
-19,	184,//0.8		10
-19,	163,//0.9		11
-19,	147,//1			12
-19,	133,//1.1		13
-19,	122,//1.2		14
-19,	113,//1.3		15
-19,	105,//1.4		16
-20,	196,//1.5		17
-20,	184,//1.6		18
-20,	173,//1.7		19
-20,	163,//1.8		20
-20,	155,//1.9		21
-20,	147,//2			22
-20,	117,//2.5		23
-21,	196,//3			24
-21,	168,//3.5		25
-21,	147,//4
-21,	130,//4.5
-22,	235,//5
-22,	196,//6
-22,	168,//7
-22,	147,//8
-22,	130,//9
-23,	235,//10
-23,	196,//12
-23,	168,//14
-23,	147,//16
-23,	130,//18
-24,	235,//20
-24,	188,//25
-24,	157,//30
-24,	134,//35
-25,	235,//40
-25,	209,//45
-25,	188,//50
-25,	171,//55
-25,	157,//60
-25,	145,//65
-25,	134,//70
-26,	251,//75
-26,	235,//80
-=======
 #define REQMSK_ATUNE_RUNTIMEERR	0X01
 #define REQMSK_ATUNE_DBR 		0X02
 #define REQMSK_ATUNE_DONE 		0X04
@@ -367,7 +209,6 @@ const PROGMEM unsigned char kilstable230[] =
 26,	221,//70		48
 26,	206,//75		49
 26,	193,//80		50
->>>>>>> master
 };
 const PROGMEM unsigned char kilstable168[] =
 {
