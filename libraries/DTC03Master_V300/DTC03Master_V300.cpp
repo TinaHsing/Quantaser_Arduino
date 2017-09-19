@@ -1,9 +1,5 @@
-/* modification for disable sensortype purpose : data 2016/11/13
-	1. in I2CReadData(), set g_sensortype to 0;
-	2. add g_mod_status variable in DTC03Master_P02.h
-	3. add VMOD x and y GLCD coordinate in DTC03Master_P02.h
-	4. add PrintModStatus
-
+/* 
+	09/19/2017
 */
 #include <DTC03Master_V300.h>
 DTC03Master::DTC03Master()
