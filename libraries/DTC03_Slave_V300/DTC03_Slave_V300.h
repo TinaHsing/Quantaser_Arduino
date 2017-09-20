@@ -1,12 +1,8 @@
-<<<<<<< HEAD
-#include <DTC03_MS.h>
-=======
 #ifndef DTC03_SLAVE_H
 #define DTC03_SLAVE_H
 
 #include <DTC03_MS.h>
 
->>>>>>> master
 //#include <avr/pgmspace.h>
 
 //========================Other Library version Request =================
@@ -14,13 +10,8 @@
 // ===================================================
 
 // =====================DEBUGFLAG Table =================================
-<<<<<<< HEAD
-//#define DEBUGFLAG01
-//#define DEBUGFLAG02 2
-=======
 #define DEBUGFLAG01 
 //#define DEBUGFLAG02 3
->>>>>>> master
 //#define DEBUGFLAG03
 
 #ifdef DTCDEBUG01
@@ -47,12 +38,9 @@
 #define RMEASUREAVGTIME 10
 #define AVGTIME 64 // Note!!!! VACTAVGTIEM = 2 ^ VACTAVGPWR 
 #define AVGPWR 6 	// Note!!!! VACTAVGTIEM = 2 ^ VACTAVGPWR
-<<<<<<< HEAD
-=======
 // new for autotune//
 #define ATUNEAVGTIME 4
 #define ATUNEAVGPWR 2
->>>>>>> master
 
 #define BCONSTOFFSET 3500
 
@@ -145,8 +133,6 @@
 #define T0INV 0.003354
 #define V_NOAD590 30000 
 
-<<<<<<< HEAD
-=======
 //new for autotune//
 #define AUTUNE_MV_STATUS 0
 #define ATUNE_BIAS 50690
@@ -157,7 +143,6 @@
 #define FINDBIASARRAY 15
 #define RUNTIMELIMIT 1200000//1200000 : 20 min
 #define SAMPLINGTINE 1000 
->>>>>>> master
 const unsigned char PS_16 = (1<<ADPS2);
 const unsigned char PS_32 = (1<<ADPS2)|(1<<ADPS0);
 const unsigned char PS_128 = (1<<ADPS2)|(1<<ADPS1)|(1<<ADPS0);
@@ -169,11 +154,8 @@ class PID;
 class DTC03
 {
 public:
-<<<<<<< HEAD
-=======
 	AD5541 dacformos, dacforilim;
 	PID pid, ipid;
->>>>>>> master
 	DTC03();
 	unsigned int InitVactArray();
     void SetPinMode();
@@ -197,44 +179,16 @@ public:
     void ReadIsense();
     void ReadVpcb();
     float ReturnTemp(unsigned int, bool);
-<<<<<<< HEAD
-    void BuildUpArray(bool, bool, bool);
-    void setVset();
-
-	unsigned int g_vact, g_vmod, g_fbc_base, g_Rmeas, g_isense0, g_currentabs,g_itecread;//
-=======
     unsigned int ReturnVset(float tset, bool type);
     void BuildUpArray(bool, bool, bool);
     void setVset();
      
 
 	unsigned int g_vact, g_vact_MV, g_vmod, g_fbc_base, g_Rmeas, g_isense0, g_currentabs,g_itecread;//
->>>>>>> master
     unsigned char g_p, g_ki, g_ls, g_currentlim, g_kiindex, g_tpidoffset;
     unsigned char g_r1, g_r2;;
 	unsigned long g_vactavgsum, g_itecavgsum, g_vpcbavgsum;
 	bool g_en_state, g_heating, g_errcode1, g_errcode2, g_sensortype, g_mod_status, g_wakeup;
-<<<<<<< HEAD
-    bool g_overshoot;
-	unsigned int g_b_upper, g_b_lower,g_vset_limit, g_ilimdacout,g_vset_limitt, g_otp;
-    unsigned int g_vmodoffset, g_i2ctest, g_Vtemp;//
-    int g_iteclimitset;//
-    AD5541 dacformos, dacforilim;
-
-private:
-	//int ReadIsense();
-	int ReadVtec(int Avgtime);
-	//unsigned char g_currentindex, g_vbeh1, g_vbeh2, g_vbec1, g_vbec2, g_vactindex;
-    unsigned char  g_vactindex, g_currentindex, g_vpcbindex;
-	LTC1865 ltc1865;
-	//AD5541 dacformos, dacforilim;
-	//int g_vmodoffset;
-	//unsigned int g_vset_limit,g_vbec, g_vbeh, g_b_upper, g_b_lower, g_ilimdacout, g_vmod;
-	//unsigned int g_vbec, g_vbeh,g_vmod;
-	unsigned int Vactarray[AVGTIME], Itecarray[AVGTIME], Vpcbarray[AVGTIME], t_master;
-    float g_ilimgain;
-};
-=======
     bool g_overshoot, g_atune_flag;
 	unsigned int g_b_upper, g_b_lower,g_vset_limit, g_ilimdacout,g_vset_limitt, g_otp;
     unsigned int g_vmodoffset, g_i2ctest, g_Vtemp;//
@@ -280,4 +234,3 @@ private:
    
 };
 #endif
->>>>>>> master
