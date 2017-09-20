@@ -9,7 +9,7 @@
 #include <EEPROM.h>
 #include <DTC03_MS.h>
 #define PRINTLOOP 1
-#define PIDOUTPUTLIMIT 48000 //set MAX duty here, Itec must < 5A 
+#define PIDOUTPUTLIMIT 60000 //set MAX duty here, Itec must < 5A 
 
 DTC03 dtc;
 PID ipid, tpid;
