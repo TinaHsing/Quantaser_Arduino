@@ -58,6 +58,9 @@
 #define MVTIME 16
 #define MVTIME_POWER 4
 #define MV_STATUS 1
+#define TIME_CONST_IDX22 22
+#define TIME_CONST_IDX24 24
+#define TIME_CONST_IDX36 24
 
 //------pin definition ----------------
 #define ENC_A 2
@@ -277,7 +280,7 @@ public:
 	void PrintTpidoff();
 	void PrintTotp();
 	void PrintCounter(bool, unsigned int);
-	void PrintTest(unsigned char);
+	void PrintTest(int);
 		
 	void CheckStatus();
 	void CalculateRate();
@@ -291,11 +294,12 @@ public:
 	void Timer();
 	void SaveEEPROM();
 	void RuntestI2C();
-	void setKpKiLs(unsigned char);
+//	void setKpKiLs(unsigned char);
+	void setKpKiLs(unsigned char, unsigned char);
 	void Overshoot_Cancelation(float);
 	void checkOvershoot(float);
 	void vact_MV();
-	void TimeConstantTransfer(unsigned int);
+	void TimeConstantTransfer(unsigned int, int, int, int, int &);
 	void TimeConstantTransfer_reset();
 	
 	
@@ -317,6 +321,7 @@ private:
 	unsigned int  g_vstart, g_vset, g_vend, p_loopcount, p_trate, p_tlp, p_vact_array[MVTIME], p_TcTranfer_index;
 	unsigned long loopindex, g_timer, g_tenc[3], g_tscan, g_tpush, p_vact_MV_sum;
 	float g_tstart, g_tend, g_tnow, g_tfine, p_rate;
-	bool p_TendFlag, p_TstartBegin_flag;
+	bool p_TendFlag, p_TstartBegin_flag, p_TcTranferFlag_stop, p_TcTranferFlag_end, p_TcTranferFlag_scan;
+	int p_TcTransferIndexInit_scan, p_TcTransferIndexInit_end, p_TcTransferIndexInit_stop;
 
 };
