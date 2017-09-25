@@ -58,18 +58,13 @@ long PID::Compute(bool en, long errin, unsigned char kp, unsigned char ki, unsig
 	if(en)
 	{	
 		if(ki != ki_temp) g_errorlimit =  (g_i_limit<<ls)/ki;
-//		g_errorlimit =  (g_i_limit<<ls)/ki;
         g_errorsum+=errin;
+        
 		if(g_errorsum >= g_errorlimit) g_errorsum = g_errorlimit ;
 		else if(g_errorsum <= (-1)*g_errorlimit) g_errorsum = (-1)*g_errorlimit ;
-		p_term = kp * errin;
 		
-        //if (g_errorsum>0)g_i_term = (g_errorsum >>ls)*ki;//20161105 divieded first to avoid 
-		//else if (g_errorsum<0)g_i_term = (-1)*long((abs(g_errorsum)>>ls)*ki);//20161105
-        
-        i_term = (long)(((long long)(g_errorsum)*(long long)(ki))>>ls);//20161105 divieded first to avoid 
-        
-        //esumki=(long long)(g_errorsum)*(long long)(ki);//
+		p_term = kp * errin;       
+        i_term = (long)(((long long)(g_errorsum)*(long long)(ki))>>ls);
         
         if(p_term > g_p_limit) p_term = g_p_limit;
 		else if(p_term < (-1)*g_p_limit) p_term = (-1)*g_p_limit ;
@@ -114,9 +109,9 @@ long PID::Compute(bool en, long errin, unsigned char kp, unsigned char ki, unsig
 			Serial.print(",");
 			Serial.print(i_term);
 			Serial.print(",");
-			Serial.print(g_out);
-			Serial.print(",");
-			Serial.println(en);
+			Serial.println(g_out);
+//			Serial.print(",");
+//			Serial.println(en);
 //			Serial.print(",");
 //			Serial.print((long) g_errorlimit,HEX);
 //			Serial.print(",");

@@ -170,7 +170,7 @@ public:
 	bool g_en_state, g_heating, g_errcode1, g_errcode2, g_sensortype, g_mod_status, g_wakeup;
     bool g_overshoot;
 	unsigned int g_b_upper, g_b_lower,g_vset_limit, g_ilimdacout,g_vset_limitt, g_otp;
-    unsigned int g_vmodoffset, g_i2ctest, g_Vtemp;//
+    unsigned int g_vmodoffset, g_i2ctest, g_Vtemp, g_testindex;//
     int g_iteclimitset;//
     AD5541 dacformos, dacforilim;
 

@@ -35,6 +35,7 @@ void DTC03::ParamInit()
   g_vactindex = 0;
   g_vpcbindex = 0;
   g_ilimdacout = 65535;
+  g_testindex = 0;
 
   g_tpidoffset = 2;
   g_wakeup = 0;
@@ -94,11 +95,17 @@ void DTC03::SetMos(bool status, unsigned int fb_value)
 	fb_byte = ~(fb_value>>8);
 	analogWrite(NMOSH_IN, fb_byte );
 //	analogWrite(NMOSH_IN, 0 );
-//	Serial.print(fb_value);
-//	Serial.print(", ");
-//	Serial.print((fb_value>>8));
-//	Serial.print(", ");
-//	Serial.println(fb_byte);
+//	if(g_en_state)
+//	{
+//		if(g_testindex%2000==0)
+//		{
+//			Serial.print(fb_value);
+//			Serial.print(", ");
+//			Serial.print((fb_value>>8));
+//			Serial.print(", ");
+//			Serial.println(fb_byte);
+//		}
+//	}	
 }
 void DTC03::SetMosOff()
 {
@@ -399,8 +406,8 @@ void DTC03::I2CReceive()
     
 //    Serial.println("CTR:");
 //    Serial.print(g_currentlim);
-    Serial.print("p: ");
-    Serial.println(g_p);
+//    Serial.print("p: ");
+//    Serial.println(g_p);
     break;
 
     case I2C_COM_VSET:
@@ -419,10 +426,10 @@ void DTC03::I2CReceive()
     g_ls = temp[0];
     g_ki = temp[1];
     
-    Serial.print("LSKI:");
-    Serial.print(g_ls);
-    Serial.print(", ");
-    Serial.println(g_ki);
+//    Serial.print("LSKI:");
+//    Serial.print(g_ls);
+//    Serial.print(", ");
+//    Serial.println(g_ki);
     break;
 
     case I2C_COM_R1R2:
@@ -467,8 +474,8 @@ void DTC03::I2CReceive()
 		g_overshoot = temp[1];
 //		Serial.print("wu:");
 //    	Serial.println(g_wakeup);
-    	Serial.print("os:");
-    	Serial.println(g_overshoot);
+//    	Serial.print("os:");
+//    	Serial.println(g_overshoot);
     break;
     
     

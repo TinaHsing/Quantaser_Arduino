@@ -53,6 +53,11 @@
 #define SCANSAMPLERATE  50 //15
 #define ILIMSTART 0.5
 #define ILIMSTEP 0.05
+#define SCAN_KPTC 1
+#define NOSCAN_KPTC 2 
+#define MVTIME 16
+#define MVTIME_POWER 4
+#define MV_STATUS 1
 
 //------pin definition ----------------
 #define ENC_A 2
@@ -79,8 +84,8 @@
 #define EEADD_DUMMY			100
 
 //----------NOEE Default value------
-#define NOEE_VSTART		32932
-#define NOEE_VEND		9313
+#define NOEE_VSTART		16983
+#define NOEE_VEND		504
 #define NOEE_RATE		1
 #define NOEE_ILIM       50 // currntlimit,3A=50
 #define NOEE_FBC		0
@@ -140,7 +145,7 @@
 #define TRATE_COORD_Y	ROWPIXELdef*4
 
 #define TEST_COORD_X	COLUMEPIXEL0507*15
-#define TEST_COORD_Y	0
+#define TEST_COORD_Y	ROWPIXELdef*1
 
 
 //-------ENG mode related-------
@@ -272,7 +277,7 @@ public:
 	void PrintTpidoff();
 	void PrintTotp();
 	void PrintCounter(bool, unsigned int);
-	void PrintTest();
+	void PrintTest(unsigned char);
 		
 	void CheckStatus();
 	void CalculateRate();
@@ -289,13 +294,16 @@ public:
 	void setKpKiLs(unsigned char);
 	void Overshoot_Cancelation(float);
 	void checkOvershoot(float);
+	void vact_MV();
+	void TimeConstantTransfer(unsigned int);
+	void TimeConstantTransfer_reset();
 	
 	
 	bool g_en_state;
 	int g_itec;
-	unsigned int g_vact, g_fbcbase, g_tpcb, g_otp;
+	unsigned int g_vact, g_fbcbase, g_tpcb, g_otp, g_vact_MV;
 	unsigned long g_tloop;
-    unsigned char g_currentlim, g_r1, g_r2, g_tpidoff; 
+    unsigned char g_currentlim, g_r1, g_r2, g_tpidoff, g_kiindex_scan, g_kiindex_noscan_temp, g_kiindex_noscan ; 
     bool g_errcode1, g_errcode2, g_wakeup;
 
 
@@ -303,10 +311,12 @@ private:
 	glcd lcd;
 	bool g_scan, g_heater, g_paramterupdate, p_en[2], p_scan[2], p_tnow_flag[2], p_curstatus0flag, p_rateflag, p_EngFlag, p_resetCounterFlag;
 	bool p_ee_changed, p_enableFlag, p_overshoot_scan, p_overshoot_noscan, p_overshoot_cancel_Flag_scan, p_overshoot_cancel_Flag_noscan, testB;
+	unsigned char p_scan_kptcIndex, p_noscan_kptcIndex;
 	char g_counter, g_counter2, p_timer_status;
-	unsigned char g_rateindex, g_trate, g_cursorstate,g_oldcursorstate, g_lastencoded, g_kiindex, g_p, p_ee_change_state, p_kpkiLast;
-	unsigned int  g_vstart, g_vset, g_vend, p_loopcount, p_trate, p_tlp;
-	unsigned long loopindex, g_timer, g_tenc[3], g_tscan, g_tpush;
+	unsigned char g_rateindex, g_trate, g_cursorstate,g_oldcursorstate, g_lastencoded, g_kiindex, g_p, p_ee_change_state, p_kpkiLast, p_mvindex;
+	unsigned int  g_vstart, g_vset, g_vend, p_loopcount, p_trate, p_tlp, p_vact_array[MVTIME], p_TcTranfer_index;
+	unsigned long loopindex, g_timer, g_tenc[3], g_tscan, g_tpush, p_vact_MV_sum;
 	float g_tstart, g_tend, g_tnow, g_tfine, p_rate;
+	bool p_TendFlag, p_TstartBegin_flag;
 
 };

@@ -9,7 +9,7 @@
 #include <EEPROM.h>
 #include <DTC03_MS.h>
 #define PRINTLOOP 1
-#define PIDOUTPUTLIMIT 60000 //set MAX duty here, Itec must < 5A 
+#define PIDOUTPUTLIMIT 40000 //set MAX duty here, Itec must < 5A 
 
 DTC03 dtc;
 PID ipid, tpid;
@@ -21,11 +21,12 @@ void setup() {
   Wire.begin(DTC03P05);
   Wire.onReceive(ReceiveEvent);
   Wire.onRequest(RequestEvent);
-
   dtc.SetSPI();
   dtc.SetPinMode();
   dtc.ParamInit();
   dtc.DynamicVcc();
+//  Serial.print("PIDOUTPUTLIMIT=");
+//  Serial.println(PIDOUTPUTLIMIT);
   if(dtc.g_sensortype) digitalWrite(SENSOR_TYPE, HIGH);
   else digitalWrite(SENSOR_TYPE, LOW);
   dtc.CheckSensorType();
@@ -72,12 +73,18 @@ void loop() {
     dtc.g_overshoot = 0;
 //    tpid.g_errorsum >>= 1;
   }
-  
-  toutput=tpid.Compute(dtc.g_en_state, terr, dtc.g_p, dtc.g_ki, dtc.g_ls); 
-  output = (long)(abs(toutput)+dtc.g_fbc_base)>>1;
+  dtc.g_testindex++;
+  toutput=tpid.Compute(dtc.g_en_state, terr, dtc.g_p, dtc.g_ki, dtc.g_ls)>>1; 
+  output = (long)(abs(toutput)+dtc.g_fbc_base);
   if(output>PIDOUTPUTLIMIT) output=PIDOUTPUTLIMIT;//
   if (toutput<=0) dtc.SetMos(HEATING,output);
-  else if (toutput>0) dtc.SetMos(HEATING,0);  
+  else 
+  {
+    dtc.SetMos(HEATING,0); 
+//    tpid.g_errorsum = 0;
+  }
+//  else if 
+//  (toutput>0) dtc.SetMos(HEATING,0);  
   i++;
 }
 

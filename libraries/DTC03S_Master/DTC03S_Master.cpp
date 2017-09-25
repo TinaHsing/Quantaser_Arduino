@@ -40,7 +40,18 @@ void DTC03SMaster::ParamInit()
 	p_overshoot_cancel_Flag_scan = 1;
 	p_overshoot_cancel_Flag_noscan = 1;
 	p_resetCounterFlag = 1;
+	p_scan_kptcIndex = 1;
+	p_noscan_kptcIndex = 2;
+	p_TcTranfer_index = 0;
+	p_TendFlag = 0;
 	p_timer_status=0;
+	p_mvindex = 0;
+	p_kpkiLast = 11;
+	g_kiindex_scan = 22;
+	g_kiindex_noscan_temp = g_kiindex_scan;
+	g_kiindex_noscan = 28;
+	p_TstartBegin_flag = 1;
+	for (int i=0;i<MVTIME;i++) p_vact_array[i]=0;
 }
 void DTC03SMaster::WelcomeScreen()
 {
@@ -265,38 +276,51 @@ void DTC03SMaster::I2CReadData(unsigned char com)
   }
  delayMicroseconds(I2CSENDDELAY);//20161031
 }
-void DTC03SMaster::PrintTest()
+void DTC03SMaster::PrintTest(unsigned char in)
 {
 	lcd.SelectFont(SystemFont5x7);
 	lcd.GotoXY(TEST_COORD_X, TEST_COORD_Y);
-	lcd.print(g_wakeup);
-	testB=!testB;
-	lcd.print(testB);	
+	if(in<10) lcd.print(" "); 
+	lcd.print(in);
+	
 }
 void DTC03SMaster::CheckStatus()
 {
 		float tact, itec_f, tpcb_f;
 		
-		switch (p_EngFlag) {
+		switch (p_EngFlag) 
+		{
 			case 0:
-				I2CReadData(I2C_COM_VACT);
-  	    		tact = ReturnTemp(g_vact,0);
-  	    		PrintTact(tact);								
+				if(loopindex%150==0)
+				{
+					I2CReadData(I2C_COM_VACT);
+					vact_MV();
+					if (MV_STATUS) tact = ReturnTemp(g_vact_MV,0);
+	  	    		else tact = ReturnTemp(g_vact,0);
+	  	    		PrintTact(tact);	
+				}	
+				if (loopindex%150==1) 
+				{
+					I2CReadData(I2C_COM_ITEC_ER);
+		            if(!g_wakeup) I2CWriteAll();
+				}										
 			break;
 			case 1:
-				if (loopindex%3==0) {
+				if (loopindex%30==0) 
+				{
 					I2CReadData(I2C_COM_ITEC_ER);
 		            itec_f = float(g_itec)*CURRENTRatio;
 		            PrintItec(itec_f);
-//		            PrintTest();
 		            if(!g_wakeup) I2CWriteAll();
 				}				
-				if (loopindex%3==1) {
+				if (loopindex%30==1) 
+				{
 					I2CReadData(I2C_COM_PCB);
 		            tpcb_f = float(g_tpcb)/4.0-20.5;
 		            PrintTpcb(tpcb_f);
 				}
-				if (loopindex%3==2) {
+				if (loopindex%30==2) 
+				{
 					I2CReadData(I2C_COM_VACT);
 	  	    		tact = ReturnTemp(g_vact,0);
 	  	    		PrintTact(tact);
@@ -307,6 +331,15 @@ void DTC03SMaster::CheckStatus()
 }
 void DTC03SMaster::RuntestI2C() {
 	if (loopindex%500==0) I2CWriteData(I2C_COM_TEST);		
+}
+void DTC03SMaster::vact_MV()
+{
+	p_vact_MV_sum -= p_vact_array[p_mvindex];
+	p_vact_array[p_mvindex] = g_vact;
+	p_vact_MV_sum += p_vact_array[p_mvindex];
+	g_vact_MV = p_vact_MV_sum>>MVTIME_POWER;
+	p_mvindex++;
+	if(p_mvindex==MVTIME) p_mvindex=0;
 }
 float DTC03SMaster::ReturnTemp(unsigned int vact, bool type)
 {
@@ -379,21 +412,28 @@ void DTC03SMaster::PrintTend()
 void DTC03SMaster::PrintTact(float tact)
 {
 		
-	if (p_EngFlag == 1) {
+	if (p_EngFlag == 1) 
+	{
 		lcd.SelectFont(SystemFont5x7);
 		lcd.GotoXY(TA_X2, TA_Y);
 	}
-	else {
+	else 
+	{
 		lcd.SelectFont(Arial_bold_14);
 		lcd.GotoXY(TACT_COORD_X, TACT_COORD_Y);
 	}
+	
 	if(g_errcode2 == 1) lcd.print("error2");
 //	else if (g_errcode1 == 1) lcd.print("error1");
-	else {
+	else 
+	{
 		if(tact< 9.991) lcd.print(" ");
-		lcd.print(tact, 2); 		
+		lcd.print(tact, 2); 
+	    lcd.print("  "); 		
 	}
-	Overshoot_Cancelation(tact);	
+	if(!p_overshoot_scan) checkOvershoot(tact);
+	
+//	Overshoot_Cancelation(tact);	
 }
 void DTC03SMaster::PrintRate()
 {
@@ -574,10 +614,20 @@ void DTC03SMaster::CalculateRate()
 	unsigned int t_temp;
 	
 	t_temp = millis(); 
-	if ( (g_en_state==1) && (g_scan==1) && (p_EngFlag==0)) 
-	{
+	if ( (g_en_state==1) && (g_scan==1) && (p_EngFlag==0)) //scan mode
+	{		
+//		if(p_overshoot_cancel_Flag_scan) setKpKiLs(1);			
+		p_TstartBegin_flag = 0;
+		if( !p_TendFlag ) // still scanning 
+		{
+			TimeConstantTransfer_reset();
+			setKpKiLs(p_scan_kptcIndex);			
+		}
+		else //already at Tend point
+		{
+			TimeConstantTransfer(1000);
+		}
 		
-		if(p_overshoot_cancel_Flag_scan) setKpKiLs(1);	
 		if ( (t_temp-p_trate) >= SCANSAMPLERATE ) 
 		{						
 			p_tlp = t_temp-p_trate;
@@ -586,12 +636,20 @@ void DTC03SMaster::CalculateRate()
 			if(g_tend > g_tstart) 
 			{
 				g_tnow += p_rate;
-				if( (g_tnow+g_tfine) > g_tend) g_tnow = g_tend - g_tfine;								
+				if( (g_tnow+g_tfine) > g_tend) 
+				{
+					g_tnow = g_tend - g_tfine;	
+//					p_TendFlag = 1;
+				}							
 			}	
 			else 
 			{
 				g_tnow -= p_rate;
-				if( (g_tnow+g_tfine) < g_tend) g_tnow = g_tend - g_tfine;				
+				if( (g_tnow+g_tfine) < g_tend) 
+				{
+//					p_TendFlag = 1;
+					g_tnow = g_tend - g_tfine;	
+				}			
 			}
 		    p_rateflag = 1;					
 	    }
@@ -600,7 +658,9 @@ void DTC03SMaster::CalculateRate()
 
 	if ( (g_en_state==1) && (g_scan==0) && (p_EngFlag==0)) // press stop mode
 	{
-		setKpKiLs(2);
+//		setKpKiLs(2);
+		if(p_TstartBegin_flag) setKpKiLs(0);
+		else TimeConstantTransfer(1000);		
 	}
 	
 	if (p_rateflag == 1) 
@@ -623,35 +683,55 @@ void DTC03SMaster::CalculateRate()
 	}
 		
 }
-void DTC03SMaster::Timer()
+void DTC03SMaster::TimeConstantTransfer(unsigned int rate)
 {
-	switch(p_timer_status) 
-	{
-		case 0:
-			// do nothing
-			break;
-		case 1:
-			if(g_tend > g_tstart) 
+	
+	if (p_TcTranfer_index%rate==0)
+		{
+			if(g_kiindex_noscan_temp < g_kiindex_noscan) 
 			{
-				g_tnow += p_rate;
-				if( (g_tnow+g_tfine) > g_tend) g_tnow = g_tend - g_tfine;								
-			}	
-		    else 
-			{
-				g_tnow -= p_rate;
-				if( (g_tnow+g_tfine) < g_tend) g_tnow = g_tend - g_tfine;				
-			}
-		    g_vset = ReturnVset(g_tnow+g_tfine, 0);
-//	        I2CWriteData(I2C_COM_VSET);
-	        break;
-	    case 2:
-	    	g_vset = ReturnVset(g_tstart, 0);
-//	        I2CWriteData(I2C_COM_VSET);
-	    	break;
-		
-	}
-
+				g_kiindex_noscan_temp++;
+				setKpKiLs(p_noscan_kptcIndex);
+				p_noscan_kptcIndex++;
+			} 
+		}
+		p_TcTranfer_index++;
 }
+void DTC03SMaster::TimeConstantTransfer_reset()
+{
+	g_kiindex_noscan_temp = g_kiindex_scan; 
+	p_noscan_kptcIndex = NOSCAN_KPTC;
+	p_TcTranfer_index = 0;
+}
+//void DTC03SMaster::Timer()
+//{
+//	switch(p_timer_status) 
+//	{
+//		case 0:
+//			// do nothing
+//			break;
+//		case 1:
+//			if(g_tend > g_tstart) 
+//			{
+//				g_tnow += p_rate;
+//				if( (g_tnow+g_tfine) > g_tend) g_tnow = g_tend - g_tfine;								
+//			}	
+//		    else 
+//			{
+//				g_tnow -= p_rate;
+//				if( (g_tnow+g_tfine) < g_tend) g_tnow = g_tend - g_tfine;				
+//			}
+//		    g_vset = ReturnVset(g_tnow+g_tfine, 0);
+////	        I2CWriteData(I2C_COM_VSET);
+//	        break;
+//	    case 2:
+//	    	g_vset = ReturnVset(g_tstart, 0);
+////	        I2CWriteData(I2C_COM_VSET);
+//	    	break;
+//		
+//	}
+//
+//}
 //void DTC03SMaster::CalculateRate() // test timer, failed: timer interference with I2C
 //{
 //	unsigned int t_temp;
@@ -676,55 +756,91 @@ void DTC03SMaster::Timer()
 void DTC03SMaster::Overshoot_Cancelation(float tact){
 	
 	checkOvershoot(tact);
-	if ( p_overshoot_scan==1 && p_overshoot_cancel_Flag_scan==1 &&  (tact-g_tend) > 0.5 ) {
+	if ( p_overshoot_scan==1 && p_overshoot_cancel_Flag_scan==1 &&  (tact-g_tend) > 0.5 ) 
+	{
 		p_overshoot_cancel_Flag_scan = 0;
 		setKpKiLs(2);
 	    I2CWriteData(I2C_COM_WAKEUP);			
 	}
-	if ( p_overshoot_noscan==1 && p_overshoot_cancel_Flag_noscan==1 &&  (tact-g_tstart) > 0.5 ) {
+	if ( p_overshoot_noscan==1 && p_overshoot_cancel_Flag_noscan==1 &&  (tact-g_tstart) > 0.5 ) 
+	{
 		p_overshoot_cancel_Flag_noscan = 0;	
 		setKpKiLs(2);	
 		I2CWriteData(I2C_COM_WAKEUP);
 	}	
-
-	
 }
-void DTC03SMaster::checkOvershoot(float tact) {
-	if(g_en_state==1) {
-		if (g_scan == 1) {
-			if ( abs( tact-g_tend )<0.1 ) p_overshoot_scan=1 ;
-		}
-		else {
-			if ( abs(tact-g_tstart)<0.1 ) p_overshoot_noscan=1 ;
-		}		
+void DTC03SMaster::checkOvershoot(float tact) 
+{
+//	if(g_en_state==1) 
+//	{
+//		if (g_scan == 1) 
+//		{
+//			if ( abs( tact-g_tend )<0.1 )
+//			{
+//				p_TendFlag = 1;
+//				p_overshoot_scan=1 ;
+//			} 
+//		}
+//		else
+//		{
+//			if ( abs(tact-g_tstart)<0.1 ) p_overshoot_noscan=1 ;
+//		}		
+//	}
+	if(g_en_state && g_scan) 
+	{
+		if ( abs( tact-g_tend )<0.1 )
+		{
+			p_TendFlag = 1;
+			p_overshoot_scan=1 ;
+		} 
 	}
 }
 
-void DTC03SMaster::setKpKiLs(unsigned char in) {
-	
-
+void DTC03SMaster::setKpKiLs(unsigned char in) 
+{	
+	PrintTest(in);
 	if(in != p_kpkiLast)
 	{
 //		 switch(in)
 //		 {
-//		 	case 1: // scan mode
-//			g_p = 30;
+//		 	case SCAN_KPTC: // scan mode
+//			g_p = 10;
 //			I2CWriteData(I2C_COM_CTR);
-//			g_kiindex=12; //Time constamt: 1s		        
+//			g_kiindex = g_kiindex_scan; //22, Time constamt: 2s (20, 147)		        
 //			I2CWriteData(I2C_COM_KI);
 //			break;	
 //			
-//		 	case 2:
-//			g_p = 30;
+//		 	case NOSCAN_KPTC:
+//			g_p = 5;
 //			I2CWriteData(I2C_COM_CTR);
-//			g_kiindex=34; //Time constamt: 12s		        
+//			g_kiindex = g_kiindex_noscan_temp; //36, Time constamt: 16s(23, 147)	        
 //			I2CWriteData(I2C_COM_KI);
 //			break;
 //		 } 
-	}
-		
+		 if(in == 0)
+		 {
+		 	g_p = 5;
+			I2CWriteData(I2C_COM_CTR);
+			g_kiindex = g_kiindex_noscan; //36, Time constamt: 16s(23, 147)
+			I2CWriteData(I2C_COM_KI);
+		 }
+		 else if(in==SCAN_KPTC)
+		 {
+		 	g_p = 10;
+			I2CWriteData(I2C_COM_CTR);
+			g_kiindex = g_kiindex_scan; //22, Time constamt: 2s (20, 147)		        
+			I2CWriteData(I2C_COM_KI);
+		 }
+		 else
+		 {
+		 	g_p = 30;
+			I2CWriteData(I2C_COM_CTR);
+			g_kiindex = g_kiindex_noscan_temp; //36, Time constamt: 16s(23, 147)
+//			g_kiindex = g_kiindex_scan; //22, Time constamt: 2s (20, 147)	        
+			I2CWriteData(I2C_COM_KI);
+		 }
+	}		
 	p_kpkiLast = in;
-
 }
 
 void DTC03SMaster::UpdateEnable()//20161101
@@ -736,10 +852,12 @@ void DTC03SMaster::UpdateEnable()//20161101
 		p_overshoot_noscan = 0;
 		p_overshoot_cancel_Flag_scan = 1;
 		p_overshoot_cancel_Flag_noscan = 1;
+		TimeConstantTransfer_reset();
+		p_TstartBegin_flag = 1;
+		p_TendFlag = 0;
 	}
 	if(g_en_state != p_en[1])
-	{
-		
+	{		
 		g_en_state = p_en[1];
 		I2CWriteData(I2C_COM_INIT);
 		PrintEnable();
@@ -751,10 +869,11 @@ void DTC03SMaster::CheckScan()
 	if(digitalRead(SCANB)==0) 
 	{
 		t_temp = millis();
-		if ((t_temp - g_tscan) > 500 ) {
-		g_scan = !g_scan;
-		p_scan[1] = g_scan;
-		PrintScan();
+		if ((t_temp - g_tscan) > 500 ) 
+		{
+			g_scan = !g_scan;
+			p_scan[1] = g_scan;
+			PrintScan();
 		}
 	}
 	g_tscan = t_temp;	
