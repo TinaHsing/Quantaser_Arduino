@@ -60,7 +60,7 @@
 #define MV_STATUS 1
 #define TIME_CONST_IDX22 22
 #define TIME_CONST_IDX24 24
-#define TIME_CONST_IDX36 24
+#define TIME_CONST_IDX36 36
 
 //------pin definition ----------------
 #define ENC_A 2

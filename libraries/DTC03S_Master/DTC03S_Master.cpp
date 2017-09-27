@@ -628,7 +628,7 @@ void DTC03SMaster::CalculateRate()
 			p_TcTranferFlag_end = 1;
 			p_TcTransferIndexInit_end = TIME_CONST_IDX22;
 			
-			if(p_TcTranferFlag_scan) TimeConstantTransfer(1000,10,TIME_CONST_IDX36,TIME_CONST_IDX22,p_TcTransferIndexInit_scan);
+			if(p_TcTranferFlag_scan) TimeConstantTransfer(1000,10,TIME_CONST_IDX22,TIME_CONST_IDX22,p_TcTransferIndexInit_scan);
 //			TimeConstantTransfer_reset();
 						
 		}
@@ -746,7 +746,12 @@ void DTC03SMaster::TimeConstantTransfer(unsigned int rate, int kp, int tc_start,
 			}
 			else p_TcTranferFlag_scan = 0;
 	    }
-	    else setKpKiLs(kp, tc_start);
+	    else 
+		{
+			p_TcTranferFlag_scan = 0;
+			p_TcTranferFlag_stop = 0;
+			setKpKiLs(kp, tc_start);
+		}
 				 
 	}
 	p_TcTranfer_index++;
