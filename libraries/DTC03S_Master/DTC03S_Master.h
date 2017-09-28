@@ -321,7 +321,7 @@ private:
 	unsigned int  g_vstart, g_vset, g_vend, p_loopcount, p_trate, p_tlp, p_vact_array[MVTIME], p_TcTranfer_index;
 	unsigned long loopindex, g_timer, g_tenc[3], g_tscan, g_tpush, p_vact_MV_sum;
 	float g_tstart, g_tend, g_tnow, g_tfine, p_rate;
-	bool p_TendFlag, p_TstartBegin_flag, p_TcTranferFlag_stop, p_TcTranferFlag_end, p_TcTranferFlag_scan;
-	int p_TcTransferIndexInit_scan, p_TcTransferIndexInit_end, p_TcTransferIndexInit_stop;
+	bool p_TendFlag, p_TstartBegin_flag, p_TcTranferFlag_stop, p_TcTranferFlag_end, p_TcTranferFlag_scan, p_OsNoscan_chk;
+	int p_TcTransferIndexInit_scan, p_TcTransferIndexInit_end, p_TcTransferIndexInit_stop, p_TcTransferIndexInit_start;
 
 };

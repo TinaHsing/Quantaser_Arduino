@@ -460,7 +460,7 @@ void DTC03SMaster::PrintTnow()
 {
 	lcd.SelectFont(SystemFont5x7);
 	lcd.GotoXY(TFINE_COORD_X, TFINE_COORD_Y);
-	if (p_tnow_flag[1]) lcd.print(g_tnow+g_tfine);
+	if (p_tnow_flag[1]) lcd.print(g_tnow+g_tfine,1);
 	else lcd.print("     ");	
 }
 void DTC03SMaster::PrintP()
@@ -626,18 +626,29 @@ void DTC03SMaster::CalculateRate()
 			p_TcTranferFlag_stop = 1;
 			p_TcTransferIndexInit_stop = TIME_CONST_IDX22;
 			p_TcTranferFlag_end = 1;
-			p_TcTransferIndexInit_end = TIME_CONST_IDX22;
+			p_TcTransferIndexInit_end = TIME_CONST_IDX22; 
 			
-			if(p_TcTranferFlag_scan) TimeConstantTransfer(1000,10,TIME_CONST_IDX22,TIME_CONST_IDX22,p_TcTransferIndexInit_scan);
-//			TimeConstantTransfer_reset();
+//			if(p_TcTranferFlag_scan) TimeConstantTransfer(1000,10,TIME_CONST_IDX24,TIME_CONST_IDX22,p_TcTransferIndexInit_scan);
+			if(p_TcTranferFlag_scan) 
+//			{
+//				if(g_rateindex == 1) TimeConstantTransfer(1000,10,TIME_CONST_IDX36,TIME_CONST_IDX36,p_TcTransferIndexInit_scan);
+//				else TimeConstantTransfer(1000,10,TIME_CONST_IDX22,TIME_CONST_IDX22,p_TcTransferIndexInit_scan);
+				TimeConstantTransfer(1000,10,TIME_CONST_IDX22,TIME_CONST_IDX22,p_TcTransferIndexInit_scan);
+//			}
 						
 		}
 		else //reach Tend point
+		
 		{
 			p_TcTranferFlag_scan = 1;
 			p_TcTranferFlag_stop = 1;
-			if(p_TcTranferFlag_end) TimeConstantTransfer(1000,30,TIME_CONST_IDX22,TIME_CONST_IDX24,p_TcTransferIndexInit_end);
-//			TimeConstantTransfer(1000);
+//			if(p_TcTranferFlag_end) TimeConstantTransfer(1000,30,TIME_CONST_IDX22,TIME_CONST_IDX24,p_TcTransferIndexInit_end);
+			if(p_TcTranferFlag_end)
+			{
+				if(g_rateindex == 1) TimeConstantTransfer(1000,10,TIME_CONST_IDX36,TIME_CONST_IDX36,p_TcTransferIndexInit_end);
+				else TimeConstantTransfer(1000,10,TIME_CONST_IDX22,TIME_CONST_IDX24,p_TcTransferIndexInit_end);				
+			}		
+			
 		}
 		
 		if ( (t_temp-p_trate) >= SCANSAMPLERATE ) 
@@ -671,17 +682,30 @@ void DTC03SMaster::CalculateRate()
 	if ( (g_en_state==1) && (g_scan==0) && (p_EngFlag==0)) // press stop mode
 	{
 		p_TcTranferFlag_scan = 1;
-		p_TcTransferIndexInit_scan = TIME_CONST_IDX36;
+		p_TcTransferIndexInit_scan = TIME_CONST_IDX24;
 		
 		if(p_TstartBegin_flag) 
 		{
 			p_TstartBegin_flag = 0;
 			p_TcTranferFlag_stop = 0;
+//			p_TcTransferIndexInit_start = TIME_CONST_IDX22;
 			setKpKiLs(5,36); // initial stabilization, kp=5, tc=16s
 		}	
 		else 
 		{
-			if(p_TcTranferFlag_stop) TimeConstantTransfer(1000,30,TIME_CONST_IDX22,TIME_CONST_IDX24,p_TcTransferIndexInit_stop);
+//			if(p_TcTranferFlag_stop) TimeConstantTransfer(1000,30,TIME_CONST_IDX22,TIME_CONST_IDX24,p_TcTransferIndexInit_stop);
+//			if(p_overshoot_noscan) 
+//			{
+//				p_overshoot_noscan = 0;
+//				p_OsNoscan_chk = 0;
+////				TimeConstantTransfer(1000,15,TIME_CONST_IDX22,TIME_CONST_IDX24,p_TcTransferIndexInit_start);
+//				setKpKiLs(30,24);
+//			}
+			if(p_TcTranferFlag_stop)
+			{
+				if(g_rateindex == 1) TimeConstantTransfer(1000,30,TIME_CONST_IDX36,TIME_CONST_IDX36,p_TcTransferIndexInit_stop);
+				else TimeConstantTransfer(1000,30,TIME_CONST_IDX22,TIME_CONST_IDX24,p_TcTransferIndexInit_stop);				
+			}
 		}		
 	}
 	
@@ -885,29 +909,33 @@ void DTC03SMaster::setKpKiLs(unsigned char kp, unsigned char tcidx)
 //}
 void DTC03SMaster::checkOvershoot(float tact) 
 {
-//	if(g_en_state==1) 
-//	{
-//		if (g_scan == 1) 
-//		{
-//			if ( abs( tact-g_tend )<0.1 )
-//			{
-//				p_TendFlag = 1;
-//				p_overshoot_scan=1 ;
-//			} 
-//		}
-//		else
-//		{
-//			if ( abs(tact-g_tstart)<0.1 ) p_overshoot_noscan=1 ;
-//		}		
-//	}
-	if(g_en_state && g_scan) 
+	if(g_en_state==1) 
 	{
-		if ( abs( tact-g_tend )<0.1 )
+		if (g_scan == 1) 
 		{
-			p_TendFlag = 1;
-			p_overshoot_scan=1 ;
-		} 
+			if ( abs( tact-g_tend )<0.1 )
+			{
+				p_TendFlag = 1;
+				p_overshoot_scan=1 ;
+			} 
+		}
+		else
+		{
+			if(p_OsNoscan_chk)
+			{
+				if ( abs(tact-g_tstart)<0.1 ) p_overshoot_noscan=1 ;
+			}
+			
+		}		
 	}
+//	if(g_en_state && g_scan) 
+//	{
+//		if ( abs( tact-g_tend )<0.1 )
+//		{
+//			p_TendFlag = 1;
+//			p_overshoot_scan=1 ;
+//		} 
+//	}
 }
 
 void DTC03SMaster::UpdateEnable()//20161101
@@ -917,6 +945,7 @@ void DTC03SMaster::UpdateEnable()//20161101
 		p_en[1] = 0;
 		p_overshoot_scan = 0;
 		p_overshoot_noscan = 0;
+		p_OsNoscan_chk = 1;
 		p_overshoot_cancel_Flag_scan = 1;
 		p_overshoot_cancel_Flag_noscan = 1;
 //		TimeConstantTransfer_reset();
@@ -1156,7 +1185,7 @@ void DTC03SMaster::UpdateParam()
 				p_ee_change_state = EEADD_RATE_INDEX;
 			break;
 			case 3:
-				g_tfine += g_counter*0.01;	
+				g_tfine += g_counter*0.1;	
 				if (g_tfine > FINETUNEAMP) g_tfine = FINETUNEAMP;
 				if (g_tfine < -FINETUNEAMP) g_tfine = -FINETUNEAMP;
 				g_vset = ReturnVset(g_tnow+g_tfine, 0);

@@ -406,8 +406,8 @@ void DTC03::I2CReceive()
     
 //    Serial.println("CTR:");
 //    Serial.print(g_currentlim);
-//    Serial.print("p: ");
-//    Serial.println(g_p);
+    Serial.print("p: ");
+    Serial.println(g_p);
     break;
 
     case I2C_COM_VSET:
@@ -426,10 +426,10 @@ void DTC03::I2CReceive()
     g_ls = temp[0];
     g_ki = temp[1];
     
-//    Serial.print("LSKI:");
-//    Serial.print(g_ls);
-//    Serial.print(", ");
-//    Serial.println(g_ki);
+    Serial.print("LSKI:");
+    Serial.print(g_ls);
+    Serial.print(", ");
+    Serial.println(g_ki);
     break;
 
     case I2C_COM_R1R2:
