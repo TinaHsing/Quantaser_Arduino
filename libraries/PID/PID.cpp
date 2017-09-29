@@ -26,6 +26,7 @@ void PID::Init( long long p_limit, long long i_limit, unsigned char ki, unsigned
 	g_index=0;
 	g_p_limit = p_limit;
     g_i_limit = i_limit;//20171107
+    g_i_term = 0; 
     g_errorlimit = (g_i_limit<<ls)/ki;
     Serial.print("g_errorlimit: ");
     Serial.print((unsigned long)g_i_limit);
@@ -53,31 +54,35 @@ long PID::Compute(bool en, long errin, unsigned char kp, unsigned char ki, unsig
 	unsigned char ki_temp;
 	
 	errin = errin >> g_errgain;
-//	g_errorlimit = (g_i_limit<<ls)/ki;
-//	
+
 	if(en)
 	{	
-		if(ki != ki_temp) g_errorlimit =  (g_i_limit<<ls)/ki;
-        g_errorsum+=errin;
-        
-		if(g_errorsum >= g_errorlimit) g_errorsum = g_errorlimit ;
-		else if(g_errorsum <= (-1)*g_errorlimit) g_errorsum = (-1)*g_errorlimit ;
+//		if(ki != ki_temp) g_errorlimit =  (g_i_limit<<ls)/ki;
+//        g_errorsum+=errin;
+//        
+//		if(g_errorsum >= g_errorlimit) g_errorsum = g_errorlimit ;
+//		else if(g_errorsum <= (-1)*g_errorlimit) g_errorsum = (-1)*g_errorlimit ;
 		
 		p_term = kp * errin;       
-        i_term = (long)(((long long)(g_errorsum)*(long long)(ki))>>ls);
+//        i_term = (long)(((long long)(g_errorsum)*(long long)(ki))>>ls);
+        g_i_term += ((errin*ki)>>ls);
         
         if(p_term > g_p_limit) p_term = g_p_limit;
 		else if(p_term < (-1)*g_p_limit) p_term = (-1)*g_p_limit ;
 		
-        if(i_term > g_i_limit) i_term = g_i_limit;//20161107 added
-		else if(i_term < (-1)*g_i_limit) i_term = (-1)*g_i_limit ;//
+		if(g_i_term > g_i_limit) g_i_term = g_i_limit;
+		else if(g_i_term < (-1)*g_i_limit) g_i_term = (-1)*g_i_limit ;
+		
+//        if(i_term > g_i_limit) i_term = g_i_limit;//20161107 added
+//		else if(i_term < (-1)*g_i_limit) i_term = (-1)*g_i_limit ;
         ki_temp = ki;
-        output = -(p_term+i_term);//20161027
+        output = -(p_term+g_i_term);//20161027
 	}
 	else
 	{
 		p_term=0; 
-		i_term=0;
+		g_i_term = 0;
+//		i_term=0;
         g_errorsum =0;
 		output =0;
 
@@ -107,7 +112,7 @@ long PID::Compute(bool en, long errin, unsigned char kp, unsigned char ki, unsig
 			Serial.print(",");
 			Serial.print(p_term);
 			Serial.print(",");
-			Serial.print(i_term);
+			Serial.print(g_i_term);
 			Serial.print(",");
 			Serial.println(g_out);
 //			Serial.print(",");
