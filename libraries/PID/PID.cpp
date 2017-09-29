@@ -26,7 +26,8 @@ void PID::Init( long long p_limit, long long i_limit, unsigned char ki, unsigned
 	g_index=0;
 	g_p_limit = p_limit;
     g_i_limit = i_limit;//20171107
-    g_i_term = 0; 
+    g_i_term = 0;
+	g_i_term_bank = 0; 
     g_errorlimit = (g_i_limit<<ls)/ki;
     Serial.print("g_errorlimit: ");
     Serial.print((unsigned long)g_i_limit);
@@ -51,21 +52,33 @@ long PID::Compute(bool en, long errin, unsigned char kp, unsigned char ki, unsig
 	long p_term, i_term, output;
 	long long esumki;//
 	unsigned long t1;
-	unsigned char ki_temp;
+
 	
 	errin = errin >> g_errgain;
 
 	if(en)
 	{	
-//		if(ki != ki_temp) g_errorlimit =  (g_i_limit<<ls)/ki;
-//        g_errorsum+=errin;
-//        
-//		if(g_errorsum >= g_errorlimit) g_errorsum = g_errorlimit ;
-//		else if(g_errorsum <= (-1)*g_errorlimit) g_errorsum = (-1)*g_errorlimit ;
+		if(ki != g_ki_temp ||  ls != g_ls_temp) 
+		{
+			g_errorlimit =  (g_i_limit<<ls)/ki;		
+		}
+		
+        g_errorsum += errin;        
+		if(g_errorsum >= g_errorlimit) g_errorsum = g_errorlimit ;
+		else if(g_errorsum <= (-1)*g_errorlimit) g_errorsum = (-1)*g_errorlimit ;
 		
 		p_term = kp * errin;       
-//        i_term = (long)(((long long)(g_errorsum)*(long long)(ki))>>ls);
-        g_i_term += ((errin*ki)>>ls);
+        i_term = (long)(((long long)(g_errorsum)*(long long)(ki))>>ls);
+        if(ki != g_ki_temp ||  ls != g_ls_temp) 
+		{
+			g_i_term_bank = g_i_term;
+        	g_errorsum = 0;	
+			i_term = 0;		
+		}
+
+		g_i_term = g_i_term_bank + i_term;
+
+//        g_i_term += ((errin*ki)>>ls);
         
         if(p_term > g_p_limit) p_term = g_p_limit;
 		else if(p_term < (-1)*g_p_limit) p_term = (-1)*g_p_limit ;
@@ -75,7 +88,8 @@ long PID::Compute(bool en, long errin, unsigned char kp, unsigned char ki, unsig
 		
 //        if(i_term > g_i_limit) i_term = g_i_limit;//20161107 added
 //		else if(i_term < (-1)*g_i_limit) i_term = (-1)*g_i_limit ;
-        ki_temp = ki;
+        g_ki_temp = ki;
+        g_ls_temp = ls;
         output = -(p_term+g_i_term);//20161027
 	}
 	else

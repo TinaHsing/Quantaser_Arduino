@@ -50,7 +50,7 @@ void DTC03SMaster::ParamInit()
 	g_kiindex_scan = TIME_CONST_IDX22;
 	g_kiindex_noscan_temp = g_kiindex_scan;
 	g_kiindex_noscan = TIME_CONST_IDX24;
-	
+	p_OsNoscan_chk = 0;
 	p_TstartBegin_flag = 1;
 	for (int i=0;i<MVTIME;i++) p_vact_array[i]=0;
 }
@@ -694,13 +694,13 @@ void DTC03SMaster::CalculateRate()
 		else 
 		{
 //			if(p_TcTranferFlag_stop) TimeConstantTransfer(1000,30,TIME_CONST_IDX22,TIME_CONST_IDX24,p_TcTransferIndexInit_stop);
-//			if(p_overshoot_noscan) 
-//			{
-//				p_overshoot_noscan = 0;
-//				p_OsNoscan_chk = 0;
-////				TimeConstantTransfer(1000,15,TIME_CONST_IDX22,TIME_CONST_IDX24,p_TcTransferIndexInit_start);
-//				setKpKiLs(30,24);
-//			}
+			if(p_overshoot_noscan) 
+			{
+				p_overshoot_noscan = 0;
+				p_OsNoscan_chk = 0;
+//				TimeConstantTransfer(1000,15,TIME_CONST_IDX22,TIME_CONST_IDX24,p_TcTransferIndexInit_start);
+				setKpKiLs(30,22);
+			}
 			if(p_TcTranferFlag_stop)
 			{
 				if(g_rateindex == 1) TimeConstantTransfer(1000,30,TIME_CONST_IDX36,TIME_CONST_IDX36,p_TcTransferIndexInit_stop);
