@@ -31,7 +31,7 @@ void setup() {
   else digitalWrite(SENSOR_TYPE, LOW);
   dtc.CheckSensorType();
   dtc.CheckTemp();
-  tpid.Init(32768, 32768, dtc.g_ki, dtc.g_ls, 0 );
+  tpid.Init(32768, 20000, dtc.g_ki, dtc.g_ls, 0 );
   dtc.dacforilim.ModeWrite(0);
   dtc.dacformos.ModeWrite(0);
 }

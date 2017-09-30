@@ -620,35 +620,41 @@ void DTC03SMaster::CalculateRate()
 //		if(p_overshoot_cancel_Flag_scan) setKpKiLs(1);			
 //		p_TstartBegin_flag = 0;
 		
-		
 		if( !p_TendFlag ) // scanning 
 		{
 			p_TcTranferFlag_stop = 1;
 			p_TcTransferIndexInit_stop = TIME_CONST_IDX22;
 			p_TcTranferFlag_end = 1;
 			p_TcTransferIndexInit_end = TIME_CONST_IDX22; 
+			if(p_TcTranferFlag_scan)
+			{
+				p_TcTranferFlag_scan = 0;
+				setKpKiLs(15,36);
+			}
 			
 //			if(p_TcTranferFlag_scan) TimeConstantTransfer(1000,10,TIME_CONST_IDX24,TIME_CONST_IDX22,p_TcTransferIndexInit_scan);
-			if(p_TcTranferFlag_scan) 
+//			if(p_TcTranferFlag_scan) 
 //			{
 //				if(g_rateindex == 1) TimeConstantTransfer(1000,10,TIME_CONST_IDX36,TIME_CONST_IDX36,p_TcTransferIndexInit_scan);
 //				else TimeConstantTransfer(1000,10,TIME_CONST_IDX22,TIME_CONST_IDX22,p_TcTransferIndexInit_scan);
-				TimeConstantTransfer(1000,10,TIME_CONST_IDX22,TIME_CONST_IDX22,p_TcTransferIndexInit_scan);
-//			}
-						
+//				TimeConstantTransfer(1000,10,TIME_CONST_IDX22,TIME_CONST_IDX22,p_TcTransferIndexInit_scan);
+//			}						
 		}
-		else //reach Tend point
-		
+		else //reach Tend point		
 		{
 			p_TcTranferFlag_scan = 1;
 			p_TcTranferFlag_stop = 1;
-//			if(p_TcTranferFlag_end) TimeConstantTransfer(1000,30,TIME_CONST_IDX22,TIME_CONST_IDX24,p_TcTransferIndexInit_end);
 			if(p_TcTranferFlag_end)
 			{
-				if(g_rateindex == 1) TimeConstantTransfer(1000,10,TIME_CONST_IDX36,TIME_CONST_IDX36,p_TcTransferIndexInit_end);
-				else TimeConstantTransfer(1000,10,TIME_CONST_IDX22,TIME_CONST_IDX24,p_TcTransferIndexInit_end);				
-			}		
-			
+				p_TcTranferFlag_end = 0;
+				setKpKiLs(30,22);
+			}
+//			if(p_TcTranferFlag_end) TimeConstantTransfer(1000,30,TIME_CONST_IDX22,TIME_CONST_IDX24,p_TcTransferIndexInit_end);
+//			if(p_TcTranferFlag_end)
+//			{
+//				if(g_rateindex == 1) TimeConstantTransfer(1000,10,TIME_CONST_IDX36,TIME_CONST_IDX36,p_TcTransferIndexInit_end);
+//				else TimeConstantTransfer(1000,10,TIME_CONST_IDX22,TIME_CONST_IDX24,p_TcTransferIndexInit_end);				
+//			}					
 		}
 		
 		if ( (t_temp-p_trate) >= SCANSAMPLERATE ) 
@@ -678,13 +684,15 @@ void DTC03SMaster::CalculateRate()
 	    }
 	    p_enableFlag = 1; // change to 1 only when EN ON && Scan ON && ~ENG mode 
 	}
+	
+		
 
 	if ( (g_en_state==1) && (g_scan==0) && (p_EngFlag==0)) // press stop mode
 	{
 		p_TcTranferFlag_scan = 1;
 		p_TcTransferIndexInit_scan = TIME_CONST_IDX24;
 		
-		if(p_TstartBegin_flag) 
+		if(p_TstartBegin_flag)  // just beginning
 		{
 			p_TstartBegin_flag = 0;
 			p_TcTranferFlag_stop = 0;
@@ -699,13 +707,13 @@ void DTC03SMaster::CalculateRate()
 				p_overshoot_noscan = 0;
 				p_OsNoscan_chk = 0;
 //				TimeConstantTransfer(1000,15,TIME_CONST_IDX22,TIME_CONST_IDX24,p_TcTransferIndexInit_start);
-				setKpKiLs(30,22);
+				setKpKiLs(15,22);
 			}
-			if(p_TcTranferFlag_stop)
-			{
-				if(g_rateindex == 1) TimeConstantTransfer(1000,30,TIME_CONST_IDX36,TIME_CONST_IDX36,p_TcTransferIndexInit_stop);
-				else TimeConstantTransfer(1000,30,TIME_CONST_IDX22,TIME_CONST_IDX24,p_TcTransferIndexInit_stop);				
-			}
+//			if(p_TcTranferFlag_stop)
+//			{
+//				if(g_rateindex == 1) TimeConstantTransfer(1000,30,TIME_CONST_IDX36,TIME_CONST_IDX36,p_TcTransferIndexInit_stop);
+//				else TimeConstantTransfer(1000,30,TIME_CONST_IDX22,TIME_CONST_IDX24,p_TcTransferIndexInit_stop);				
+//			}
 		}		
 	}
 	
