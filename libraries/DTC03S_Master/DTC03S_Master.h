@@ -55,8 +55,8 @@
 #define ILIMSTEP 0.05
 #define SCAN_KPTC 1
 #define NOSCAN_KPTC 2 
-#define MVTIME 16
-#define MVTIME_POWER 4
+#define MVTIME 8
+#define MVTIME_POWER 3
 #define MV_STATUS 1
 #define TIME_CONST_IDX22 22
 #define TIME_CONST_IDX24 24
@@ -320,7 +320,7 @@ private:
 	unsigned char g_rateindex, g_trate, g_cursorstate,g_oldcursorstate, g_lastencoded, g_kiindex, g_p, p_ee_change_state, p_kpkiLast, p_mvindex;
 	unsigned int  g_vstart, g_vset, g_vend, p_loopcount, p_trate, p_tlp, p_vact_array[MVTIME], p_TcTranfer_index;
 	unsigned long loopindex, g_timer, g_tenc[3], g_tscan, g_tpush, p_vact_MV_sum;
-	float g_tstart, g_tend, g_tnow, g_tfine, p_rate;
+	float g_tstart, g_tend, g_tnow, g_tfine, p_rate, g_tact;
 	bool p_TendFlag, p_TstartBegin_flag, p_TcTranferFlag_stop, p_TcTranferFlag_end, p_TcTranferFlag_scan, p_OsNoscan_chk;
 	int p_TcTransferIndexInit_scan, p_TcTransferIndexInit_end, p_TcTransferIndexInit_stop, p_TcTransferIndexInit_start;
 

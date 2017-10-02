@@ -298,6 +298,7 @@ void DTC03SMaster::CheckStatus()
 					vact_MV();
 					if (MV_STATUS) tact = ReturnTemp(g_vact_MV,0);
 	  	    		else tact = ReturnTemp(g_vact,0);
+	  	    		g_tact = tact;
 	  	    		PrintTact(tact);	
 				}	
 				if (loopindex%150==1) 
@@ -629,7 +630,11 @@ void DTC03SMaster::CalculateRate()
 			if(p_TcTranferFlag_scan)
 			{
 				p_TcTranferFlag_scan = 0;
-				setKpKiLs(15,36);
+//				if(g_rateindex == 1) setKpKiLs(15,22);
+//				else setKpKiLs(15,36);
+				if( g_tact < 50.5) setKpKiLs(15,22);
+				else if( g_tact < 100.5) setKpKiLs(40,13);
+				else setKpKiLs(80,12);
 			}
 			
 //			if(p_TcTranferFlag_scan) TimeConstantTransfer(1000,10,TIME_CONST_IDX24,TIME_CONST_IDX22,p_TcTransferIndexInit_scan);
@@ -647,7 +652,9 @@ void DTC03SMaster::CalculateRate()
 			if(p_TcTranferFlag_end)
 			{
 				p_TcTranferFlag_end = 0;
-				setKpKiLs(30,22);
+				if(g_tend < 50.5) setKpKiLs(15,22);
+				else if(g_tend < 100.5) setKpKiLs(40,13);
+				else setKpKiLs(80,12);
 			}
 //			if(p_TcTranferFlag_end) TimeConstantTransfer(1000,30,TIME_CONST_IDX22,TIME_CONST_IDX24,p_TcTransferIndexInit_end);
 //			if(p_TcTranferFlag_end)
@@ -697,17 +704,26 @@ void DTC03SMaster::CalculateRate()
 			p_TstartBegin_flag = 0;
 			p_TcTranferFlag_stop = 0;
 //			p_TcTransferIndexInit_start = TIME_CONST_IDX22;
-			setKpKiLs(5,36); // initial stabilization, kp=5, tc=16s
+			setKpKiLs(15,36); // initial stabilization, kp=5, tc=16s
 		}	
 		else 
 		{
 //			if(p_TcTranferFlag_stop) TimeConstantTransfer(1000,30,TIME_CONST_IDX22,TIME_CONST_IDX24,p_TcTransferIndexInit_stop);
-			if(p_overshoot_noscan) 
+			if(p_overshoot_noscan) // reach Tstart point
 			{
 				p_overshoot_noscan = 0;
 				p_OsNoscan_chk = 0;
 //				TimeConstantTransfer(1000,15,TIME_CONST_IDX22,TIME_CONST_IDX24,p_TcTransferIndexInit_start);
-				setKpKiLs(15,22);
+				if(g_tstart < 50.5) setKpKiLs(15,22);
+				else if(g_tstart < 100.5) setKpKiLs(40,13);
+				else setKpKiLs(80,12);
+			}
+			if(p_TcTranferFlag_stop)
+			{
+				p_TcTranferFlag_stop = 0;
+				if( g_tact < 50.5) setKpKiLs(15,22);
+				else if( g_tact < 100.5) setKpKiLs(40,13);
+				else setKpKiLs(80,12);
 			}
 //			if(p_TcTranferFlag_stop)
 //			{
@@ -1224,7 +1240,7 @@ void DTC03SMaster::UpdateParam()
 			
 			case 8:
 				g_p += g_counter;
-				if(g_p>99) g_p=99;
+				if(g_p>150) g_p=150;
                 if(g_p<1) g_p=1;             
                 I2CWriteData(I2C_COM_CTR);
                 PrintP();

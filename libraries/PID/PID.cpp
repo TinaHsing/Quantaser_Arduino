@@ -96,6 +96,7 @@ long PID::Compute(bool en, long errin, unsigned char kp, unsigned char ki, unsig
 	{
 		p_term=0; 
 		g_i_term = 0;
+		g_i_term_bank = 0;
 //		i_term=0;
         g_errorsum =0;
 		output =0;
