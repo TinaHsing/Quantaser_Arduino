@@ -397,17 +397,19 @@ void DTC03SMaster::PrintTstart()
 	lcd.SelectFont(SystemFont5x7);
 	if (p_EngFlag == 1) lcd.GotoXY(TS_X2, TS_Y);	
 	else lcd.GotoXY(TSTART_COORD_X2, TSTART_COORD_Y);		
-	if(g_tstart < 9.993) lcd.print(" ");
-    lcd.print(g_tstart,2);
-	
+	if(g_tstart < 9.993) lcd.print("  ");
+	else if(g_tstart < 99.991) lcd.print(" ");
+    lcd.print(g_tstart,1);
+	lcd.print("  ");
 }
 void DTC03SMaster::PrintTend()
 {
 	lcd.SelectFont(SystemFont5x7);
 	lcd.GotoXY(TEND_COORD_X2, TEND_COORD_Y);
-	if(g_tend < 9.991) lcd.print(" ");
-	lcd.print(g_tend,2);
-//	lcd.print(",");
+	if(g_tend < 9.991) lcd.print("  ");
+	else if(g_tend < 99.91) lcd.print(" ");
+	lcd.print(g_tend,1);
+	lcd.print("  ");
 //	lcd.print(p_rate,4);
 	 
 }
@@ -429,8 +431,9 @@ void DTC03SMaster::PrintTact(float tact)
 //	else if (g_errcode1 == 1) lcd.print("error1");
 	else 
 	{
-		if(tact< 9.991) lcd.print(" ");
-		lcd.print(tact, 2); 
+		if(tact< 9.991) lcd.print("  ");
+		else if(tact< 99.991) lcd.print(" ");
+		lcd.print(tact, 1); 
 	    lcd.print("  "); 		
 	}
 	if(!p_overshoot_scan) checkOvershoot(tact);
@@ -1170,7 +1173,7 @@ void DTC03SMaster::UpdateParam()
 		switch(g_cursorstate)
 		{
 			case 0:
-				g_tstart += g_counter2*0.01;
+				g_tstart += g_counter2*0.1;
 				g_tnow = g_tstart;
 				if(g_tstart > 150.00) g_tstart =150.00;
 				if(g_tstart < 7.00) g_tstart = 7.00;
@@ -1190,7 +1193,7 @@ void DTC03SMaster::UpdateParam()
 			break;
 
 			case 1:
-				g_tend += g_counter2*0.01;
+				g_tend += g_counter2*0.1;
 				if(g_tend > 150.00) g_tend = 150.00;
 				if(g_tend< 7.00) g_tend = 7.00;
 				PrintTend(); 
@@ -1319,14 +1322,14 @@ void DTC03SMaster::Encoder() // use rising edge triger of ENC_B
 	{
 		g_paramterupdate =1;
 		g_counter =-1;
-		if (g_tenc[2] > COUNTERSPEEDUP) g_counter2 = -50;
+		if (g_tenc[2] > COUNTERSPEEDUP) g_counter2 = -10;
 		else g_counter2 =-1;		
 	}
 	else if(encoded == 0b11)
 	{
 		g_paramterupdate =1;
 		g_counter =1;
-		if (g_tenc[2] > COUNTERSPEEDUP) g_counter2 =50;
+		if (g_tenc[2] > COUNTERSPEEDUP) g_counter2 =10;
 		else g_counter2 = 1;	
 	}
 	g_tenc[0] = tenc;	
