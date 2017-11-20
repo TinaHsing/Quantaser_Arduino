@@ -139,6 +139,7 @@
 #define T0INV 0.003354
 #define V_NOAD590 30000 
 #define V_OVERTEMP 481 // 90 degree
+#define BVALUE 3988 
 
 const unsigned char PS_16 = (1<<ADPS2);
 const unsigned char PS_32 = (1<<ADPS2)|(1<<ADPS0);
@@ -174,6 +175,7 @@ public:
 	void SaveEEPROM();
     int ReadIsense();//
     void CheckInitValue(bool, bool, bool);
+    float ReturnTemp(unsigned int);
 
 	unsigned int g_vact, g_vset, g_fbc_base, g_isense0,Vactarray[VACTAVGTIME], Itecarray[ITECAVGTIME],g_currentabs,g_itecread;//
     unsigned char g_p, g_ki, g_ls, g_currentlim, g_ee_change_state,g_kiindex, g_limcounter,g_currentindex, g_tpidoffset, g_r1, g_r2;

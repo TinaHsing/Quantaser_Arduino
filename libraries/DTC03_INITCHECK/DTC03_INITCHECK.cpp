@@ -92,10 +92,9 @@ void DTC03::CheckInitValue(bool sw1, bool sw2, bool sw3)
 				if((FBCCHECK_LOW + i_step)>FBCCHECK_HIGH) i_step = 0;
 				i++;
 			}	
-		}	
+			
 		
-		if(sw3)
-		{
+		
 			////cooling////
 			SetMosOff();			
 			i_step = 0; //計算cooling 前先歸零 
@@ -130,49 +129,68 @@ void DTC03::CheckInitValue(bool sw1, bool sw2, bool sw3)
 				i++;
 			}
 			SetMosOff();
-		}
-		
-		Serial.println("    ");
-		Serial.print("fbc_base heating =");
-		Serial.println(fbc_heating);
-		Serial.print("fbc_base cooling =");
-		Serial.println(fbc_cooling);
-		Serial.println("Choose lower one as fbc_base!");
-		Serial.println("    ");
-		Serial.print("0.5A for calculate R =");
-		Serial.println(cal_R_value);		
-		Serial.println(" ");
 		
 		
-		Serial.println("#Checking Mod input offest value");
-		Serial.println("Unplug BNC cable from MOD Input.");
-		for ( int i=0; i<100; i++) {
-			ReadVoltage();
-			mod_sum += g_vmod; 
-			Serial.print(g_vact);	
-			Serial.print(", ");
-			Serial.print(g_vmod);	
-			Serial.print(", ");
-			Serial.println((float)ReadIsense()*5/1023);		
+		    Serial.println("    ");
+		    Serial.print("fbc_base heating =");
+		    Serial.println(fbc_heating);
+		    Serial.print("fbc_base cooling =");
+		    Serial.println(fbc_cooling);
+		    Serial.println("Choose lower one as fbc_base!");
+		    Serial.println("    ");
+		    Serial.print("0.5A for calculate R =");
+		    Serial.println(cal_R_value);		
+		    Serial.println(" ");
+	    }
+		
+		if(sw3)
+		{
+			Serial.println("#Checking Mod input offest value");
+		    Serial.println("Unplug BNC cable from MOD Input.");
+	    	for ( int i=0; i<100; i++) 
+     		{
+	    		ReadVoltage();
+	    		mod_sum += g_vmod; 
+	    		Serial.print(g_vact);	
+	    		Serial.print(", ");
+	    		Serial.print(g_vmod);	
+	    		Serial.print(", ");
+	    		Serial.println((float)ReadIsense()*5/1023);		
+		    }
+    		mod_avg = mod_sum/100;
+	    	Serial.print("100 times AVG MOD offset value= ");
+	    	Serial.println(mod_avg);
+	    	Serial.println("Normal value is around 32768; if not, ");
+	    	Serial.println("check +5VB, MOD buffer OPA");
+	    	mod_sum = 0; //將mod_sum變數值歸零，留給計算std用。 
+	    	for ( int i=0; i<100; i++) 
+			{
+		    	ReadVoltage();
+		    	mod_sum += sq(g_vmod - mod_avg); 			
+		    }
+	    	mod_std = sqrt(mod_sum/100);
+	    	Serial.print("STD = ");
+	    	Serial.println(mod_std);
+	    	
+	    	Serial.println(F("---------------------------"));
+	    	Serial.println(F("#Check modulation function"));
+	    	Serial.println(F("Add DC 100mV to mod BNC:"));
+	    	
 		}
-		mod_avg = mod_sum/100;
-		Serial.print("100 times AVG MOD offset value= ");
-		Serial.println(mod_avg);
-		Serial.println("Normal value is around 32768; if not, ");
-		Serial.println("check +5VB, MOD buffer OPA");
-		mod_sum = 0; //將mod_sum變數值歸零，留給計算std用。 
-		for ( int i=0; i<100; i++) {
-			ReadVoltage();
-			mod_sum += sq(g_vmod - mod_avg); 			
-		}
-		mod_std = sqrt(mod_sum/100);
-		Serial.print("STD = ");
-		Serial.println(mod_std);
+		
+		
+		
 				
 	#else
 		Serial.println("Open INITIAL_VALUE_CHECK flag to use CheckFbcValue() function");
 	#endif		
 
+}
+float DTC03::ReturnTemp(unsigned int vact)
+{
+  float tact;
+  tact = 1/(log((float)vact/RTHRatio)/BVALUE+T0INV)-273.15;
+  return tact;
 }
 void DTC03::DynamicVcc()
 {

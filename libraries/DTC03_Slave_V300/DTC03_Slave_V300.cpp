@@ -650,6 +650,7 @@ int DTC03::autotune(float &kp, float &ki)
 			break;			
 		}
 	}	
+//	Serial.println("leave");
 	if(!g_atune_flag) return(0); // for runtime err case
 //	Serial.print("v_bias_relay= ");
 //	Serial.println(v_bias_relay);
@@ -959,9 +960,9 @@ unsigned int DTC03::FindBiasCurrent(float &t_leave, uint8_t &flag, unsigned int 
 	switch(flag)
 	{
 		case 0:
-			pid.Init(32768,0,1,2,0 );
+			pid.Init(32768,0,1,2,0 ); //PID::Init( long long p_limit, long long i_limit, unsigned char ki, unsigned char ls, unsigned char err_gain)
 			ipid.Init(32768,32768,g_ki,g_ls,7);
-			for(int i=0;i<FINDBIASARRAY;i++) v_bias[i]=0;
+			for(int i=0;i<FINDBIASARRAY;i++) v_bias[i]=0; // array space for determing stability condition
 			input_bias(v_now,0);
 			t_now = ReturnTemp(v_now,0);
 			t_leave = t_now;
@@ -970,18 +971,19 @@ unsigned int DTC03::FindBiasCurrent(float &t_leave, uint8_t &flag, unsigned int 
 			ts = millis();	
 			flag = 1;			
 			g_dbrCounter_flag = 1;
+			return(0);
 //			Serial.print("t_bias=");
 //			Serial.println(t_bias,1);
 			
 		break;
 		case 1:
-			input_bias(v_now,1);
+			input_bias(v_now,2);
 			ReadIsense();
 			CurrentLimit();
 			iteclimit = (long)g_iteclimitset<<7;
 		
 			err = (long)v_now - (long)v_bias_find; 
-			tout = pid.Compute(1, err, g_p_atune, 0, 0);
+			tout = pid.Compute(1, err, g_p_atune, 0, 0); // PID::Compute(bool en, long errin, unsigned char kp, unsigned char ki, unsigned char ls)
 			iset=abs(tout*0.586);
   			if(iset > iteclimit) iset=iteclimit;
   			isense =abs(((long)(g_itecread)-(long)(g_isense0))<<7 );
@@ -997,9 +999,11 @@ unsigned int DTC03::FindBiasCurrent(float &t_leave, uint8_t &flag, unsigned int 
 			bool stable_flag = 0;
 			unsigned int v_bias_max, v_bias_min;
 			te = millis();
-				
+//			Serial.print("test condition:");
+//			Serial.print(te-ts);
+//			Serial.print(", ");
+//			Serial.println((ReturnTemp(v_now,0)-t_leave));
 			if((te-ts)>=SAMPLINGTINE && (ReturnTemp(v_now,0)-t_leave)>0.1)
-
 			{		
 				
 				if(g_dbrCounter_flag)
@@ -1008,26 +1012,31 @@ unsigned int DTC03::FindBiasCurrent(float &t_leave, uint8_t &flag, unsigned int 
 					g_dbr_counter[0] = millis();
 				}
 				v_bias_max = v_bias[0];
-				for(int i=1; i<FINDBIASARRAY;i++)
+				for(int i=0; i<FINDBIASARRAY;i++)
 				{
 					if(v_bias[i] > v_bias_max) v_bias_max = v_bias[i];				
 				}
 				
 				v_bias_min = v_bias[0];
-				for(int i=1; i<FINDBIASARRAY;i++)
+				for(int i=0; i<FINDBIASARRAY;i++)
 				{
-					if(v_bias[i] < v_bias_min) v_bias_min = v_bias[i];				
+					if(v_bias[i] < v_bias_min) v_bias_min = v_bias[i];	
+//					Serial.print(v_bias[i]);
+//					if(i<FINDBIASARRAY)	Serial.print(", ");
+//					else Serial.println();		
 				}
 
-//				Serial.println(v_bias_max-v_bias_min);
-				if((v_bias_max - v_bias_min)==g_stableCode_atune) stable_flag=1;
+				Serial.print(v_bias_max-v_bias_min);
+				Serial.print(", ");
+				Serial.println(g_stableCode_atune);
+				if((v_bias_max - v_bias_min) <= g_stableCode_atune) stable_flag=1;
 				if((v_bias_max - v_bias_min)<=15) 
 				{
 					g_dbr_counter[1] = millis();
 					unsigned long dbr_counter_tdiff = g_dbr_counter[1]-g_dbr_counter[0];					
 //					Serial.print("dbr_counter_tdiff=");
 //					Serial.println(dbr_counter_tdiff);
-					if(dbr_counter_tdiff < 20000) 
+					if(dbr_counter_tdiff < 20000) // means time to reach dT<15 code status less than 20s -> judge as DBR case
 					{
 						g_DBRflag=1;
 						flag = 2;
@@ -1204,27 +1213,27 @@ uint8_t DTC03::atunKiLs(float &tc)
 	}
 }
 
-void DTC03::CheckSerial()
-{
-	unsigned int in;
-//	Serial.begin(9600);
-	if(Serial.available()>0)
-  	{
-	    in = Serial.read();
-	    switch(in)
-	    {
-	      case '1':
-	        Serial.println(is<<8 | js);
-	        js++;
-	        break;
-	       case '2':
-	        Serial.println(is<<8 | js);
-	        is++;
-	        break;
-		}  
-	}
-//	Serial.end();
-}
+//void DTC03::CheckSerial()
+//{
+//	unsigned int in;
+////	Serial.begin(9600);
+//	if(Serial.available()>0)
+//  	{
+//	    in = Serial.read();
+//	    switch(in)
+//	    {
+//	      case '1':
+//	        Serial.println(is<<8 | js);
+//	        js++;
+//	        break;
+//	       case '2':
+//	        Serial.println(is<<8 | js);
+//	        is++;
+//	        break;
+//		}  
+//	}
+////	Serial.end();
+//}
 
 
 
