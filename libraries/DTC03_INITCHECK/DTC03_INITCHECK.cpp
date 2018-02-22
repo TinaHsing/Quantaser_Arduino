@@ -56,7 +56,8 @@ void DTC03::CheckInitValue(bool sw1, bool sw2, bool sw3)
 		
 		if(sw2)
 		{
-			SetMosOff();	
+//			SetMosOff();	
+			SetMos(HEATING, 0);
 			izero = ReadIsense();
 			Serial.print("current0 =");
 		    Serial.println(izero);				
@@ -68,6 +69,7 @@ void DTC03::CheckInitValue(bool sw1, bool sw2, bool sw3)
 			while( ( abs(itec - izero) ) < 5) 
 			{ // old value 5
 				SetMos(HEATING, FBCCHECK_LOW + i_step);
+//				SetMos(HEATING, 55000);
 				delay(100);
 				itec = ReadIsense();
 	//			Serial.println(itec);
@@ -76,9 +78,9 @@ void DTC03::CheckInitValue(bool sw1, bool sw2, bool sw3)
 				itec_array[i] = itec-izero; 
 				Serial.print(FBCCHECK_LOW + i_step);
 				Serial.print("  , ");
-				Serial.print(itec_array[i]);
-				Serial.print("  , ");
-				Serial.println(itec*5/1023); //check read voltage value 
+				Serial.println(itec_array[i]);
+//				Serial.print("  , ");
+//				Serial.println(itec*5/1023); //check read voltage value 
 				
 				if ( (i =2) && fbc_flag ) {
 					if ( (abs(itec_array[0]) > di) && (abs(itec_array[1]) > di) && (abs(itec_array[2]) > di) && fbc_flag ){ //連續3個值都 > di 才判定 fbc_heating
@@ -96,17 +98,21 @@ void DTC03::CheckInitValue(bool sw1, bool sw2, bool sw3)
 		
 		
 			////cooling////
-			SetMosOff();			
+//			SetMosOff();
+					
 			i_step = 0; //計算cooling 前先歸零 
 			i = 0; 
 			fbc_flag = 1;
-			
+			SetMos(COOLING, 0);
 			Serial.println("cooling :");
-			itec = ReadIsense();
-			
+			izero = ReadIsense();
+			Serial.print("current0 =");
+		    Serial.println(izero);	
+		    
 			while( ( abs(itec - izero) ) < 49) {
 				SetMos(COOLING, FBCCHECK_LOW + i_step);
-	//			SetMos(COOLING, 0);
+//				SetMos(COOLING, 0);
+//				SetMosOff();
 				delay(100);
 				itec = ReadIsense();
 				if (i>2) i=2;
@@ -114,6 +120,7 @@ void DTC03::CheckInitValue(bool sw1, bool sw2, bool sw3)
 				Serial.print(FBCCHECK_LOW + i_step);
 				Serial.print("  , ");
 				Serial.println(itec_array[i]);
+//				Serial.println(itec);
 				
 				if ( (i =2) && fbc_flag ) {
 					if ( (abs(itec_array[0]) > di) && (abs(itec_array[1]) > di) && (abs(itec_array[2]) > di) && fbc_flag ){ //連續3個值都 > di 才判定 fbc_heating
