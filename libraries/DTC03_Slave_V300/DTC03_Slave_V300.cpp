@@ -74,18 +74,29 @@ void DTC03::SetVcc(unsigned char state)
 	switch (state)
 	{
 		case VCCLOW:
-//			digitalWrite(VCC3,LOW); //use VCC3 only for P08, otherwise use VCC2
+#if 0 //use VCC3 only for P08, otherwise use VCC2
+			digitalWrite(VCC3,LOW); 
+#else
 			digitalWrite(VCC2,LOW);
+#endif
  			digitalWrite(VCC1,LOW);
  		break;
+
  		case VCCMEDIUM:
-// 			digitalWrite(VCC3,LOW);
+#if 0 //use VCC3 only for P08, otherwise use VCC2
+ 			digitalWrite(VCC3,LOW);
+#else
  			digitalWrite(VCC2,LOW);
+#endif
  			digitalWrite(VCC1,HIGH);
  		break;
+
  		case VCCHIGH:
-// 			digitalWrite(VCC3,HIGH);
+#if 0 //use VCC3 only for P08, otherwise use VCC2
+ 			digitalWrite(VCC3,HIGH);
+#else
  	 		digitalWrite(VCC2,HIGH);
+#endif
  			digitalWrite(VCC1,LOW);
  		break;
  		default:
@@ -652,10 +663,14 @@ int DTC03::autotune(float &kp, float &ki)
 	}	
 //	Serial.println("leave");
 	if(!g_atune_flag) return(0); // for runtime err case
-//	Serial.print("v_bias_relay= ");
-//	Serial.println(v_bias_relay);
+	
+	
 
     input_bias(p_noise_Mid,1);
+//    Serial.print("v_bias_relay= ");
+//	Serial.println(v_bias_relay);
+//	Serial.print("p_noise_Mid= ");
+//	Serial.println(p_noise_Mid);
     while(!find_period_flag) 
     {
     	RelayMethod(v_bias_relay, in, &init_flag, &relay_heating_flag, &relay_cooling_flag, find_period_flag, relay_period, period_count, step_out);
@@ -751,11 +766,11 @@ void DTC03::AtunSamplingTime()
 }
 void DTC03::RelayMethod(unsigned int &v_bias_relay, unsigned int &in, bool *init_flag, bool *relay_heating_flag, bool *relay_cooling_flag, bool &find_period_flag, unsigned long *relay_period, int &period_count, unsigned int &step_out)
 {	
-	input_bias(in,1);
+	input_bias(in,0);
+	
+	
 //	Serial.print(in);
-//	Serial.print(", ");
-//	Serial.print(p_noise_Mid);
-//	Serial.print(", ");
+//	Serial.print(", ");	
 //	Serial.print((int)(in-p_noise_Mid));
 //	Serial.print(", ");
 	ReadIsense();
@@ -786,6 +801,8 @@ void DTC03::RelayMethod(unsigned int &v_bias_relay, unsigned int &in, bool *init
       {
         step_out = v_bias_relay + OUTSTEP/2; //heating initially
       }
+//      Serial.print(find_period_flag);
+//	  Serial.print(", ");
       output_bias(step_out,1); 
       delay(50);
 }
@@ -977,7 +994,7 @@ unsigned int DTC03::FindBiasCurrent(float &t_leave, uint8_t &flag, unsigned int 
 			
 		break;
 		case 1:
-			input_bias(v_now,2);
+			input_bias(v_now,1);
 			ReadIsense();
 			CurrentLimit();
 			iteclimit = (long)g_iteclimitset<<7;
@@ -1026,9 +1043,9 @@ unsigned int DTC03::FindBiasCurrent(float &t_leave, uint8_t &flag, unsigned int 
 //					else Serial.println();		
 				}
 
-				Serial.print(v_bias_max-v_bias_min);
-				Serial.print(", ");
-				Serial.println(g_stableCode_atune);
+//				Serial.print(v_bias_max-v_bias_min);
+//				Serial.print(", ");
+//				Serial.println(g_stableCode_atune);
 				if((v_bias_max - v_bias_min) <= g_stableCode_atune) stable_flag=1;
 				if((v_bias_max - v_bias_min)<=15) 
 				{
