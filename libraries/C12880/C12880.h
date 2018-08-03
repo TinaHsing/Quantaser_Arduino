@@ -27,6 +27,7 @@
 #define ADC_READA	B01000011 // set the reference to 5V, Set the result to the right adjust, ReadCh3
 #define ADC_READB	B01000100 // set the reference to 5V, Set the result to the right adjust, ReadCh4
 
+#define nop asm volatile ("nop\n\t") // use nop to tune the delay
 
 
 
