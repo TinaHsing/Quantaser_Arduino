@@ -56,6 +56,7 @@ void C12880::ReadVedioA(int *buffer)
 	for (i=0; i < CHANNEL_NUMBER; i++)
 	{
 		ADCSRA |= B01000000;
+		while(ADCSRA & B01000000);
 		low = ADCL;
 		high = ADCH;
 		buffer[i] = (high << 8) | low;
