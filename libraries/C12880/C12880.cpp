@@ -2,8 +2,6 @@
 
 #include <C12880.h>
 
-
-
 C12880::C12880()
 {}
 
@@ -23,8 +21,8 @@ void C12880::LEDInit(unsigned char led1, unsigned char led2)
 {
 	guc_led1 = led1;
 	guc_led2 = led2;
-	pinMode (guc_led1, OUTPUT);
-	pinMode (guc_led2, OUTPUT);
+	pinMode(guc_led1, OUTPUT);
+	pinMode(guc_led2, OUTPUT);
 	digitalWrite(guc_led1, LOW);
 	digitalWrite(guc_led2, LOW);
 }
@@ -132,7 +130,7 @@ void C12880::ReadVedioAB(int *buffer)
 #if 1	//2 for byte
 void C12880::ReadVedioAB(byte *buffer)
 {
-	unsigned int i, low, high, num = 0;
+	unsigned int i, low, high;
 	for (i=0; i < CHANNEL_NUMBER*4; i++)
 	{
 		// read A
@@ -143,7 +141,6 @@ void C12880::ReadVedioAB(byte *buffer)
 		high = ADCH;
 		buffer[i] = low;
 		buffer[++i] = high;
-		num++;
 		// read B
 		ADMUX = ADC_READB;
 		ADCSRA |= B01000000;
@@ -152,7 +149,6 @@ void C12880::ReadVedioAB(byte *buffer)
 		high = ADCH;
 		buffer[++i] = low;
 		buffer[++i] = high;
-		num++;
 		PulseClkAB(1);
 	}
 }

@@ -19,7 +19,7 @@
 #define PIN_CLKB 	A4
 #define PIN_STB 	A6
 
-#define CHANNEL_NUMBER 28
+#define CHANNEL_NUMBER 288
 
 #define CLKAB_HIGH 	B00010100 // use | to implement clk high with PORTC
 #define CLKAB_LOW 	B11101011 // use & to implement clk low with PORTC
