@@ -9,8 +9,8 @@ C12880::C12880()
 
 void C12880::SpectroInit()
 {
-	pinMode (PIN_CLK, OUTPUT);
-	pinMode (PIN_STA, OUTPUT);
+	pinMode(PIN_CLK, OUTPUT);
+	pinMode(PIN_STA, OUTPUT);
 	pinMode(PIN_STB, OUTPUT);
 	digitalWrite(PIN_CLK, HIGH);
 	digitalWrite(PIN_STA, LOW);
