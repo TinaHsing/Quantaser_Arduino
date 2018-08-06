@@ -154,6 +154,218 @@ void C12880::ReadVedioAB(byte *buffer)
 }
 #endif
 
+void C12880::RunDevice(uint32_t I_timeA, uint32_t I_timeB)
+{
+  PulseClkAB(3);
 
+#if DEBUG_MODE
+  Serial.print("A time = ");
+  Serial.println(I_timeA);
+  Serial.print("B time = ");
+  Serial.println(I_timeB);
+#endif
 
+  if (I_timeA == I_timeB)
+  {
+    I_timeBothAB = I_timeA;
+  	ucFlagAB = 0;
+  }
+  else if (I_timeB > I_timeA)
+  {
+    I_timeBothAB = I_timeA;
+    I_timeB -= I_timeA;
+    ucFlagAB = 2;
+  }
+  else // if (I_timeA > I_timeB)
+  {
+    I_timeBothAB = I_timeB;
+    I_timeA -= I_timeB;
+    ucFlagAB = 1;
+  }
+
+  StartIntegAB();
+#if DEBUG_MODE
+  Serial.println("Start Integ AB");
+#endif
+  PulseClkAB(I_timeBothAB);
+#if DEBUG_MODE
+  Serial.print("Start AB clock = ");
+  Serial.println(I_timeBothAB);
+#endif
+
+  if (ucFlagAB == 0)
+  {
+    StopIntegA();
+    StopIntegB();
+#if DEBUG_MODE
+    Serial.println("Stop A and B Integ");
+#endif
+    PulseClkAB(PAUSE_NUMBER);
+#if DEBUG_MODE
+    Serial.print("Start AB clock = ");
+    Serial.println(PAUSE_NUMBER);
+#endif
+  }
+  else if (ucFlagAB == 2)
+  {
+    StopIntegA();
+#if DEBUG_MODE
+    Serial.println("Stop A Integ");
+#endif
+
+    if (I_timeB < PAUSE_NUMBER)
+    {
+      PulseClkAB(I_timeB);
+#if DEBUG_MODE
+      Serial.print("Start AB clock = ");
+      Serial.println(I_timeB);
+#endif
+
+      StopIntegB();
+#if DEBUG_MODE
+      Serial.println("Stop B Integ");
+#endif
+
+      P_timeBothAB = PAUSE_NUMBER - I_timeB;
+      PulseClkAB(P_timeBothAB);
+#if DEBUG_MODE
+      Serial.print("Start AB clock = ");
+      Serial.println(P_timeBothAB);
+#endif
+
+      PulseClkB(I_timeB);
+#if DEBUG_MODE
+      Serial.print("Start B clock = ");
+      Serial.println(I_timeB);
+#endif
+    }
+    else // if (I_timeB > PAUSE_NUMBER)
+    {
+      PulseClkAB(PAUSE_NUMBER);
+#if DEBUG_MODE
+      Serial.print("Start AB clock = ");
+      Serial.println(PAUSE_NUMBER);
+#endif
+
+      I_timeB -= PAUSE_NUMBER;
+      PulseClkB(I_timeB);
+#if DEBUG_MODE
+      Serial.print("Start B clock = ");
+      Serial.println(I_timeB);
+#endif
+
+      StopIntegB();
+#if DEBUG_MODE
+      Serial.println("Stop B Integ");
+#endif
+
+      PulseClkB(PAUSE_NUMBER);
+#if DEBUG_MODE
+      Serial.print("Start B clock = ");
+      Serial.println(PAUSE_NUMBER);
+#endif
+    }
+  }
+  else // if (ucFlagAB == true)
+  {
+    StopIntegB();
+#if DEBUG_MODE
+    Serial.println("Stop B Integ");
+#endif
+
+    if (I_timeA < PAUSE_NUMBER)
+    {
+      PulseClkAB(I_timeA);
+#if DEBUG_MODE
+      Serial.print("Start AB clock = ");
+      Serial.println(I_timeA);
+#endif
+
+      StopIntegA();
+#if DEBUG_MODE
+      Serial.println("Stop A Integ");
+#endif
+
+      P_timeBothAB = PAUSE_NUMBER - I_timeA;
+      PulseClkAB(P_timeBothAB);
+#if DEBUG_MODE
+      Serial.print("Start AB clock = ");
+      Serial.println(P_timeBothAB);
+#endif
+
+      PulseClkA(I_timeA);
+#if DEBUG_MODE
+      Serial.print("Start A clock = ");
+      Serial.println(I_timeA);
+#endif
+    }
+    else // if (I_timeA > PAUSE_NUMBER)
+    {
+      PulseClkAB(PAUSE_NUMBER);
+#if DEBUG_MODE
+      Serial.print("Start AB clock = ");
+      Serial.println(PAUSE_NUMBER);
+#endif
+
+      I_timeA -= PAUSE_NUMBER;
+      PulseClkA(I_timeA);
+#if DEBUG_MODE
+      Serial.print("Start A clock = ");
+      Serial.println(I_timeA);
+#endif
+
+      StopIntegA();
+#if DEBUG_MODE
+      Serial.println("Stop A Integ");
+#endif
+
+      PulseClkA(PAUSE_NUMBER);
+#if DEBUG_MODE
+      Serial.print("Start A clock = ");
+      Serial.println(PAUSE_NUMBER);
+#endif
+    }
+  }
+  
+  ReadVedioAB(data);
+#if DEBUG_MODE
+  Serial.println();
+#endif
+}
+
+void C12880::PrintData()
+{
+  int i;
+
+#if 0  //only read 1
+  for (i=0; i< CHANNEL_NUMBER; i++)
+  {
+    Serial.println(data[i]);
+  }
+#endif
+
+#if 0  //2 for int
+  for (i=0; i< CHANNEL_NUMBER*2; i++)
+  {
+    Serial.print(data[i]);
+    Serial.print(',');
+    Serial.println(data[++i]);
+  }
+#endif
+
+#if 1  //2 for byte
+  for (i=0; i< CHANNEL_NUMBER*4; i++)
+  {
+    unsigned char n1 = 0, n2 = 0, n3 = 0, n4 = 0;
+    n1 = data[i];
+    n2 = data[++i];
+    n3 = data[++i];
+    n4 = data[++i];
+    Serial.print(n1|(n2<<8));
+    Serial.print(',');
+    Serial.println(n3|(n4<<8));
+  }
+#endif
+
+}
 

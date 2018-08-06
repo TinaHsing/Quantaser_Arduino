@@ -1,6 +1,8 @@
 #ifndef C12880_H
 #define C12880_H
 
+#define DEBUG_MODE  0
+
 #define CLKPERIOD1 1 	// 1us
 #define CLKPERIOD2 100 	// 100us
 
@@ -19,7 +21,8 @@
 #define PIN_CLKB 	A4
 #define PIN_STB 	A6
 
-#define CHANNEL_NUMBER 288
+#define CHANNEL_NUMBER	288
+#define PAUSE_NUMBER	87
 
 #define CLKAB_HIGH 	B00010100 // use | to implement clk high with PORTC
 #define CLKAB_LOW 	B11101011 // use & to implement clk low with PORTC
@@ -46,7 +49,14 @@ private:
 	unsigned char guc_led1, guc_led2;
 	unsigned char guc_opst1h, guc_opst1l, guc_opst2h, guc_opst2l; // fast port manipulation constant
 
-	public:
+	//int data[CHANNEL_NUMBER];
+	//int data[CHANNEL_NUMBER*2];
+	byte data[CHANNEL_NUMBER*4];
+
+	uint32_t I_timeBothAB = 0, P_timeBothAB = 0;
+	uint8_t ucFlagAB = 0;
+
+public:
 	C12880();
 
 	void SpectroInit();
@@ -61,6 +71,8 @@ private:
 	//void ReadVedioA(int *buffer);
 	//void ReadVedioAB(int *buffer);
 	void ReadVedioAB(byte *buffer);
+	void RunDevice(uint32_t I_timeA, uint32_t I_timeB);
+	void PrintData();
 };
 
 #endif
