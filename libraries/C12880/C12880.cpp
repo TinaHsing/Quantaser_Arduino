@@ -80,54 +80,7 @@ void C12880::StopIntegB()
 	PORTC &= ~STB_HIGH;
 }
 
-#if 0	//only read 1
-void C12880::ReadVedioA(int *buffer)
-{	
-	ADMUX = ADC_READA;
-	unsigned int i, low, high;
-	for (i=0; i < CHANNEL_NUMBER; i++)
-	{
-		ADCSRA |= B01000000;
-		while(ADCSRA & B01000000);
-		low = ADCL;
-		high = ADCH;
-		buffer[i] = (high << 8) | low;
-		PulseClkA(1);
-	}
-}
-#endif
-
-#if 0	//2 for int
-void C12880::ReadVedioAB(int *buffer)
-{	
-	unsigned int i, low, high;
-	for (i=0; i < CHANNEL_NUMBER*2; i++)
-	{
-#if 1
-		//read A
-		ADMUX = ADC_READA;
-		ADCSRA |= B01000000;
-		while(ADCSRA & B01000000);
-		low = ADCL;
-		high = ADCH;
-		buffer[i] = (high << 8) | low;
-		//read B
-		ADMUX = ADC_READB;
-		ADCSRA |= B01000000;
-		while(ADCSRA & B01000000);
-		low = ADCL;
-		high = ADCH;
-		buffer[++i] = (high << 8) | low;
-#else	//debug
-		buffer[i] = analogRead(ADC_READA);
-		buffer[++i] = analogRead(ADC_READB);
-#endif
-		PulseClkAB(1);
-	}
-}
-#endif
-
-#if 1	//2 for byte
+#if DEBUG_MODE	//2 for byte
 void C12880::ReadVedioAB(byte *buffer)
 {
 	unsigned int i, low, high;
@@ -152,10 +105,51 @@ void C12880::ReadVedioAB(byte *buffer)
 		PulseClkAB(1);
 	}
 }
+#else //2 for byte and print
+void C12880::ReadVedioAB(uint8_t ucPrintMode)
+{
+	unsigned int i, low, high;
+	for (i=0; i < CHANNEL_NUMBER; i++)
+	{
+		// read A
+		ADMUX = ADC_READA;
+		ADCSRA |= B01000000;
+		while(ADCSRA & B01000000);
+		low = ADCL;
+		high = ADCH;
+		if (ucPrintMode == WriteSerial)
+		{
+		  Serial.write(low);
+		  Serial.write(high);
+		}
+		else if (ucPrintMode == WriteSD)
+		{
+
+		}
+		// read B
+		ADMUX = ADC_READB;
+		ADCSRA |= B01000000;
+		while(ADCSRA & B01000000);
+		low = ADCL;
+		high = ADCH;
+		if (ucPrintMode == WriteSerial)
+		{
+		  Serial.write(low);
+		  Serial.write(high);
+		}
+		else if (ucPrintMode == WriteSD)
+		{
+
+		}
+		PulseClkAB(1);
+	}
+}
 #endif
 
-void C12880::RunDevice(uint32_t I_timeA, uint32_t I_timeB)
+void C12880::RunDevice(uint32_t I_timeA, uint32_t I_timeB, uint8_t ucPrintMode)
 {
+  uint32_t t1 = 0, t2 = 0, ptime = 0;
+
   PulseClkAB(3);
 
 #if DEBUG_MODE
@@ -168,19 +162,19 @@ void C12880::RunDevice(uint32_t I_timeA, uint32_t I_timeB)
   if (I_timeA == I_timeB)
   {
     I_timeBothAB = I_timeA;
-  	ucFlagAB = 0;
+  	ucFlagAB = ABSameTime;
   }
   else if (I_timeB > I_timeA)
   {
     I_timeBothAB = I_timeA;
     I_timeB -= I_timeA;
-    ucFlagAB = 2;
+    ucFlagAB = BTimeBig2A;
   }
   else // if (I_timeA > I_timeB)
   {
     I_timeBothAB = I_timeB;
     I_timeA -= I_timeB;
-    ucFlagAB = 1;
+    ucFlagAB = ATimeBig2B;
   }
 
   StartIntegAB();
@@ -193,7 +187,7 @@ void C12880::RunDevice(uint32_t I_timeA, uint32_t I_timeB)
   Serial.println(I_timeBothAB);
 #endif
 
-  if (ucFlagAB == 0)
+  if (ucFlagAB == ABSameTime)
   {
     StopIntegA();
     StopIntegB();
@@ -206,7 +200,7 @@ void C12880::RunDevice(uint32_t I_timeA, uint32_t I_timeB)
     Serial.println(PAUSE_NUMBER);
 #endif
   }
-  else if (ucFlagAB == 2)
+  else if (ucFlagAB == BTimeBig2A)
   {
     StopIntegA();
 #if DEBUG_MODE
@@ -266,7 +260,7 @@ void C12880::RunDevice(uint32_t I_timeA, uint32_t I_timeB)
 #endif
     }
   }
-  else // if (ucFlagAB == true)
+  else // if (ucFlagAB == ATimeBig2B)
   {
     StopIntegB();
 #if DEBUG_MODE
@@ -327,33 +321,27 @@ void C12880::RunDevice(uint32_t I_timeA, uint32_t I_timeB)
     }
   }
   
+  t1 = micros();
+#if DEBUG_MODE
   ReadVedioAB(data);
+#else
+  ReadVedioAB(ucPrintMode);
+#endif
+  t2 = micros();
+  ptime = t2 - t1;
+  Serial.print("ReadVedioAB time = ");
+  Serial.println(ptime);
+
 #if DEBUG_MODE
   Serial.println();
 #endif
 }
 
+#if DEBUG_MODE
 void C12880::PrintData()
 {
   int i;
 
-#if 0  //only read 1
-  for (i=0; i< CHANNEL_NUMBER; i++)
-  {
-    Serial.println(data[i]);
-  }
-#endif
-
-#if 0  //2 for int
-  for (i=0; i< CHANNEL_NUMBER*2; i++)
-  {
-    Serial.print(data[i]);
-    Serial.print(',');
-    Serial.println(data[++i]);
-  }
-#endif
-
-#if 1  //2 for byte
   for (i=0; i< CHANNEL_NUMBER*4; i++)
   {
     unsigned char n1 = 0, n2 = 0, n3 = 0, n4 = 0;
@@ -365,7 +353,6 @@ void C12880::PrintData()
     Serial.print(',');
     Serial.println(n3|(n4<<8));
   }
-#endif
-
 }
+#endif
 

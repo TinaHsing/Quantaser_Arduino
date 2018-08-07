@@ -15,12 +15,12 @@ void setup() {
   spectro.PulseClkAB(87);
   spectro.ReadVedioAB(data);
 #else
-  spectro.RunDevice(10000,10000);
+  spectro.RunDevice(10000,10000,NoPrint);
 #endif
   //=======
   delay(10);
-  spectro.RunDevice(20000,30000);
-#if !DEBUG_MODE
+  spectro.RunDevice(20000,30000,WriteSerial);
+#if DEBUG_MODE
   spectro.PrintData();
 #endif
 }
