@@ -106,10 +106,11 @@ void C12880::ReadVedioAB(byte *buffer)
 	}
 }
 #else //2 for byte and print
-void C12880::ReadVedioAB(uint8_t ucPrintMode)
+void C12880::ReadVedioAB(uint8_t ucPrintMode, File myFile)
 {
 	unsigned int i, low, high;
-	for (i=0; i < CHANNEL_NUMBER; i++)
+	Serial.write("hi~");
+	for (i=0; i < 6; i++)
 	{
 		// read A
 		ADMUX = ADC_READA;
@@ -119,12 +120,13 @@ void C12880::ReadVedioAB(uint8_t ucPrintMode)
 		high = ADCH;
 		if (ucPrintMode == WriteSerial)
 		{
-		  Serial.write(low);
-		  Serial.write(high);
+		  Serial.write(65);
+		  Serial.write(66);
 		}
 		else if (ucPrintMode == WriteSD)
 		{
-
+		  myFile.write(65);
+		  myFile.write(66);
 		}
 		// read B
 		ADMUX = ADC_READB;
@@ -134,19 +136,20 @@ void C12880::ReadVedioAB(uint8_t ucPrintMode)
 		high = ADCH;
 		if (ucPrintMode == WriteSerial)
 		{
-		  Serial.write(low);
-		  Serial.write(high);
+		  Serial.write(67);
+		  Serial.write(68);
 		}
 		else if (ucPrintMode == WriteSD)
 		{
-
+		  myFile.write(67);
+		  myFile.write(68);
 		}
 		PulseClkAB(1);
 	}
 }
 #endif
 
-void C12880::RunDevice(uint32_t I_timeA, uint32_t I_timeB, uint8_t ucPrintMode)
+void C12880::RunDevice(uint32_t I_timeA, uint32_t I_timeB, uint8_t ucPrintMode, File myFile)
 {
   uint32_t t1 = 0, t2 = 0, ptime = 0;
 
@@ -320,16 +323,16 @@ void C12880::RunDevice(uint32_t I_timeA, uint32_t I_timeB, uint8_t ucPrintMode)
 #endif
     }
   }
-  
+
   t1 = micros();
 #if DEBUG_MODE
   ReadVedioAB(data);
 #else
-  ReadVedioAB(ucPrintMode);
+  ReadVedioAB(ucPrintMode, myFile);
 #endif
   t2 = micros();
   ptime = t2 - t1;
-  Serial.print("ReadVedioAB time = ");
+  //Serial.print("ReadVedioAB time = ");
   Serial.println(ptime);
 
 #if DEBUG_MODE

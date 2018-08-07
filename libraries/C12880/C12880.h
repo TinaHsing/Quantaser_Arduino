@@ -1,3 +1,6 @@
+#include <SPI.h>
+#include <SD.h>
+
 #ifndef C12880_H
 #define C12880_H
 
@@ -39,6 +42,8 @@
 #define ADC_READB	B01000000 // set the reference to 5V, Set the result to the right adjust, ReadCh0
 
 #define nop asm volatile ("nop\n\t") // use nop to tune the delay
+
+#define SD_CSPIN	4
 
 enum{
 	ABSameTime = 0,
@@ -82,9 +87,9 @@ public:
 #if DEBUG_MODE
 	void ReadVedioAB(byte *buffer);
 #else
-	void ReadVedioAB(uint8_t ucPrintMode);
+	void ReadVedioAB(uint8_t ucPrintMode, File myFile);
 #endif
-	void RunDevice(uint32_t I_timeA, uint32_t I_timeB, uint8_t ucPrintMode);
+	void RunDevice(uint32_t I_timeA, uint32_t I_timeB, uint8_t ucPrintMode, File myFile);
 	void PrintData();
 };
 
