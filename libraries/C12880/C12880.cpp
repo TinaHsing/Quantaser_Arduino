@@ -1,5 +1,5 @@
 #include "Arduino.h"
-
+#include <LTC1865.h>
 #include <C12880.h>
 
 C12880::C12880()
@@ -15,6 +15,7 @@ void C12880::SpectroInit()
 	digitalWrite(PIN_STA, LOW);
 	digitalWrite(PIN_CLKB, HIGH);
 	digitalWrite(PIN_STB, LOW);
+	adc.init(ADCCONVPIN,0);
 }
 
 void C12880::LEDInit(unsigned char led1, unsigned char led2)
@@ -108,16 +109,14 @@ void C12880::ReadVedioAB(byte *buffer)
 #else //2 for byte and print
 void C12880::ReadVedioAB(uint8_t ucPrintMode, File myFile)
 {
-	unsigned int i, low, high;
-	Serial.write("hi~");
-	for (i=0; i < 6; i++)
+	unsigned int i, adcout;
+	unsigned char low, high;
+	for (i=0; i < CHANNEL_NUMBER; i++)
 	{
 		// read A
-		ADMUX = ADC_READA;
-		ADCSRA |= B01000000;
-		while(ADCSRA & B01000000);
-		low = ADCL;
-		high = ADCH;
+		adcout = adc.Read(1);
+		low = (unsigned char) (adcout);
+		high = adcout >>8;
 		if (ucPrintMode == WriteSerial)
 		{
 		  Serial.write(65);
@@ -129,21 +128,21 @@ void C12880::ReadVedioAB(uint8_t ucPrintMode, File myFile)
 		  myFile.write(66);
 		}
 		// read B
-		ADMUX = ADC_READB;
-		ADCSRA |= B01000000;
-		while(ADCSRA & B01000000);
-		low = ADCL;
-		high = ADCH;
+		adcout = adc.Read(0);
+		//delayMicroseconds(1);
+		low = (unsigned char) (adcout);
+		high = adcout >>8;
 		if (ucPrintMode == WriteSerial)
 		{
-		  Serial.write(67);
-		  Serial.write(68);
+		   Serial.write(67);
+		   Serial.write(68);
 		}
 		else if (ucPrintMode == WriteSD)
 		{
 		  myFile.write(67);
 		  myFile.write(68);
 		}
+		
 		PulseClkAB(1);
 	}
 }
@@ -332,7 +331,9 @@ void C12880::RunDevice(uint32_t I_timeA, uint32_t I_timeB, uint8_t ucPrintMode, 
 #endif
   t2 = micros();
   ptime = t2 - t1;
-  //Serial.print("ReadVedioAB time = ");
+  Serial.print("Mode: ");
+  Serial.print(ucPrintMode);
+  Serial.print(" ReadVedioAB time = ");
   Serial.println(ptime);
 
 #if DEBUG_MODE

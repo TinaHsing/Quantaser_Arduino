@@ -1,11 +1,18 @@
+#include <LTC1865.h>
+#include <SPI.h>
 #include <C12880.h>
 
 C12880 spectro;
+
 File myFile;
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
+
+  SPI.begin();
+  SPI.setBitOrder(MSBFIRST);
+  SPI.setClockDivider(SPI_CLOCK_DIV2);
   spectro.SpectroInit();
 #if 0   //sample code
   spectro.PulseClkAB(3);
@@ -17,6 +24,7 @@ void setup() {
   spectro.ReadVedioAB(data);
 #else
   spectro.RunDevice(10000,10000,NoPrint,myFile);
+  Serial.println("3");
 #endif
   //=======
   delay(10);
@@ -34,6 +42,7 @@ void setup() {
   myFile = SD.open("test.txt", FILE_WRITE);
 
   if (myFile) {
+    Serial.println("SD");
     spectro.RunDevice(30000,20000,WriteSD,myFile);
   } else {
     // if the file didn't open, print an error:

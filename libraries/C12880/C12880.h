@@ -24,6 +24,8 @@
 #define PIN_CLKB	A4
 #define PIN_STB		A6
 
+#define ADCCONVPIN 6
+
 #define CHANNEL_NUMBER	288
 #define PAUSE_NUMBER	87
 
@@ -56,11 +58,11 @@ enum{
 	WriteSerial,
 	WriteSD,
 };
-
+class LTC1865;
 class C12880
 {
 private:
-	
+	LTC1865 adc;
 	unsigned char guc_led1, guc_led2;
 	unsigned char guc_opst1h, guc_opst1l, guc_opst2h, guc_opst2l; // fast port manipulation constant
 
