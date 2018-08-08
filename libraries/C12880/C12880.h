@@ -92,7 +92,9 @@ public:
 	void ReadVedioAB(uint8_t ucPrintMode, File myFile);
 #endif
 	void RunDevice(uint32_t I_timeA, uint32_t I_timeB, uint8_t ucPrintMode, File myFile);
+#if DEBUG_MODE
 	void PrintData();
+#endif
 };
 
 #endif

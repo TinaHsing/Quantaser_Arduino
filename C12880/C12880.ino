@@ -24,7 +24,6 @@ void setup() {
   spectro.ReadVedioAB(data);
 #else
   spectro.RunDevice(10000,10000,NoPrint,myFile);
-  Serial.println("3");
 #endif
   //=======
   delay(10);
@@ -42,7 +41,6 @@ void setup() {
   myFile = SD.open("test.txt", FILE_WRITE);
 
   if (myFile) {
-    Serial.println("SD");
     spectro.RunDevice(30000,20000,WriteSD,myFile);
   } else {
     // if the file didn't open, print an error:
