@@ -109,8 +109,8 @@ void C12880::ReadVedioAB(byte *buffer)
 void C12880::ReadVedioAB(uint8_t ucPrintMode, File myFile)
 {
 	unsigned int i, low, high;
-
-	for (i=0; i < CHANNEL_NUMBER; i++)
+	Serial.write("hi~");
+	for (i=0; i < 6; i++)
 	{
 		// read A
 		ADMUX = ADC_READA;
@@ -332,9 +332,7 @@ void C12880::RunDevice(uint32_t I_timeA, uint32_t I_timeB, uint8_t ucPrintMode, 
 #endif
   t2 = micros();
   ptime = t2 - t1;
-  if (ucPrintMode == WriteSerial)
-	Serial.println();
-  Serial.print("ReadVedioAB time = ");
+  //Serial.print("ReadVedioAB time = ");
   Serial.println(ptime);
 
 #if DEBUG_MODE
