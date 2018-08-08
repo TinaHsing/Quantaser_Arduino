@@ -109,40 +109,33 @@ void C12880::ReadVedioAB(byte *buffer)
 void C12880::ReadVedioAB(uint8_t ucPrintMode, File myFile)
 {
 	unsigned int i, low, high, j;
-	byte data[96];
+	byte data[384];	//288/3*4
 
   if (ucPrintMode == WriteSD)
   {
 	for (j=0; j < 3; j++)
 	{
-	for (i=0; i < 96; i++)
-	{
+	  for (i=0; i < 384; i++)
+	  {
 		// read A
 		ADMUX = ADC_READA;
 		ADCSRA |= B01000000;
 		while(ADCSRA & B01000000);
 		low = ADCL;
 		high = ADCH;
-		if (ucPrintMode == WriteSerial)
-		{
-		  data[i] = low;
-		  data[++i] = high;
-		}
+		data[i] = low;
+		data[++i] = high;
 		// read B
 		ADMUX = ADC_READB;
 		ADCSRA |= B01000000;
 		while(ADCSRA & B01000000);
 		low = ADCL;
 		high = ADCH;
-		if (ucPrintMode == WriteSerial)
-		{
-		  data[++i] = low;
-		  data[++i] = high;
-		}
+		data[++i] = low;
+		data[++i] = high;
 		PulseClkAB(1);
-	}
-	myFile.write(data,96);
-	j++;
+	  }
+	  myFile.write(data,384);
 	}
   }
   else
@@ -362,7 +355,9 @@ void C12880::RunDevice(uint32_t I_timeA, uint32_t I_timeB, uint8_t ucPrintMode, 
   ptime = t2 - t1;
   if (ucPrintMode == WriteSerial)
 	Serial.println();
-  Serial.print("ReadVedioAB time = ");
+  Serial.print("Mode:");
+  Serial.print(ucPrintMode);
+  Serial.print(" time = ");
   Serial.println(ptime);
 
 #if DEBUG_MODE
