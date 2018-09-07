@@ -4,8 +4,8 @@
 #include <Wire.h>
 #include <AD5541.h>
 #include <LTC1865.h>
-#include <DTC03_Slave_V300.h>
 #include <PID.h>
+#include <DTC03_Slave_V300.h>
 #include <EEPROM.h>
 #include <DTC03_MS.h>
 #define PRINTLOOP 1
