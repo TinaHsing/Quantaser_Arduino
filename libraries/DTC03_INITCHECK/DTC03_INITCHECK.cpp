@@ -25,9 +25,12 @@ void DTC03::CheckInitValue(bool sw1, bool sw2, bool sw3)
 		boolean fbc_flag = 1;
 		SetMosOff();
 		digitalWrite(SENSOR_TYPE,0);
+
 		if(sw1)
 		{
-			Serial.println("#Please measure VCC voltage");
+			Serial.println(F("#Please measure VCC voltage"));
+
+#if 0	//sherry+- 2017.11.30
 			SetVcc(VCCLOW);
 			Serial.print("Vcc LOW : ");
 			for (int i=10; i>0; i--) {
@@ -46,20 +49,41 @@ void DTC03::CheckInitValue(bool sw1, bool sw2, bool sw3)
 				Serial.println(i);
 				delay(1000);
 			}
-		}	
-		Serial.println("#Searching  Fbc_base Value");
+#else
+			Serial.println(F("Set Vcc LOW : "));
+			SetVcc(VCCLOW);
+			Serial.println(F("Press ENTER to continue after read Vcc LOW : "));
+			while(Serial.available() == 0) ;
+			Serial.readString();
+
+			Serial.println(F("Set Vcc HIGH : "));
+			SetVcc(VCCHIGH);
+			Serial.println(F("Press ENTER to continue after read Vcc HIGH : "));
+			while(Serial.available() == 0) ;
+			Serial.readString();
+
+			Serial.println(F("Set Vcc MID : "));
+			SetVcc(VCCMEDIUM);
+			Serial.println(F("Press ENTER to continue after read Vcc MID : "));
+			while(Serial.available() == 0) ;
+			Serial.readString();
+#endif
+		}
+
+		Serial.println(F("---------------------------"));
+		Serial.println(F("#Searching  Fbc_base Value"));
 		Serial.print("Vgs_low = ");
 		Serial.println(FBCCHECK_LOW);
-		Serial.print("Vgs_high =");
+		Serial.print("Vgs_high = ");
 		Serial.println(FBCCHECK_HIGH);
 		
 		
 		if(sw2)
 		{
-//			SetMosOff();	
+			//SetMosOff();	
 			SetMos(HEATING, 0);
 			izero = ReadIsense();
-			Serial.print("current0 =");
+			Serial.print("current0 = ");
 		    Serial.println(izero);				
 			////heating//////
 			Serial.println("heating :");
@@ -69,7 +93,6 @@ void DTC03::CheckInitValue(bool sw1, bool sw2, bool sw3)
 			while( ( abs(itec - izero) ) < 5) 
 			{ // old value 5
 				SetMos(HEATING, FBCCHECK_LOW + i_step);
-//				SetMos(HEATING, 55000);
 				delay(100);
 				itec = ReadIsense();
 	//			Serial.println(itec);
@@ -78,13 +101,20 @@ void DTC03::CheckInitValue(bool sw1, bool sw2, bool sw3)
 				itec_array[i] = itec-izero; 
 				Serial.print(FBCCHECK_LOW + i_step);
 				Serial.print("  , ");
+#if 0  //sherry+- 2018.8.2
 				Serial.println(itec_array[i]);
 //				Serial.print("  , ");
 //				Serial.println(itec*5/1023); //check read voltage value 
+#else	//sherry+- 2018.3.28
+				Serial.print(itec_array[i]);
+				Serial.print("  , ");
+				Serial.println(itec*5/1023); //check read voltage value 
+#endif
 				
-				if ( (i =2) && fbc_flag ) {
-					if ( (abs(itec_array[0]) > di) && (abs(itec_array[1]) > di) && (abs(itec_array[2]) > di) && fbc_flag ){ //連續3個值都 > di 才判定 fbc_heating
-						fbc_flag = 0; //一進if loop裡即關掉flag, 下次就不會進來 
+				if ( (i = 2) && fbc_flag )
+				{
+					if ( (abs(itec_array[0]) > di) && (abs(itec_array[1]) > di) && (abs(itec_array[2]) > di) && fbc_flag ){
+						fbc_flag = 0; 
 						fbc_heating = FBCCHECK_LOW + i_step - 400;
 					}  
 					 itec_array[0] = itec_array[1];
@@ -98,39 +128,40 @@ void DTC03::CheckInitValue(bool sw1, bool sw2, bool sw3)
 		
 		
 			////cooling////
-//			SetMosOff();
-					
-			i_step = 0; //計算cooling 前先歸零 
+			//SetMosOff();
+			SetMos(COOLING, 0);			
+			izero = ReadIsense();
+			i_step = 0; 
 			i = 0; 
 			fbc_flag = 1;
-			SetMos(COOLING, 0);
+
 			Serial.println("cooling :");
-			izero = ReadIsense();
-			Serial.print("current0 =");
-		    Serial.println(izero);	
-		    
-			while( ( abs(itec - izero) ) < 49) {
+			itec = ReadIsense();
+			
+			while( ( abs(itec - izero) ) < 49)
+			{
 				SetMos(COOLING, FBCCHECK_LOW + i_step);
 //				SetMos(COOLING, 0);
 //				SetMosOff();
 				delay(100);
 				itec = ReadIsense();
 				if (i>2) i=2;
-				itec_array[i] = itec-izero; 
+				itec_array[i] = itec-izero;
 				Serial.print(FBCCHECK_LOW + i_step);
 				Serial.print("  , ");
 				Serial.println(itec_array[i]);
 //				Serial.println(itec);
 				
-				if ( (i =2) && fbc_flag ) {
-					if ( (abs(itec_array[0]) > di) && (abs(itec_array[1]) > di) && (abs(itec_array[2]) > di) && fbc_flag ){ //連續3個值都 > di 才判定 fbc_heating
-						fbc_flag = 0; //一進if loop裡即關掉flag, 下次就不會進來 
+				if ( (i = 2) && fbc_flag )
+				{
+					if ( (abs(itec_array[0]) > di) && (abs(itec_array[1]) > di) && (abs(itec_array[2]) > di) && fbc_flag ){
+						fbc_flag = 0; 
 						fbc_cooling = FBCCHECK_LOW + i_step - 400;
 					}  
 					 itec_array[0] = itec_array[1];
 					 itec_array[1] = itec_array[2];
 				}
-				cal_R_value = FBCCHECK_LOW + i_step; //跳出while迴圈前的最後一個值為itec接近500mA之值 
+				cal_R_value = FBCCHECK_LOW + i_step; 
 				i_step += 100;
 				if((FBCCHECK_LOW + i_step)>FBCCHECK_HIGH) i_step = 0;
 				i++;
@@ -139,37 +170,46 @@ void DTC03::CheckInitValue(bool sw1, bool sw2, bool sw3)
 		
 		
 		    Serial.println("    ");
-		    Serial.print("fbc_base heating =");
+		    Serial.print("fbc_base heating = ");
 		    Serial.println(fbc_heating);
-		    Serial.print("fbc_base cooling =");
+		    Serial.print("fbc_base cooling = ");
 		    Serial.println(fbc_cooling);
 		    Serial.println("Choose lower one as fbc_base!");
 		    Serial.println("    ");
-		    Serial.print("0.5A for calculate R =");
+		    Serial.print("0.5A for calculate R = ");
 		    Serial.println(cal_R_value);		
 		    Serial.println(" ");
 	    }
 		
+		Serial.println(F("---------------------------"));
+
 		if(sw3)
 		{
+			String sInputString;         // a String to hold incoming data
+			int cInput = 0;
+			long cOutput = 0;
+			int mod_avg_0V = 0;
+			int mod_avg_diff = 0;
+			float temp = 0;
+       
 			Serial.println("#Checking Mod input offest value");
 		    Serial.println("Unplug BNC cable from MOD Input.");
 	    	for ( int i=0; i<100; i++) 
      		{
 	    		ReadVoltage();
-	    		mod_sum += g_vmod; 
-	    		Serial.print(g_vact);	
+	    		mod_sum += g_vmod;
+	    		Serial.print(g_vact);
 	    		Serial.print(", ");
-	    		Serial.print(g_vmod);	
+	    		Serial.print(g_vmod);
 	    		Serial.print(", ");
 	    		Serial.println((float)ReadIsense()*5/1023);		
 		    }
     		mod_avg = mod_sum/100;
-	    	Serial.print("100 times AVG MOD offset value= ");
+	    	Serial.print("100 times AVG MOD offset value = ");
 	    	Serial.println(mod_avg);
 	    	Serial.println("Normal value is around 32768; if not, ");
 	    	Serial.println("check +5VB, MOD buffer OPA");
-	    	mod_sum = 0; //將mod_sum變數值歸零，留給計算std用。 
+	    	mod_sum = 0; 
 	    	for ( int i=0; i<100; i++) 
 			{
 		    	ReadVoltage();
@@ -181,15 +221,64 @@ void DTC03::CheckInitValue(bool sw1, bool sw2, bool sw3)
 	    	
 	    	Serial.println(F("---------------------------"));
 	    	Serial.println(F("#Check modulation function"));
+
+#if 0	//sherry+- 2017.12.1
 	    	Serial.println(F("Add DC 100mV to mod BNC:"));
-	    	
+#else
+	    	mod_avg_0V = mod_avg;
+		    Serial.println(F("Plug BNC cable from MOD Input."));
+	    	Serial.println(F("Set DC about 400mV , 200mv , -200mv and -400mv to mod BNC:"));
+	    	Serial.println(F("[ The actual value will be divided by 2 ]"));
+	   		Serial.println();
+
+	    	for ( int x = 0; x < 4; x++) 
+     		{
+     			mod_sum = 0;
+     			g_vmod = 0;
+     			mod_avg = 0;
+
+				Serial.println(F("Input mv value after set voltage at MULTIMETER : "));
+				while(Serial.available() == 0) ;
+				sInputString = Serial.readStringUntil('\n');
+				cInput = sInputString.toInt()/2;
+				Serial.print(cInput);
+				cOutput = cInput * 65535 / 5000;
+				Serial.print(" mv output should be around : ");
+				Serial.println(cOutput);
+
+		    	for ( int i = 0; i < 100; i++) 
+     			{
+	    			ReadVoltage();
+	    			mod_sum += g_vmod;
+		    		//Serial.print(g_vmod);
+		    		Serial.print(", ");
+		    		//if ((i % 10) == 9)
+			    	//	Serial.println();
+			    }
+			    Serial.println();
+
+   		 		mod_avg = mod_sum/100;
+	    		Serial.print("100 times AVG MOD offset value = ");
+		    	Serial.println(mod_avg);
+		    	Serial.print("diff from 0V = ");
+		    	mod_avg_diff = mod_avg - mod_avg_0V;
+		    	Serial.print(mod_avg_diff);
+		    	Serial.print(", temp = ");
+		    	temp = ReturnTemp(mod_avg_diff + 26214);
+		    	Serial.println(temp,1);
+		    	Serial.print("diff = ");
+	    		Serial.println(mod_avg_diff - cOutput);
+	    		Serial.println();
+	    	}
+#endif
+
 		}
 		
 		
 		
 				
 	#else
-		Serial.println("Open INITIAL_VALUE_CHECK flag to use CheckFbcValue() function");
+		Serial.println(F("Open INITIAL_VALUE_CHECK flag to use CheckFbcValue() function"));
 	#endif		
 
 }
@@ -342,16 +431,30 @@ void DTC03::SetVcc(unsigned char state)
 	switch (state)
 	{
 		case VCCLOW:
+#if 0 //use VCC3 only for P08, otherwise use VCC2
+			digitalWrite(VCC3,LOW);
+#else
 			digitalWrite(VCC2,LOW);
- 			digitalWrite(VCC1,LOW);
+#endif
+			digitalWrite(VCC1,LOW);
  		break;
+
  		case VCCMEDIUM:
+#if 0 //use VCC3 only for P08, otherwise use VCC2
+ 			digitalWrite(VCC3,LOW);
+#else
  			digitalWrite(VCC2,LOW);
- 			digitalWrite(VCC1,HIGH);
+#endif
+			digitalWrite(VCC1,HIGH);
  		break;
+
  		case VCCHIGH:
+#if 0 //use VCC3 only for P08, otherwise use VCC2
+ 			digitalWrite(VCC3,HIGH);
+#else
  	 		digitalWrite(VCC2,HIGH);
- 			digitalWrite(VCC1,LOW);
+#endif
+			digitalWrite(VCC1,LOW);
  		break;
  		default:
  		break;
