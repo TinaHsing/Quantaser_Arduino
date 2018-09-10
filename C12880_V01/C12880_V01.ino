@@ -1,4 +1,5 @@
 #include <SPI.h>
+#include <LTC1865.h>
 #include <C12880_V01.h>
 #define CLKA 2
 #define STA 5
@@ -13,6 +14,7 @@ C12880 spectro(CLKA, STA, CLKB, STB, ADCCONV, ADC_CHA);
 void setup() {
  
   Serial.begin(115200);
+  Serial.println("test");
   spectro.SpectroInit();
   spectro.RunDevice(2000, 2500);
 
