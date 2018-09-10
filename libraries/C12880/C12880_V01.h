@@ -2,7 +2,9 @@
 #define C12880_H
 
 
-#define TESTMOD	1
+#define TIMEMODE	1
+#define HEXMODE     0
+#define NONHEX      1
 
 // =======define pin for the spectrometer ========
 // Spectro A:
@@ -33,16 +35,10 @@ class C12880
 
 public:
 	LTC1865 adc;
-	C12880(unsigned char clka, unsigned char sta, unsigned char clkb, unsigned char stb, unsigned char adcconv, unsigned char adc_cha);
+	C12880();
 
-	bool SpectroInit();
-	void PulseClkA(unsigned long pulse);
-	void PulseClkB(unsigned long pulse);
-	void PulseClkAB(unsigned long pulse);
-	void StartIntegAB();
-	void StopIntegA();
-	void StopIntegB();
-	void ReadVedioAB();
+	bool SpectroInit(unsigned char clka, unsigned char sta, unsigned char clkb, unsigned char stb, unsigned char adcconv, unsigned char adc_cha);
+
 	void RunDevice(unsigned long I_timeA, unsigned long I_timeB);
 
 private:
@@ -50,6 +46,13 @@ private:
 	unsigned char guc_clka_high, guc_clkb_high, guc_clkab_high, guc_clka_low, guc_clkb_low, guc_clkab_low;
 	unsigned char guc_sta_high, guc_stb_high, guc_stab_high;
 	unsigned char guc_adc_cha;
+	void PulseClkA(unsigned long pulse);
+	void PulseClkB(unsigned long pulse);
+	void PulseClkAB(unsigned long pulse);
+	void StartIntegAB();
+	void StopIntegA();
+	void StopIntegB();
+	void ReadVedioAB();
 
 };
 
