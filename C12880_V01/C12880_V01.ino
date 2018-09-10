@@ -17,7 +17,7 @@ void setup() {
   Serial.println("test");
   spectro.SpectroInit();
   spectro.RunDevice(2000, 2500);
-
+  Serial.println("test");
 
 }
 
