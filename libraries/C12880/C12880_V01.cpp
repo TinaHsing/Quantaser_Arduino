@@ -160,9 +160,7 @@ void C12880::RunDevice(unsigned long I_timeA, unsigned long I_timeB)
   t2= micros(); 
   #endif
   PulseClkAB(I_timeBothAB);
-  #if TIMEMODE
-  t5 = micros();
-  #endif
+
 
   if (ucFlagAB == ABSameTime)
   {
@@ -238,7 +236,7 @@ void C12880::RunDevice(unsigned long I_timeA, unsigned long I_timeB)
   ReadVedioAB();
 
 #if TIMEMODE
-  //t5 = micros();
+  t5 = micros();
   Serial.print("start PROG:");
   Serial.println(t1);
   Serial.print("Start INIT");
