@@ -13,10 +13,10 @@ C12880 spectro(CLKA, STA, CLKB, STB, ADCCONV, ADC_CHA);
 
 void setup() {
  
-  Serial.begin(115200);
+  Serial.begin(9600);
   Serial.println("test");
-  spectro.SpectroInit();
-  spectro.RunDevice(2000, 2500);
+//  spectro.SpectroInit();
+//  spectro.RunDevice(2000, 2500);
   Serial.println("test");
 
 }
