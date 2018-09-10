@@ -8,14 +8,15 @@
 #define ADCCONV 7
 #define ADC_CHA 0
 
-C12880 spectro(CLKA, STA, CLKB, STB, ADCCONV, ADC_CHA);
+C12880 spectro;
 
 
 void setup() {
  
   Serial.begin(115200);
   Serial.println("test");
-  spectro.SpectroInit();
+  delay(10);
+  spectro.SpectroInit(CLKA, STA, CLKB, STB, ADCCONV, ADC_CHA);
   spectro.RunDevice(2000, 2500);
   Serial.println("test");
 
