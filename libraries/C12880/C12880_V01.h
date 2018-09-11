@@ -2,7 +2,7 @@
 #define C12880_H
 
 
-#define TIMEMODE	1
+#define TIMEMODE	0
 #define HEXMODE     0
 #define NONHEX      1
 

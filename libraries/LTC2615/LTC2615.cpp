@@ -15,9 +15,9 @@ void LTC2615::write(uint8_t ch, float value)
 	code = (uint16_t)(value/ref*max);
 	t[0] = (code >> 8)<<2 | ((uint8_t)code & 0b11000000)>>6;
 	t[1] = (uint8_t)code << 2;
-	Serial.println((CC << 4) | ch, BIN);
-	Serial.println(t[0],BIN);
-	Serial.println(t[1],BIN);
+	// Serial.println((CC << 4) | ch, BIN);
+	// Serial.println(t[0],BIN);
+	// Serial.println(t[1],BIN);
 	Wire.beginTransmission(ADD);
 	Wire.write((CC << 4) | ch);
 	Wire.write(t,2); 
