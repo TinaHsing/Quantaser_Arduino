@@ -27,23 +27,29 @@ void setup() {
 
 void loop() {
   long I1, I2, I3, ta, tb, t_wait, rp;
+  unsigned long t1, t2;
   
-  scanVar("Input LED_A current in mA", I1); 
-  scanVar("Input LED_B current in mA", I2); 
-  scanVar("Input LED_C current in mA", I3); 
+  scanVar("Input LED_A current (mA, <= 1300)", I1); 
+  scanVar("Input LED_B current (mA, <= 1300)", I2); 
+  scanVar("Input LED_C current (mA, <= 1300)", I3); 
   scanVar("Input integration time of spectrometer A(us, min 90)", ta); 
   scanVar("Input integration time of spectrometer B(us, min 90)", tb); 
   scanVar("Input wait time before date acquisition(us)", t_wait); 
-  scanVar("Input repeat times", rp); 
+  scanVar("Input repeat times (min 1)", rp); 
   currentOut(LEDA, I1);
   currentOut(LEDB, I2);
   currentOut(LEDC, I3);
+  if(rp < 1) rp = 1;
   delayMicroseconds(t_wait);
+  t1=micros();
   for(int i=0; i<rp; i++) 
   {
     spectro.RunDevice(us2cyc(ta), us2cyc(tb));
+//    Serial.println(i);
   }
-  
+  t2=micros();
+//  Serial.print("time: ");
+//  Serial.println((t2-t1)/1000);
 }
 
 void scanVar(String s, long &var)
@@ -65,18 +71,18 @@ void currentOut(byte ch, int cur)
   
   if(ch == 1) {
     ltc2615.write(CH_G, volt);
-    Serial.print("CH_G: ");
-    Serial.println(volt);
+//    Serial.print("CH_G: ");
+//    Serial.println(volt);
   }
   else if(ch == 2) {
     ltc2615.write(CH_F, volt);
-    Serial.print("CH_F: ");
-    Serial.println(volt);
+//    Serial.print("CH_F: ");
+//    Serial.println(volt);
   }
   else if(ch == 3) {
     ltc2615.write(CH_E, volt);
-    Serial.print("CH_E: ");
-    Serial.println(volt);
+//    Serial.print("CH_E: ");
+//    Serial.println(volt);
   } 
 }
 
