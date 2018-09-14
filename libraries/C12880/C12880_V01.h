@@ -2,9 +2,10 @@
 #define C12880_H
 
 
+#define DEBUG		0
 #define TIMEMODE	0
-#define HEXMODE     0
-#define NONHEX      1
+#define HEXMODE     1
+#define NONHEX      0
 
 // =======define pin for the spectrometer ========
 // Spectro A:

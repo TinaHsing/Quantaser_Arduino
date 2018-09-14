@@ -22,12 +22,15 @@ bool C12880::SpectroInit(unsigned char clka, unsigned char sta, unsigned char cl
   guc_clkb_low = ~guc_clkb_high;
   guc_sta_high = 1<< guc_sta;
   guc_stb_high = 1<< guc_stb;
-  
-  guc_stab_high = guc_sta | guc_stb;
+    
+  guc_stab_high = guc_sta_high | guc_stb_high;
   guc_clkab_high = guc_clka_high | guc_clkb_high;
   guc_clkab_low = ~guc_clkab_high;
   guc_adc_cha = adc_cha;
   
+
+  
+
   SPI.begin();
   SPI.setBitOrder(MSBFIRST);
   SPI.setClockDivider(SPI_CLOCK_DIV2);
@@ -39,9 +42,9 @@ bool C12880::SpectroInit(unsigned char clka, unsigned char sta, unsigned char cl
 	pinMode(guc_sta, OUTPUT);
 	pinMode(guc_clkb, OUTPUT);
 	pinMode(guc_stb, OUTPUT);
-	digitalWrite(guc_clka, HIGH);
+	digitalWrite(guc_clka, LOW);
 	digitalWrite(guc_sta, LOW);
-	digitalWrite(guc_clkb, HIGH);
+	digitalWrite(guc_clkb, LOW);
 	digitalWrite(guc_stb, LOW);
 
   return 0;
@@ -52,8 +55,9 @@ void C12880::PulseClkA(unsigned long pulse)
 	unsigned int i;
 	for (i = 0; i < pulse; i++)
 	{
-		PORTD |= guc_clka_high;
-		PORTD &= guc_clka_low;
+		
+    PORTD |= guc_clka_high;
+    PORTD &= guc_clka_low;	
 	}
 }
 
@@ -62,9 +66,11 @@ void C12880::PulseClkB(unsigned long pulse)
 	unsigned int i;
 	for (i = 0; i < pulse; i++)
 	{
-		PORTD |= guc_clkb_high;
-		PORTD &= guc_clkb_low;
+		
+    PORTD |= guc_clkb_high;
+    PORTD &= guc_clkb_low;
 	}
+
 }
 
 void C12880::PulseClkAB(unsigned long pulse)
@@ -72,8 +78,10 @@ void C12880::PulseClkAB(unsigned long pulse)
 	unsigned int i;
 	for (i = 0; i < pulse; i++)
 	{
-		PORTD |= guc_clkab_high;
-		PORTD &= guc_clkab_low;
+		
+    PORTD |= guc_clkab_high;
+    PORTD &= guc_clkab_low;
+		
 	}
 }
 
@@ -98,7 +106,6 @@ void C12880::ReadVedioAB()
   unsigned char low, high;
 	for (i=0; i < CHANNEL_NUMBER; i++)
 	{
- 
     data = adc.Read(!guc_adc_cha);
     low = (unsigned char)(data);
     high = data >>8;
@@ -154,13 +161,12 @@ void C12880::RunDevice(unsigned long I_timeA, unsigned long I_timeB)
     ucFlagAB = ATimeBig2B;
   }
 
-  PulseClkAB(3);
+  PulseClkAB(2);
   StartIntegAB();
   #if TIMEMODE
   t2= micros(); 
   #endif
   PulseClkAB(I_timeBothAB);
-
 
   if (ucFlagAB == ABSameTime)
   {
@@ -247,8 +253,6 @@ void C12880::RunDevice(unsigned long I_timeA, unsigned long I_timeB)
   Serial.println(t4);
   Serial.print("finished:");
   Serial.println(t5);
-
-
 #endif
 
 }
