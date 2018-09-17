@@ -24,15 +24,16 @@ void setup() {
   Serial.begin(150000);
   ltc2615.init();
   spectro.SpectroInit(CLKA, STA, CLKB, STB, ADCCONV, ADC_CHA);
+  currentOut(LEDA, 0);
+  currentOut(LEDB, 0);
+  currentOut(LEDC, 0);
 }
 
 void loop() {
   unsigned long I1, I2, I3, ta, tb, t_wait, rp, taa, tbb;
   unsigned long t1, t2;
-  
   while(Serial.available()==0);
   Serial.read();
-  
   scanVar("I1:", I1); 
   scanVar("I2:", I2); 
   scanVar("I3:", I3); 
@@ -40,7 +41,7 @@ void loop() {
   scanVar("Tb:", tb); 
   scanVar("Twait:", t_wait); 
   scanVar("Repeat:", rp); 
-  delay (20);
+//  delay (20);
 //  I1 = 150;
 //  I2 = 150;
 //  I3 = 150;
@@ -66,9 +67,7 @@ void loop() {
   t2=micros();
 //  Serial.print("time: ");
 //  Serial.println((t2-t1)/1000);
-  currentOut(LEDA, 0);
-  currentOut(LEDB, 0);
-  currentOut(LEDC, 0);
+  
 
 }
 
