@@ -23,10 +23,12 @@ void setup() {
   Wire.begin(DTC03P05);
   Wire.onReceive(ReceiveEvent);
   Wire.onRequest(RequestEvent);
+  
   dtc.SetSPI();
   dtc.SetPinMode();
   dtc.ParamInit();
   dtc.DynamicVcc();
+
   dtc.CheckSensorType();
   dtc.CheckTemp();
   ipid.Init(32768,32768,dtc.g_ki,dtc.g_ls,ISENSE_GAIN);

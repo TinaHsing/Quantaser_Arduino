@@ -363,7 +363,11 @@ void DTC03::I2CRequest()
 //    vact=g_vactavgsum >> AVGPWR;
     temp[0]=g_vact_MV;
     temp[1]=g_vact_MV >> 8;
-//    Serial.println("1");
+	#ifdef DEBUGFLAG01
+	   Serial.print((float)g_vact_MV/65535.0*5);
+	   Serial.print(", ");
+	   Serial.println(ReturnTemp(g_vact_MV,0));
+   #endif
     break;
 
     case I2C_COM_ITEC_ER:
