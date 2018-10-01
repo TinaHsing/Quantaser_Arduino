@@ -19,9 +19,10 @@
 
 LTC2615 ltc2615;
 C12880 spectro;
+File myFile;
 
 void setup() {
-  Serial.begin(150000);
+  Serial.begin(115200);
   ltc2615.init();
   spectro.SpectroInit(CLKA, STA, CLKB, STB, ADCCONV, ADC_CHA);
   currentOut(LEDA, 0);
@@ -41,14 +42,16 @@ void loop() {
   scanVar("Tb:", tb); 
   scanVar("Twait:", t_wait); 
   scanVar("Repeat:", rp); 
-//  delay (20);
-//  I1 = 150;
-//  I2 = 150;
-//  I3 = 150;
-//  ta = 30000;
-//  tb = 60000;
-//  t_wait = 1000;
-//  rp = 1;
+#if DEBUG
+  delay (20);
+  I1 = 150;
+  I2 = 150;
+  I3 = 150;
+  ta = 1000;
+  tb = 1000;
+  t_wait = 1000;
+  rp = 1;
+#endif
   currentOut(LEDA, I1);
   currentOut(LEDB, I2);
   currentOut(LEDC, I3);
@@ -59,15 +62,27 @@ void loop() {
   tbb = us2cyc(tb);
   //Serial.println(taa);
   //Serial.println(tbb);
+
+  if (!SD.begin(SD_CSPIN)) {
+    Serial.println("initialization failed!");
+    return;
+  }
+  myFile = SD.open("test.txt", FILE_WRITE);
+
   for(int i=0; i<rp; i++) 
   {
-    spectro.RunDevice(taa, tbb);
+  if (myFile)
+    spectro.RunDevice(taa, tbb, WriteSD, myFile);
+  else
+    spectro.RunDevice(taa, tbb, WriteSerial, myFile);
 //    Serial.println(i);
   }
   t2=micros();
 //  Serial.print("time: ");
 //  Serial.println((t2-t1)/1000);
   
+  // close the file:
+  myFile.close();
 
 }
 

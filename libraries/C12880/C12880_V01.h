@@ -1,11 +1,12 @@
 #ifndef C12880_H
 #define C12880_H
 
+#include <SD.h>
 
-#define DEBUG		0
+#define DEBUG		1
 #define TIMEMODE	0
 #define HEXMODE     1
-#define NONHEX      0
+//#define NONHEX      0
 
 // =======define pin for the spectrometer ========
 // Spectro A:
@@ -16,15 +17,20 @@
 
 #define CHANNEL_NUMBER	288
 #define PAUSE_NUMBER	87
+#define SD_CSPIN		4
 
 #define nop asm volatile ("nop\n\t") // use nop to tune the delay
-
-
 
 enum{
 	ABSameTime = 0,
 	ATimeBig2B,
 	BTimeBig2A,
+};
+
+enum{
+	NoPrint = 0,
+	WriteSerial,
+	WriteSD,
 };
 
 class LTC1865;
@@ -40,7 +46,7 @@ public:
 
 	bool SpectroInit(unsigned char clka, unsigned char sta, unsigned char clkb, unsigned char stb, unsigned char adcconv, unsigned char adc_cha);
 
-	void RunDevice(unsigned long I_timeA, unsigned long I_timeB);
+	void RunDevice(unsigned long I_timeA, unsigned long I_timeB, uint8_t ucPrintMode, File myFile);
 
 private:
 	unsigned char guc_sta, guc_stb, guc_clka, guc_clkb;
@@ -54,6 +60,7 @@ private:
 	void StopIntegA();
 	void StopIntegB();
 	void ReadVedioAB();
+	void ReadVedioAB_SD(File myFile);
 
 };
 
