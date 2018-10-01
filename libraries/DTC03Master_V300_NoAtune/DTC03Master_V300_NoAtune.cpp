@@ -1262,7 +1262,8 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
       case 14:
       	g_vmodoffset +=g_counter;
         if(g_vmodoffset>33199) g_vmodoffset=33199;
-        if(g_vmodoffset<32199) g_vmodoffset=32199;
+//        if(g_vmodoffset<32199) g_vmodoffset=32199;  //sherry+- 2018.3.31
+        if(g_vmodoffset<32100) g_vmodoffset=32100;
         I2CWriteData(I2C_COM_VMOD);
         PrintVmod();
         p_ee_change_state=EEADD_MODOFF_UPPER;

@@ -80,7 +80,7 @@
 #define NOEE_TOTP		561 //120C
 #define NOEE_PAP		10
 #define NOEE_TBIAS		15
-#define NOEE_ATSTABLE	5
+#define NOEE_ATSTABLE	10
 
 //=====================BG print coordinate definition=========
 #define TSET_COORD_X	0 
