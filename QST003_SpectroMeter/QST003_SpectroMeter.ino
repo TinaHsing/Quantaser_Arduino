@@ -19,7 +19,9 @@
 
 LTC2615 ltc2615;
 C12880 spectro;
-File myFile;
+
+File writeFile;
+char FileName[12] = "data001.bin";
 
 void setup() {
   Serial.begin(115200);
@@ -28,20 +30,29 @@ void setup() {
   currentOut(LEDA, 0);
   currentOut(LEDB, 0);
   currentOut(LEDC, 0);
+
+  if (!SD.begin(SD_CSPIN)) {
+    Serial.println("SD initialization failed!");
+  }
+
 }
 
 void loop() {
-  unsigned long I1, I2, I3, ta, tb, t_wait, rp, taa, tbb;
-  unsigned long t1, t2;
-  while(Serial.available()==0);
-  Serial.read();
-  scanVar("I1:", I1); 
-  scanVar("I2:", I2); 
-  scanVar("I3:", I3); 
-  scanVar("Ta:", ta); 
-  scanVar("Tb:", tb); 
-  scanVar("Twait:", t_wait); 
-  scanVar("Repeat:", rp); 
+  unsigned long I1, I2, I3, ta, tb, t_wait, rp;
+  unsigned long taa, tbb, t1, t2;
+  int iFileNum = 1;
+  bool bFileFull = true;
+
+    while(Serial.available()==0);
+    Serial.read();
+    scanVar("I1:", I1); 
+    scanVar("I2:", I2); 
+    scanVar("I3:", I3); 
+    scanVar("Ta:", ta); 
+    scanVar("Tb:", tb); 
+    scanVar("Twait:", t_wait); 
+    scanVar("Repeat:", rp);
+
 #if DEBUG
   delay (20);
   I1 = 150;
@@ -63,26 +74,65 @@ void loop() {
   //Serial.println(taa);
   //Serial.println(tbb);
 
-  if (!SD.begin(SD_CSPIN)) {
-    Serial.println("initialization failed!");
-    return;
-  }
-  myFile = SD.open("test.txt", FILE_WRITE);
-
-  for(int i=0; i<rp; i++) 
+  if (!SD.exists("data001.bin"))
   {
-  if (myFile)
-    spectro.RunDevice(taa, tbb, WriteSD, myFile);
-  else
-    spectro.RunDevice(taa, tbb, WriteSerial, myFile);
-//    Serial.println(i);
+    iFileNum = 1;
+    bFileFull = false;
   }
-  t2=micros();
+  else
+  {
+    for (int f = 2; f <= 999; f++)
+    {
+      sprintf(FileName, "data%03d.bin", f);
+      if (!SD.exists(FileName))
+      {
+        iFileNum = f;
+        bFileFull = false;
+        break;
+      }
+      else
+      {
+        Serial.print(FileName);
+        Serial.println(" exists");
+      }
+    }
+  }
+
+  if (bFileFull)
+  {
+    Serial.println("Please remove data001.bin to data999.bin in SD card");
+#if 0
+    for(int i = 0; i < rp; i++) 
+    {
+      spectro.RunDevice(taa, tbb, WriteSerial, writeFile);
+    }
+#endif
+  }
+  else
+  {    
+    sprintf(FileName, "data%03d.bin", iFileNum);
+    Serial.print(FileName);
+    Serial.println(" is OK");
+    writeFile = SD.open(FileName, FILE_WRITE);
+
+#if 0
+    for(int i = 0; i < rp; i++) 
+    {
+    if (writeFile)
+      spectro.RunDevice(taa, tbb, WriteSD, writeFile);
+    else
+      spectro.RunDevice(taa, tbb, WriteSerial, writeFile);
+    }
+    // close the file:
+    writeFile.close();
+  }
+
+  t2 = micros();
 //  Serial.print("time: ");
 //  Serial.println((t2-t1)/1000);
+#endif
   
-  // close the file:
-  myFile.close();
+  }
 
 }
 

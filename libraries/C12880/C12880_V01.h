@@ -3,7 +3,7 @@
 
 #include <SD.h>
 
-#define DEBUG		1
+#define DEBUG		0
 #define TIMEMODE	0
 #define HEXMODE     1
 //#define NONHEX      0
