@@ -21,7 +21,7 @@ LTC2615 ltc2615;
 C12880 spectro;
 
 void setup() {
-  Serial.begin(150000);
+  Serial.begin(9600);
   ltc2615.init();
   spectro.SpectroInit(CLKA, STA, CLKB, STB, ADCCONV, ADC_CHA);
   currentOut(LEDA, 0);
@@ -89,18 +89,18 @@ void currentOut(byte ch, int cur)
   
   if(ch == 1) {
     ltc2615.write(CH_G, volt);
-//    Serial.print("CH_G: ");
-//    Serial.println(volt);
+    Serial.print("CH_G: ");
+    Serial.println(volt);
   }
   else if(ch == 2) {
     ltc2615.write(CH_F, volt);
-//    Serial.print("CH_F: ");
-//    Serial.println(volt);
+    Serial.print("CH_F: ");
+    Serial.println(volt);
   }
   else if(ch == 3) {
     ltc2615.write(CH_E, volt);
-//    Serial.print("CH_E: ");
-//    Serial.println(volt);
+    Serial.print("CH_E: ");
+    Serial.println(volt);
   } 
 }
 
