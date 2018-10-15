@@ -1306,7 +1306,8 @@ void DTC03::CheckSerial()
         {
           //Serial.println(g_vact);
           //sInputString += g_vact;
-          Serial.println(g_vact);
+          //Serial.println(g_vact);
+	      Serial.println(g_vact_MV);
         }
         else if (strcmp(cInputStr, SERIAL_CMD_START) == 0)
         {
