@@ -14,12 +14,12 @@ void AD5541::init()
 	SPI.begin();
 	SPI.setDataMode(SPI_MODE0);
 	SPI.setBitOrder(MSBFIRST);
-<<<<<<< HEAD
-	SPI.setClockDivider(SPI_CLOCK_DIV128);
-=======
+// <<<<<<< HEAD
+	// SPI.setClockDivider(SPI_CLOCK_DIV128);
+// =======
 	SPI.setClockDivider(SPI_CLOCK_DIV2);
 	digitalWrite(_adcsel, HIGH);
->>>>>>> master
+// >>>>>>> master
 }
 void AD5541::ModeWrite(unsigned int dacvalue) // with spi.begin() and spi.end(), Need to set bit order in setup
 {
