@@ -1,0 +1,85 @@
+#include <Wire.h>
+#include <LTC2615.h>
+#include <SPI.h>
+#include <LTC1865.h>
+#include <SD.h>
+#include <C12880_V01.h>
+#include <EEPROM.h>
+#include <QSS003_P02.h>
+
+
+QSS003 board;
+C12880 spectro;
+unsigned int iFileNum=1;
+File writeFile;
+bool SD_MODE;
+char FileName[12];
+
+void setup() {
+
+ 
+ bool bFileFull = true;
+ 
+ Serial.begin(115200);
+ board.Initialize();
+ SD_MODE = digitalRead(MODE_SD_USB);
+
+ if(SD_MODE)
+   {
+     while (!SD.begin(SD_CS))	// If SD card is not ready hold the program and turn on LED until SD card is ready	
+        digitalWrite(LEDM, HIGH);      
+     
+     digitalWrite(LEDM, LOW); 	  
+     for(int f=1; f <=MAXFILE; f++)
+      {
+	 sprintf(FileName,"data%03d.hex",f);
+         if(!SD.exists(FileName))
+          {
+              iFileNum = f;
+              bFileFull = false;    
+              break;
+	  }
+	}
+
+      while(bFileFull)
+	  digitalWrite(LEDM,HIGH);
+      writeFile = SD.open(FileName,FILE_WRITE);
+   }
+ spectro.SpectroInit(CLKA, STA, CLKB, STB, ADCCONV, ADC_CHA);
+
+}
+
+void loop() {
+ 
+  unsigned long taa, tbb;
+  board.checkParam();
+  if (digitalRead(SWM))
+  {
+      digitalWrite(LEDM, HIGH);
+      taa=board.us2cyc(board.gul_ta);
+      tbb=board.us2cyc(board.gul_tb);
+      board.currentOut(LEDA, board.gui_i1);
+      board.currentOut(LEDB, board.gui_i2);
+      board.currentOut(LEDC, board.gui_i3);
+      if(board.gui_rp<1) 
+      {
+        board.gui_rp =1;
+      }
+      delayMicroseconds(board.gul_tw);      
+      for (unsigned int i =0; i <board.gui_rp; i++)
+        spectro.RunDevice(taa, tbb, SD_MODE, writeFile);
+      digitalWrite(LEDM, LOW);
+      if(SD_MODE)
+      {
+         writeFile.close();
+         iFileNum++;
+         sprintf(FileName,"data%03d.hex",iFileNum);
+         writeFile = SD.open(FileName,FILE_WRITE);
+      }
+
+      
+      delay(2000);     
+  }
+  
+
+}

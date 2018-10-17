@@ -134,46 +134,77 @@ void C12880::ReadVedioAB()
 
 void C12880::ReadVedioAB_SD(File myFile)
 {
-	unsigned int i, data, j, temp;
-  unsigned char low, high;
-	byte buf[384];	//288/3*4
+  unsigned int i, data;
+  unsigned char out[2];
 
-	for (j=0; j < 3; j++)
-	{  
-	  for (i=0; i < 384; i++)
-	  {
-		// read A
-		data = adc.Read(!guc_adc_cha);
-		low = (unsigned char)(data);
-		high = data >>8;
-		buf[i] = low;
-		buf[++i] = high;
-		// read B
-		data = adc.Read(guc_adc_cha);
-		low = (unsigned char) (data); 
-		high = data >>8;
-		buf[++i] = low;
-		buf[++i] = high;
-		PulseClkAB(1);
-	  }
-	  #if HEXMODE
-	  myFile.write(buf,384);
-	  #else
-    for (int k = 0; k < 384; k++)
-    {
-      low = buf[k];
-      high = buf[++k];
-      temp = (unsigned int)low + (unsigned int)high*256;
-	    myFile.println(temp, DEC);
-    }
-	  #endif
-	}
-#if DEBUG
-  Serial.println("Write SD OK");
-#endif
+
+  for (i=0; i < CHANNEL_NUMBER; i++)
+  {
+  // read A
+    data = adc.Read(!guc_adc_cha);
+    out[0]= (unsigned char)(data);
+    out[1] = data >>8;
+    #if HEXMODE
+    myFile.write(out,2);
+    #else
+    
+    myFile.print(data);
+    myFile.print(", ");
+    #endif
+  // read B
+    data = adc.Read(guc_adc_cha);
+    out[0]= (unsigned char)(data);
+    out[1] = data >>8;
+    #if HEXMODE
+    myFile.write(out,2);
+    #else
+    myFile.println(data);
+    #endif
+  PulseClkAB(1);
+  }
 }
+// void C12880::ReadVedioAB_SD(File myFile)
+// {
+// 	unsigned int i, data, j, temp;
+//   unsigned char low, high;
+// 	byte buf[384];	//288/3*4
 
-void C12880::RunDevice(unsigned long I_timeA, unsigned long I_timeB, uint8_t ucPrintMode, File myFile)
+// 	for (j=0; j < 3; j++)
+// 	{  
+// 	  for (i=0; i < 384; i++)
+// 	  {
+// 		// read A
+// 		data = adc.Read(!guc_adc_cha);
+// 		low = (unsigned char)(data);
+// 		high = data >>8;
+// 		buf[i] = low;
+// 		buf[++i] = high;
+// 		// read B
+// 		data = adc.Read(guc_adc_cha);
+// 		low = (unsigned char) (data); 
+// 		high = data >>8;
+// 		buf[++i] = low;
+// 		buf[++i] = high;
+// 		PulseClkAB(1);
+// 	  }
+// 	  #if HEXMODE
+// 	  myFile.write(buf,384);
+// 	  #else
+//     for (int k = 0; k < 384; k++)
+//     {
+//       low = buf[k];
+//       high = buf[++k];
+//       temp = (unsigned int)low + (unsigned int)high*256;
+// 	    myFile.println(temp, DEC);
+//     }
+// 	  #endif
+// 	}
+// #if C12DEBUG
+//   Serial.println("Write SD OK");
+// #endif
+// }
+
+void C12880::RunDevice(unsigned long I_timeA, unsigned long I_timeB, bool ucPrintMode, File myFile)
 {
   #if TIMEMODE
   unsigned long t1 = 0, t2 = 0, t3=0, t4 =0, t5 =0;
