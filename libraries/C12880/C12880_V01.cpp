@@ -104,7 +104,6 @@ void C12880::ReadVedioAB()
 {
 	unsigned int i, data;
   unsigned char low, high;
-
 	for (i=0; i < CHANNEL_NUMBER; i++)
 	{
 	// read A
@@ -231,7 +230,6 @@ void C12880::RunDevice(unsigned long I_timeA, unsigned long I_timeB, bool ucPrin
     I_timeA -= I_timeB;
     ucFlagAB = ATimeBig2B;
   }
-
   PulseClkAB(2);
   StartIntegAB();
   #if TIMEMODE

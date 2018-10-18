@@ -5,7 +5,7 @@
 
 #define ADD 0x10
 #define CC 0b0011
-#define ref 3.3
+#define _ref 3.3
 #define max 16383
 
 #define CH_A 0b0000

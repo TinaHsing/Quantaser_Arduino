@@ -16,43 +16,49 @@ bool SD_MODE;
 char FileName[12];
 
 void setup() {
-
- 
  bool bFileFull = true;
  
  Serial.begin(115200);
+ board.ReadEEPROM();
+ board.printVar();
  board.Initialize();
  SD_MODE = digitalRead(MODE_SD_USB);
 
  if(SD_MODE)
    {
      while (!SD.begin(SD_CS))	// If SD card is not ready hold the program and turn on LED until SD card is ready	
-        digitalWrite(LEDM, HIGH);      
-     
+        digitalWrite(LEDM, HIGH);       
      digitalWrite(LEDM, LOW); 	  
+
+     // scan FileName in SD card to test if SD card is full
      for(int f=1; f <=MAXFILE; f++)
       {
-	 sprintf(FileName,"data%03d.hex",f);
-         if(!SD.exists(FileName))
-          {
-              iFileNum = f;
-              bFileFull = false;    
-              break;
-	  }
-	}
-
-      while(bFileFull)
-	  digitalWrite(LEDM,HIGH);
-      writeFile = SD.open(FileName,FILE_WRITE);
+      	sprintf(FileName,"data%03d.hex",f);
+        if(!SD.exists(FileName))
+         {
+             iFileNum = f;
+             bFileFull = false;    
+             break;
+         }
+    	}
+    // if SD card is full, turn on LED forever
+     while(bFileFull)
+	    digitalWrite(LEDM,HIGH);
+     writeFile = SD.open(FileName,FILE_WRITE);
    }
+  else
+  {
+    pinMode(SD_CS, OUTPUT);
+    digitalWrite(SD_CS, HIGH);
+  }
  spectro.SpectroInit(CLKA, STA, CLKB, STB, ADCCONV, ADC_CHA);
-
 }
 
 void loop() {
  
   unsigned long taa, tbb;
   board.checkParam();
+  board.SaveEEPROM();
   if (digitalRead(SWM))
   {
       digitalWrite(LEDM, HIGH);
@@ -65,9 +71,14 @@ void loop() {
       {
         board.gui_rp =1;
       }
-      delayMicroseconds(board.gul_tw);      
-      for (unsigned int i =0; i <board.gui_rp; i++)
+//      delayMicroseconds(board.gul_tw);      
+      delay(board.gul_tw);      
+      for (unsigned int i =0; i <board.gui_rp; i++){
         spectro.RunDevice(taa, tbb, SD_MODE, writeFile);
+      }
+      board.currentOut(LEDA, 0);
+      board.currentOut(LEDB, 0);
+      board.currentOut(LEDC, 0);      
       digitalWrite(LEDM, LOW);
       if(SD_MODE)
       {
@@ -75,9 +86,7 @@ void loop() {
          iFileNum++;
          sprintf(FileName,"data%03d.hex",iFileNum);
          writeFile = SD.open(FileName,FILE_WRITE);
-      }
-
-      
+      }   
       delay(2000);     
   }
   
