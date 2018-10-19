@@ -36,7 +36,7 @@ void setup() {
       	sprintf(FileName,"data%03d.hex",f);
         if(!SD.exists(FileName))
          {
-             iFileNum = f;
+             iFileNum = f+1;
              bFileFull = false;    
              break;
          }
