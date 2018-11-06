@@ -32,7 +32,7 @@
 #define COM_Rp "Rp"
 
 //----------NOEE Default value------
-#define NOEE_DUMMY	104
+#define NOEE_DUMMY	103
 #define NOEE_I1		0		
 #define NOEE_I2		0
 #define NOEE_I3		0
