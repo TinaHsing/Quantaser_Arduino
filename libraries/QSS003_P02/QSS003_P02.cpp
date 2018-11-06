@@ -28,8 +28,17 @@ void QSS003::checkParam()
 	{
 		command = Serial.readStringUntil('=');
 		val = Serial.parseInt();
-		
-		if (strcmp(command.c_str(), COM_Tw)==0)
+		if (strcmp(command.c_str(), COM_St)==0)
+		{
+			Serial.println(gui_i1);
+			Serial.println(gui_i2);
+			Serial.println(gui_i3);
+			Serial.println(gul_ta);
+			Serial.println(gul_tb);
+			Serial.println(gul_tw);
+			Serial.println(gui_rp);
+		}
+		else if (strcmp(command.c_str(), COM_Tw)==0)
 		{
 			p_ee_changed = 1;
 			p_ee_change_state = EEADD_TW_UPPER;

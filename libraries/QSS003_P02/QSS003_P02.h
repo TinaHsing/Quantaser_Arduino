@@ -30,6 +30,7 @@
 #define COM_Tb "Tb"
 #define COM_Tw "Tw"
 #define COM_Rp "Rp"
+#define COM_St "St"
 
 //----------NOEE Default value------
 #define NOEE_DUMMY	103
