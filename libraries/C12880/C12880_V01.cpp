@@ -52,7 +52,7 @@ bool C12880::SpectroInit(unsigned char clka, unsigned char sta, unsigned char cl
 
 void C12880::PulseClkA(unsigned long pulse)
 {
-	unsigned int i;
+	unsigned long i;
 	for (i = 0; i < pulse; i++)
 	{
 		
@@ -63,7 +63,7 @@ void C12880::PulseClkA(unsigned long pulse)
 
 void C12880::PulseClkB(unsigned long pulse)
 {
-	unsigned int i;
+	unsigned long i;
 	for (i = 0; i < pulse; i++)
 	{
 		
@@ -75,7 +75,7 @@ void C12880::PulseClkB(unsigned long pulse)
 
 void C12880::PulseClkAB(unsigned long pulse)
 {
-	unsigned int i;
+	unsigned long i;
 	for (i = 0; i < pulse; i++)
 	{
 		
@@ -162,46 +162,6 @@ void C12880::ReadVedioAB_SD(File myFile)
   PulseClkAB(1);
   }
 }
-// void C12880::ReadVedioAB_SD(File myFile)
-// {
-// 	unsigned int i, data, j, temp;
-//   unsigned char low, high;
-// 	byte buf[384];	//288/3*4
-
-// 	for (j=0; j < 3; j++)
-// 	{  
-// 	  for (i=0; i < 384; i++)
-// 	  {
-// 		// read A
-// 		data = adc.Read(!guc_adc_cha);
-// 		low = (unsigned char)(data);
-// 		high = data >>8;
-// 		buf[i] = low;
-// 		buf[++i] = high;
-// 		// read B
-// 		data = adc.Read(guc_adc_cha);
-// 		low = (unsigned char) (data); 
-// 		high = data >>8;
-// 		buf[++i] = low;
-// 		buf[++i] = high;
-// 		PulseClkAB(1);
-// 	  }
-// 	  #if HEXMODE
-// 	  myFile.write(buf,384);
-// 	  #else
-//     for (int k = 0; k < 384; k++)
-//     {
-//       low = buf[k];
-//       high = buf[++k];
-//       temp = (unsigned int)low + (unsigned int)high*256;
-// 	    myFile.println(temp, DEC);
-//     }
-// 	  #endif
-// 	}
-// #if C12DEBUG
-//   Serial.println("Write SD OK");
-// #endif
-// }
 
 void C12880::RunDevice(unsigned long I_timeA, unsigned long I_timeB, bool ucPrintMode, File myFile)
 {
