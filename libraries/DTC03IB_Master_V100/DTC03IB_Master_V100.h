@@ -195,7 +195,7 @@
 #define RTHRatio 25665 
 #define CURRENTRatio 0.00977	// 3A/307code=0.00977A/code 
 
-#define ENABLE_FACTORY_UPDATE_PIB		1	//normal = 0, remote = 1	
+#define ENABLE_ENG_UPDATE_PIB			1	//normal = 0, remote = 1	
 #define ENABLE_NORMAL_UPDATE_PARAM    	0	//normal = 1, remote = 0
 
 class DTC03Master {
@@ -217,7 +217,7 @@ public:
 	void PrintIlim();
 	void PrintP();
 	void PrintKi();
-	//void PrintB();
+	void PrintB();
 	void PrintModStatus();
 	void Encoder();
 	void CursorState();	
