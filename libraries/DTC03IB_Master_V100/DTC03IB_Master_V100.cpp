@@ -74,7 +74,7 @@ void DTC03Master::ReadEEPROM()
 		g_currentlim = EEPROM.read(EEADD_currentlim);
 		g_p = EEPROM.read(EEADD_P);
 		g_kiindex = EEPROM.read(EEADD_KIINDEX);		
-		g_bconst = 3975.6124; //EEPROM.read(EEADD_BCONST_UPPER)<<8 | EEPROM.read(EEADD_BCONST_LOWER);		
+		g_bconst=EEPROM.read(EEADD_BCONST_UPPER)<<8 | EEPROM.read(EEADD_BCONST_LOWER);		
 		g_mod_status = EEPROM.read(EEADD_MODSTATUS);
         g_r1 = EEPROM.read(EEADD_R1);
         g_r2 = EEPROM.read(EEADD_R2);
@@ -95,10 +95,8 @@ void DTC03Master::ReadEEPROM()
 		EEPROM.write(EEADD_currentlim, NOEE_ILIM);		
 		EEPROM.write(EEADD_P, NOEE_P);		
 		EEPROM.write(EEADD_KIINDEX, NOEE_kiindex);
-#if 0 //sherry-- 2019.1.14
 		EEPROM.write(EEADD_BCONST_UPPER, NOEE_BCONST>>8);
 		EEPROM.write(EEADD_BCONST_LOWER, NOEE_BCONST);
-#endif
 		EEPROM.write(EEADD_MODSTATUS, NOEE_MODSTATUS);
 		EEPROM.write(EEADD_R1, NOEE_R1);
 		EEPROM.write(EEADD_R2, NOEE_R2);		
@@ -120,7 +118,7 @@ void DTC03Master::ReadEEPROM()
 		g_p = NOEE_P;
 		g_p_atune = NOEE_PAP;
 		g_kiindex = NOEE_kiindex;
-		g_bconst = 3975.6124; //NOEE_BCONST;
+		g_bconst = NOEE_BCONST;
 		g_mod_status = NOEE_MODSTATUS;
 		g_r1 = NOEE_R1;
 		g_r2 = NOEE_R2;
@@ -144,12 +142,12 @@ void DTC03Master::SaveEEPROM() {
                 EEPROM.write(EEADD_VSET_UPPER, g_vset>>8 );
                 EEPROM.write(EEADD_VSET_LOWER, g_vset);
                 break;
-#if 0 //sherry-- 2019.1.14
+    
             case EEADD_BCONST_UPPER:
                 EEPROM.write(EEADD_BCONST_UPPER, g_bconst>>8 );
                 EEPROM.write(EEADD_BCONST_LOWER, g_bconst); 
                 break;
-#endif
+
             case EEADD_MODSTATUS:
                 EEPROM.write(EEADD_MODSTATUS, g_mod_status);
                 break;
@@ -289,7 +287,6 @@ void DTC03Master::I2CWriteData(unsigned char com)
   unsigned char temp[2];
   switch(com)
   {
-#if 0 //sherry-- 2019.1.14
     case I2C_COM_INIT:
         temp[0]= g_bconst - BCONSTOFFSET;
         temp[1]= (g_bconst - BCONSTOFFSET) >> 8;
@@ -297,7 +294,7 @@ void DTC03Master::I2CWriteData(unsigned char com)
 //    if(g_sensortype) temp[1]|= REQMSK_SENSTYPE; 
 	    if(g_mod_status) temp[1]|= REQMSK_SENSTYPE; //B01000000   
         break;
-#endif
+
     case I2C_COM_CTR:
         temp[0]= g_currentlim;
         temp[1]= g_p;
@@ -680,14 +677,12 @@ void DTC03Master::PrintKi()
   lcd.print(tconst,0);
   }
 }
-#if 0 //sherry-- 2019.1.14
 void DTC03Master::PrintB()
 {
   lcd.SelectFont(SystemFont5x7);
   lcd.GotoXY(BCONST_COORD_X2, BCONST_COORD_Y);
   lcd.print(g_bconst); 
 }
-#endif
 void DTC03Master::PrintModStatus() 
 {
   lcd.SelectFont(SystemFont5x7);
@@ -832,10 +827,8 @@ void DTC03Master::PrintEngBG()
   lcd.print(Text_P);
   lcd.GotoXY(I_COORD_X,I_COORD_Y);
   lcd.print(Text_I);  
-#if 0 //sherry-- 2019.1.14
   lcd.GotoXY(BCONST_COORD_X, BCONST_COORD_Y);
   lcd.print(Text_B);
-#endif
 #endif
 }
 void DTC03Master::PrintEngAll()
@@ -853,7 +846,7 @@ void DTC03Master::PrintEngAll()
 #if ENABLE_ENG_UPDATE_PIB //sherry++ 2017.9.27
   PrintP();
   PrintKi();
-  //PrintB(); //sherry-- 2019.1.14
+  PrintB();
 #endif
 	CheckStatus();
 }
@@ -1042,8 +1035,7 @@ void DTC03Master::CursorState()
 			      g_cursorstate=10;
 		        } 
 #if ENABLE_ENG_UPDATE_PIB //sherry** 2017.9.27
-           //if( g_cursorstate>22 ) //sherry+- 2019.1.14
-           if( g_cursorstate>21 ) 
+           if( g_cursorstate>22 ) 
              g_cursorstate=10;
 #else
            if( g_cursorstate>19 )
@@ -1396,7 +1388,7 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
       break;
 
       case 5:
-#if 0 //ENABLE_ENG_UPDATE_PIB //sherry++ 2017.9.27
+#if ENABLE_ENG_UPDATE_PIB //sherry++ 2017.9.27
       case 22:
 #endif
       	g_bconst += g_counter;
@@ -1405,10 +1397,8 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
 	    I2CWriteData(I2C_COM_INIT);
   	    g_vset = ReturnVset(g_tset, g_sensortype);
 	    I2CWriteData(I2C_COM_VSET);//only send Vset, Bconst is not important for slave
-#if 0 //sherry-- 2019.1.14
 	    PrintB();
 	    p_ee_change_state=EEADD_BCONST_UPPER;
-#endif
 	    break;
 
       case 6:
