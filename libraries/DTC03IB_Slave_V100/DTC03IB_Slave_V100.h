@@ -42,8 +42,6 @@
 #define ATUNEAVGTIME 4
 #define ATUNEAVGPWR 2
 
-#define BCONSTOFFSET 3500
-
 #define ILIMDACOUTSTART 500		// define the current limit start current 500mA
 #define ILIMDACSTEP 50  		// define the current limit step current 50mA
 #define BVALUE 3988 

@@ -74,7 +74,7 @@ void DTC03Master::ReadEEPROM()
 		g_currentlim = EEPROM.read(EEADD_currentlim);
 		g_p = EEPROM.read(EEADD_P);
 		g_kiindex = EEPROM.read(EEADD_KIINDEX);		
-		g_bconst=EEPROM.read(EEADD_BCONST_UPPER)<<8 | EEPROM.read(EEADD_BCONST_LOWER);		
+		g_bconst = 3975.6124; //EEPROM.read(EEADD_BCONST_UPPER)<<8 | EEPROM.read(EEADD_BCONST_LOWER);		
 		g_mod_status = EEPROM.read(EEADD_MODSTATUS);
         g_r1 = EEPROM.read(EEADD_R1);
         g_r2 = EEPROM.read(EEADD_R2);
@@ -95,8 +95,10 @@ void DTC03Master::ReadEEPROM()
 		EEPROM.write(EEADD_currentlim, NOEE_ILIM);		
 		EEPROM.write(EEADD_P, NOEE_P);		
 		EEPROM.write(EEADD_KIINDEX, NOEE_kiindex);
+#if 0 //sherry-- 2019.1.14
 		EEPROM.write(EEADD_BCONST_UPPER, NOEE_BCONST>>8);
 		EEPROM.write(EEADD_BCONST_LOWER, NOEE_BCONST);
+#endif
 		EEPROM.write(EEADD_MODSTATUS, NOEE_MODSTATUS);
 		EEPROM.write(EEADD_R1, NOEE_R1);
 		EEPROM.write(EEADD_R2, NOEE_R2);		
@@ -118,7 +120,7 @@ void DTC03Master::ReadEEPROM()
 		g_p = NOEE_P;
 		g_p_atune = NOEE_PAP;
 		g_kiindex = NOEE_kiindex;
-		g_bconst = NOEE_BCONST;
+		g_bconst = 3975.6124; //NOEE_BCONST;
 		g_mod_status = NOEE_MODSTATUS;
 		g_r1 = NOEE_R1;
 		g_r2 = NOEE_R2;
@@ -142,12 +144,12 @@ void DTC03Master::SaveEEPROM() {
                 EEPROM.write(EEADD_VSET_UPPER, g_vset>>8 );
                 EEPROM.write(EEADD_VSET_LOWER, g_vset);
                 break;
-    
+#if 0 //sherry-- 2019.1.14
             case EEADD_BCONST_UPPER:
                 EEPROM.write(EEADD_BCONST_UPPER, g_bconst>>8 );
                 EEPROM.write(EEADD_BCONST_LOWER, g_bconst); 
                 break;
-
+#endif
             case EEADD_MODSTATUS:
                 EEPROM.write(EEADD_MODSTATUS, g_mod_status);
                 break;
@@ -239,7 +241,7 @@ void DTC03Master::CheckStatus()
 				if (p_loopindex%300==2) {
 					I2CReadData(I2C_COM_PCB);
 		            tpcb_f = float(g_tpcb)/4.0-20.5;
-		            if(p_engModeFlag) PrintTpcb(tpcb_f);
+		            if(p_engModeFlag && (g_cursorstate > 9) ) PrintTpcb(tpcb_f);
 				}	
 				if (p_loopindex%300==3) {
 					I2CReadData(I2C_COM_ATUN);
@@ -288,8 +290,8 @@ void DTC03Master::I2CWriteData(unsigned char com)
   switch(com)
   {
     case I2C_COM_INIT:
-        temp[0]= g_bconst - BCONSTOFFSET;
-        temp[1]= (g_bconst - BCONSTOFFSET) >> 8;
+        temp[0]= (unsigned int)g_bconst - BCONSTOFFSET;
+        temp[1]= ((unsigned int)g_bconst - BCONSTOFFSET) >> 8;
         if(g_en_state) temp[1] |= REQMSK_ENSTATE; //B10000000
 //    if(g_sensortype) temp[1]|= REQMSK_SENSTYPE; 
 	    if(g_mod_status) temp[1]|= REQMSK_SENSTYPE; //B01000000   
@@ -553,7 +555,7 @@ void DTC03Master::PrintNormalAll()
 	PrintIlim();
 	PrintP();
 	PrintKi();
-	PrintB();
+	//PrintB();
   PrintModStatus();
   PrintAtune();
 #endif
@@ -607,11 +609,10 @@ void DTC03Master::PrintTact(float tact)
   }
   lcd.print(" ");
 }
+#if ENABLE_NORMAL_UPDATE_PARAM //sherry++ 2017.9.29
 void DTC03Master::PrintItec(float itec)
 {
-#if ENABLE_REMOTE_MODE //sherry++ 2017.9.27
   if (!CheckSlaveRemote())
-#endif
   {
     lcd.SelectFont(SystemFont5x7);
     lcd.GotoXY(ITEC_COORD_X2,ITEC_COORD_Y);
@@ -627,9 +628,7 @@ void DTC03Master::PrintItec(float itec)
 }
 void DTC03Master::PrintIlim()
 {
-#if ENABLE_REMOTE_MODE //sherry++ 2017.9.27
   if (!CheckSlaveRemote())
-#endif
   {
     float currentlim;
     currentlim =ILIMSTART + ILIMSTEP *(float)(g_currentlim);
@@ -639,6 +638,7 @@ void DTC03Master::PrintIlim()
     lcd.print(currentlim,2);
   }
 }
+#endif
 void DTC03Master::PrintP()
 {
   lcd.SelectFont(SystemFont5x7);
@@ -677,12 +677,14 @@ void DTC03Master::PrintKi()
   lcd.print(tconst,0);
   }
 }
+#if 0 //sherry-- 2019.1.14
 void DTC03Master::PrintB()
 {
   lcd.SelectFont(SystemFont5x7);
   lcd.GotoXY(BCONST_COORD_X2, BCONST_COORD_Y);
   lcd.print(g_bconst); 
 }
+#endif
 void DTC03Master::PrintModStatus() 
 {
   lcd.SelectFont(SystemFont5x7);
@@ -822,13 +824,15 @@ void DTC03Master::PrintEngBG()
   lcd.print(Text_TAT);
   lcd.GotoXY(ATSTABLE_COORD_X, ATSTABLE_COORD_Y);
   lcd.print(Text_SAT);
-#if ENABLE_ENG_UPDATE_PIB //sherry++ 2017.9.27
+#if ENABLE_FACTORY_UPDATE_PIB //sherry++ 2017.9.27
   lcd.GotoXY(P_COORD_X,P_COORD_Y);
   lcd.print(Text_P);
   lcd.GotoXY(I_COORD_X,I_COORD_Y);
   lcd.print(Text_I);  
+#if 0 //sherry-- 2019.1.14
   lcd.GotoXY(BCONST_COORD_X, BCONST_COORD_Y);
   lcd.print(Text_B);
+#endif
 #endif
 }
 void DTC03Master::PrintEngAll()
@@ -843,10 +847,10 @@ void DTC03Master::PrintEngAll()
 	PrintP_Atune();
 	PrintTbias();
 	PrintATStable();
-#if ENABLE_ENG_UPDATE_PIB //sherry++ 2017.9.27
+#if ENABLE_FACTORY_UPDATE_PIB //sherry++ 2017.9.27
   PrintP();
   PrintKi();
-  PrintB();
+  //PrintB(); //sherry-- 2019.1.14
 #endif
 	CheckStatus();
 }
@@ -1034,8 +1038,9 @@ void DTC03Master::CursorState()
 			      PrintEngAll();
 			      g_cursorstate=10;
 		        } 
-#if ENABLE_ENG_UPDATE_PIB //sherry** 2017.9.27
-           if( g_cursorstate>22 ) 
+#if ENABLE_FACTORY_UPDATE_PIB //sherry** 2017.9.27
+           //if( g_cursorstate>22 ) //sherry+- 2019.1.14
+           if( g_cursorstate>21 ) 
              g_cursorstate=10;
 #else
            if( g_cursorstate>19 )
@@ -1140,7 +1145,7 @@ void DTC03Master::ShowCursor(unsigned char state_old)
 		    case 1:
 		    p_blinkTsetCursorFlag=1;
 		    break;
-		
+
 #if ENABLE_NORMAL_UPDATE_PARAM //sherry++ 2017.9.29
 		    case 2:
 		    lcd.SelectFont(SystemFont5x7, WHITE);
@@ -1201,9 +1206,10 @@ void DTC03Master::ShowCursor(unsigned char state_old)
 		    lcd.SelectFont(SystemFont5x7, WHITE);
 		    lcd.GotoXY(R1_COORD_X-COLUMNPIXEL0507, R1_COORD_Y);
 		    lcd.print(" ");
-#if ENABLE_ENG_UPDATE_PIB
+#if ENABLE_FACTORY_UPDATE_PIB
         lcd.SelectFont(SystemFont5x7);
-        lcd.GotoXY(BCONST_COORD_X-COLUMNPIXEL0507, BCONST_COORD_Y);
+        //lcd.GotoXY(BCONST_COORD_X-COLUMNPIXEL0507, BCONST_COORD_Y);
+        lcd.GotoXY(I_COORD_X-COLUMNPIXEL0507, I_COORD_Y);
         lcd.print(" ");
 #else
         lcd.SelectFont(SystemFont5x7);
@@ -1293,7 +1299,7 @@ void DTC03Master::ShowCursor(unsigned char state_old)
 		    lcd.print(" ");
 		    break;
 
-#if ENABLE_ENG_UPDATE_PIB //sherry++ 2017.9.27
+#if ENABLE_FACTORY_UPDATE_PIB //sherry++ 2017.9.27
         case 20:
         lcd.SelectFont(SystemFont5x7, WHITE);
         lcd.GotoXY(P_COORD_X-COLUMNPIXEL0507, P_COORD_Y);
@@ -1312,6 +1318,7 @@ void DTC03Master::ShowCursor(unsigned char state_old)
         lcd.print(" ");
         break;
 
+#if 0 //sherry-- 2019.1.14
         case 22:
         lcd.SelectFont(SystemFont5x7, WHITE);
         lcd.GotoXY(BCONST_COORD_X-COLUMNPIXEL0507, BCONST_COORD_Y);
@@ -1320,6 +1327,7 @@ void DTC03Master::ShowCursor(unsigned char state_old)
         lcd.GotoXY(I_COORD_X-COLUMNPIXEL0507, I_COORD_Y);
         lcd.print(" ");
         break;
+#endif
 #endif
 		}
   
@@ -1348,6 +1356,7 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
         p_ee_change_state=EEADD_VSET_UPPER;	
       break; 
       
+#if ENABLE_NORMAL_UPDATE_PARAM //sherry++ 2017.9.29
       case 2:
       	g_currentlim += g_counter;
         if(g_currentlim>51) g_currentlim=51;
@@ -1356,10 +1365,12 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
         PrintIlim();
         p_ee_change_state=EEADD_currentlim; 
       break;
+#endif
 
-      case 3:
-#if ENABLE_ENG_UPDATE_PIB //sherry++ 2017.9.27
+#if ENABLE_FACTORY_UPDATE_PIB //sherry++ 2017.9.27
       case 20:
+#else if ENABLE_NORMAL_UPDATE_PARAM //sherry++ 2017.9.29
+      case 3:
 #endif
       	if(!g_kpkiFromAT) g_p += g_counter; 
         if(g_p>150) g_p=150;
@@ -1370,16 +1381,17 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
         if(!g_kpkiFromAT) break;
         else p_ee_changed = 1;
 
-      case 4:
-#if ENABLE_ENG_UPDATE_PIB //sherry++ 2017.9.27
+#if ENABLE_FACTORY_UPDATE_PIB //sherry++ 2017.9.27
       case 21:
+#else if ENABLE_NORMAL_UPDATE_PARAM //sherry++ 2017.9.29
+      case 4:
 #endif
       	if(!g_kpkiFromAT) g_kiindex += g_counter;
       	else 
-		{
-			g_kpkiFromAT = 0;
+		    {
+          g_kpkiFromAT = 0;
       		g_cursorstate = 1;
-		}
+		    }
         if(g_kiindex>50) g_kiindex=50;
         if(g_kiindex<1) g_kiindex=1;      
         I2CWriteData(I2C_COM_KI);
@@ -1387,9 +1399,10 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
         p_ee_change_state=EEADD_KIINDEX;
       break;
 
-      case 5:
-#if ENABLE_ENG_UPDATE_PIB //sherry++ 2017.9.27
+#if 0  //ENABLE_FACTORY_UPDATE_PIB //sherry++ 2017.9.27
       case 22:
+#else if ENABLE_NORMAL_UPDATE_PARAM //sherry++ 2017.9.29
+      case 5:
 #endif
       	g_bconst += g_counter;
 	    if(g_bconst>4499) g_bconst=4499;
@@ -1397,29 +1410,31 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
 	    I2CWriteData(I2C_COM_INIT);
   	    g_vset = ReturnVset(g_tset, g_sensortype);
 	    I2CWriteData(I2C_COM_VSET);//only send Vset, Bconst is not important for slave
-	    PrintB();
+	    //PrintB();
 	    p_ee_change_state=EEADD_BCONST_UPPER;
 	    break;
 
+#if ENABLE_NORMAL_UPDATE_PARAM //sherry++ 2017.9.29
       case 6:
         g_mod_status = g_countersensor;
         I2CWriteData(I2C_COM_INIT);
         PrintModStatus(); 
         p_ee_change_state=EEADD_MODSTATUS;
         break;
-        
+
       case 7:
         g_atune_status = g_countersensor;
         if(g_atune_status && p_keyflag) 
-		{
-			p_keyflag = 0;
-			p_atunProcess_flag = 1;
-			I2CWriteData(I2C_COM_ATUN);
-		}
+		    {
+          p_keyflag = 0;
+          p_atunProcess_flag = 1;
+          I2CWriteData(I2C_COM_ATUN);
+        }
         if(!g_atune_status) I2CWriteData(I2C_COM_ATUN);
         PrintAtune(); 
 //        p_ee_change_state=EEADD_MODSTATUS;
         break;
+#endif
 
       case 9:
         PrintFactaryMode();
@@ -1427,8 +1442,8 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
         
       case 10:
       	g_r1 += g_counter;
-	    if(g_r1>30) g_r1=30; // R1, 1~30 for 0.1~3.0 ohm set 
-	    if(g_r1<1) g_r1=1;//
+        if(g_r1>30) g_r1=30; // R1, 1~30 for 0.1~3.0 ohm set 
+        if(g_r1<1) g_r1=1;//
       	I2CWriteData(I2C_COM_R1R2);
         PrintR1();
         p_ee_change_state=EEADD_R1;
@@ -1452,7 +1467,6 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
         PrintTpidoff();
         p_ee_change_state=EEADD_TPIDOFF;
         break;
-
 
       case 13:
       	g_fbcbase +=(g_counter*100);
@@ -1483,16 +1497,16 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
 
       case 16:
       	g_otp += (g_counter*4);
-		if (g_otp < 281) g_otp = 281; // 50C
-		if (g_otp > 561) g_otp = 561; //120C
-		I2CWriteData(I2C_COM_OTP);
+    		if (g_otp < 281) g_otp = 281; // 50C
+    		if (g_otp > 561) g_otp = 561; //120C
+    		I2CWriteData(I2C_COM_OTP);
         PrintTotp();  
         p_ee_change_state=EEADD_TOTP_UPPER;
         break;
         
        case 17:
       	g_p_atune += g_counter;
-		if(g_p_atune>99) g_p_atune=99;
+		    if(g_p_atune>99) g_p_atune=99;
         if(g_p_atune<1) g_p_atune=1;    
         I2CWriteData(I2C_COM_ATUN);
         PrintP_Atune();
@@ -1501,7 +1515,7 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
         
         case 18:
       	g_T_atune += g_counter;
-		if(g_T_atune>99) g_T_atune=99;
+		    if(g_T_atune>99) g_T_atune=99;
         if(g_T_atune<1) g_T_atune=1;    
         I2CWriteData(I2C_COM_ATUN);
         PrintTbias();
@@ -1510,7 +1524,7 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
         
         case 19:
       	g_stableCode_atune += g_counter;
-		if(g_stableCode_atune>99) g_stableCode_atune=99;
+    		if(g_stableCode_atune>99) g_stableCode_atune=99;
         if(g_stableCode_atune<1) g_stableCode_atune=1;    
         I2CWriteData(I2C_COM_ATSTABLE);
         PrintATStable();

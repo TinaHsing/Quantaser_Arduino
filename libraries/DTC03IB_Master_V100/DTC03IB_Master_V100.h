@@ -195,7 +195,7 @@
 #define RTHRatio 25665 
 #define CURRENTRatio 0.00977	// 3A/307code=0.00977A/code 
 
-#define ENABLE_ENG_UPDATE_PIB			1	//normal = 0, remote = 1	
+#define ENABLE_FACTORY_UPDATE_PIB		1	//normal = 0, remote = 1	
 #define ENABLE_NORMAL_UPDATE_PARAM    	0	//normal = 1, remote = 0
 
 class DTC03Master {
@@ -217,7 +217,7 @@ public:
 	void PrintIlim();
 	void PrintP();
 	void PrintKi();
-	void PrintB();
+	//void PrintB();
 	void PrintModStatus();
 	void Encoder();
 	void CursorState();	
@@ -259,11 +259,11 @@ public:
 	void SetSlaveRemote(bool bSlaveRemote);
 
 	//working variable-------------------
-	unsigned int g_vact,g_vact_MV, g_vset, g_tpcb, g_otp, g_Rmeas, g_bconst, g_fbcbase, g_vmodoffset;
+	unsigned int g_vact,g_vact_MV, g_vset, g_tpcb, g_otp, g_Rmeas, g_fbcbase, g_vmodoffset;
 	unsigned char g_p, g_ki,g_ls,g_currentlim, g_tpidoff, g_r1, g_r2, g_kiindex, g_cursorstate, g_p_atune, g_T_atune, g_stableCode_atune;
 	int g_itec;
 	bool g_mod_status, g_atune_status, g_atunDone, g_DBRflag, g_runTimeflag, g_LCDlock_flag;	
-    float g_tset;
+    float g_tset, g_bconst;
     //------------------------------------
     bool g_sensortype, g_en_state, g_kpkiFromAT;
     int en_temp, test_at=0;
