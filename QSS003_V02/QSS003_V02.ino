@@ -20,16 +20,15 @@ void setup() {
  
  Serial.begin(115200);
  board.ReadEEPROM();
+
  board.printVar();
  board.Initialize();
  SD_MODE = digitalRead(MODE_SD_USB);
-
  if(SD_MODE)
    {
      while (!SD.begin(SD_CS))	// If SD card is not ready hold the program and turn on LED until SD card is ready	
         digitalWrite(LEDM, HIGH);       
      digitalWrite(LEDM, LOW); 	  
-
      // scan FileName in SD card to test if SD card is full
      for(int f=1; f <=MAXFILE; f++)
       {
@@ -55,7 +54,6 @@ void setup() {
 }
 
 void loop() {
- 
   unsigned long taa, tbb;
   board.checkParam();
   board.SaveEEPROM();

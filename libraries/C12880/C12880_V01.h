@@ -5,7 +5,7 @@
 
 #define C12DEBUG	0
 #define TIMEMODE	0
-#define HEXMODE     1
+#define HEXMODE     0
 
 
 // =======define pin for the spectrometer ========

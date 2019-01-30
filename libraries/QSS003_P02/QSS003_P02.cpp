@@ -13,12 +13,12 @@ void QSS003::Initialize()
 	pinMode(LEDM, OUTPUT);
 	pinMode(MODE_SD_USB, INPUT);
 	digitalWrite(LEDM, LOW);
-	
 	ltc2615.init();
 	currentOut(LEDA,0);
 	currentOut(LEDB,0);
 	currentOut(LEDC,0);
 	p_ee_changed = 0;
+	
 }
 void QSS003::checkParam()
 {
@@ -88,8 +88,9 @@ void QSS003::currentOut(unsigned char ch, unsigned int cur)
 	float volt, r_sense =0.5;
 
 	volt = (float)cur/1000.0*r_sense;
-	if (ch ==1)
+	if (ch ==1){
 		ltc2615.write(CH_G, volt);
+	}
 	else if (ch ==2)
 		ltc2615.write(CH_F, volt);
 	else if (ch ==3)

@@ -13,7 +13,7 @@
 //---- Pin Definition for QSS003_P02 ----///
 #define MODE_SD_USB A0 		// USB and SD mode switch
 #define LEDM 9				// measurement LED indicator
-#define SWM 8				// mwasurement control switch
+#define SWM 8				// measurement control switch
 #define CLKA 2				// C12880A clock 
 #define STA 5				// C12880A measure
 #define CLKB 3				// C12880B clock
