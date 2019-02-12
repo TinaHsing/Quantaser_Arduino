@@ -74,13 +74,13 @@
 #define NOEE_R1			10
 #define NOEE_R2			20
 #define NOEE_TPIDOFF    2
-#define NOEE_FBC       	45000
+#define NOEE_FBC       	35000 //45000
 #define NOEE_MODOFF     32500
-#define NOEE_RMEAS      55000
+#define NOEE_RMEAS      45000 //55000
 #define NOEE_TOTP		561 //120C
 #define NOEE_PAP		10
 #define NOEE_TBIAS		15
-#define NOEE_ATSTABLE	5
+#define NOEE_ATSTABLE	10
 
 //=====================BG print coordinate definition=========
 #define TSET_COORD_X	0 
@@ -110,6 +110,7 @@
 #define BCONST_COORD_X 	COLUMNPIXEL0507*14
 #define BCONST_COORD_Y 	ROWPIXEL0507*5
 #define BCONST_COORD_X2	COLUMNPIXEL0507*16
+#define BCONST_COORD_Y2 ROWPIXEL0507*6
 #define Text_B			"B:"
 #define VMOD_COORD_X 	COLUMNPIXEL0507*14
 #define VMOD_COORD_Y 	ROWPIXEL0507*6
@@ -217,7 +218,7 @@ public:
 	void PrintIlim();
 	void PrintP();
 	void PrintKi();
-	//void PrintB();
+	void PrintB();
 	void PrintModStatus();
 	void Encoder();
 	void CursorState();	
@@ -281,7 +282,7 @@ private:
 	float g_tsetstep;
 
 	//sherry++ 2017.9.19
-  	bool g_bSlaveRemote;
+  	bool g_bSlaveRemote = false;
     //sherry++ 2017.9.29
     //unsigned int g_vset_slave;
 

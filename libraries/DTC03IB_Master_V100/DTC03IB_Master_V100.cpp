@@ -555,7 +555,7 @@ void DTC03Master::PrintNormalAll()
 	PrintIlim();
 	PrintP();
 	PrintKi();
-	//PrintB();
+	PrintB();
   PrintModStatus();
   PrintAtune();
 #endif
@@ -677,14 +677,14 @@ void DTC03Master::PrintKi()
   lcd.print(tconst,0);
   }
 }
-#if 0 //sherry-- 2019.1.14
+
 void DTC03Master::PrintB()
 {
   lcd.SelectFont(SystemFont5x7);
-  lcd.GotoXY(BCONST_COORD_X2, BCONST_COORD_Y);
+  lcd.GotoXY(BCONST_COORD_X, BCONST_COORD_Y2);
   lcd.print(g_bconst); 
 }
-#endif
+
 void DTC03Master::PrintModStatus() 
 {
   lcd.SelectFont(SystemFont5x7);
@@ -829,10 +829,8 @@ void DTC03Master::PrintEngBG()
   lcd.print(Text_P);
   lcd.GotoXY(I_COORD_X,I_COORD_Y);
   lcd.print(Text_I);  
-#if 0 //sherry-- 2019.1.14
   lcd.GotoXY(BCONST_COORD_X, BCONST_COORD_Y);
   lcd.print(Text_B);
-#endif
 #endif
 }
 void DTC03Master::PrintEngAll()
@@ -850,7 +848,7 @@ void DTC03Master::PrintEngAll()
 #if ENABLE_FACTORY_UPDATE_PIB //sherry++ 2017.9.27
   PrintP();
   PrintKi();
-  //PrintB(); //sherry-- 2019.1.14
+  PrintB();
 #endif
 	CheckStatus();
 }
@@ -1399,7 +1397,7 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
         p_ee_change_state=EEADD_KIINDEX;
       break;
 
-#if 0  //ENABLE_FACTORY_UPDATE_PIB //sherry++ 2017.9.27
+#if 0 //ENABLE_FACTORY_UPDATE_PIB //sherry++ 2017.9.27
       case 22:
 #else if ENABLE_NORMAL_UPDATE_PARAM //sherry++ 2017.9.29
       case 5:
@@ -1410,7 +1408,7 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
 	    I2CWriteData(I2C_COM_INIT);
   	    g_vset = ReturnVset(g_tset, g_sensortype);
 	    I2CWriteData(I2C_COM_VSET);//only send Vset, Bconst is not important for slave
-	    //PrintB();
+	    PrintB();
 	    p_ee_change_state=EEADD_BCONST_UPPER;
 	    break;
 
