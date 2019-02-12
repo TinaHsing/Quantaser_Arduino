@@ -237,7 +237,7 @@ void DTC03Master::CheckStatus()
 				if (p_loopindex%300==2) {
 					I2CReadData(I2C_COM_PCB);
 		            tpcb_f = float(g_tpcb)/4.0-20.5;
-		            if(p_engModeFlag) PrintTpcb(tpcb_f);
+		            if(p_engModeFlag && (g_cursorstate > 9) ) PrintTpcb(tpcb_f);
 				}	
 				if (p_loopindex%300==3) {
 					I2CReadData(I2C_COM_ATUN);
