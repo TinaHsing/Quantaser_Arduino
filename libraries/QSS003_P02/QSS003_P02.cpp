@@ -49,7 +49,6 @@ void QSS003::checkParam()
 			p_ee_changed = 1;
 			p_ee_change_state = EEADD_TA_UPPER;
 			gul_ta = val;
-			Serial.println(val);
 		}
 		else if(strcmp(command.c_str(), COM_Tb)==0)
 		{
