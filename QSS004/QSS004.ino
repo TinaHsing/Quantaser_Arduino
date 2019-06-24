@@ -5,7 +5,8 @@ LTC2615 ltc2615;
 LTC2451 ltc2451;
 
 unsigned long ul_time_begin = 0, ul_time_current = 0;
-unsigned long ul_Counter = 0, ul_ReadCounter = 0;
+unsigned long ul_ReadCounter = 0;
+volatile unsigned long ul_Counter = 0;
 
 String inputString = "";         // a String to hold incoming data
 boolean stringComplete = false;  // whether the string is complete
@@ -37,8 +38,8 @@ void loop() {
   if (stringComplete)
   {
     //Serial.println(inputString);
-    char *c_inputString = inputString.c_str();
-    char *set_vol_str = strstr(c_inputString, "SetVoltage ");
+    char *c_inputString = (char*)inputString.c_str();
+    char *set_vol_str = strstr(c_inputString, "SetVoltage");
     char *read_cnt_str = strstr(c_inputString, "ReadCounter");
     char *read_vol_str = strstr(c_inputString, "ReadVoltage");
  
@@ -48,7 +49,19 @@ void loop() {
       unsigned char ch = atoi(ch_str);
       char *vol_str = ch_str + 2;
       unsigned int vol = atoi(vol_str);
+	  // char buf[30];
+	  Serial.println("hi");
       SetVoltage(ch, vol);
+	  
+	  // Serial.println(ch);
+	  // Serial.println(vol);
+	  // sprintf(buf, "*c_inputString= %p\n", c_inputString);
+  	  // Serial.print(buf);
+	  // sprintf(buf, "*ch_str= %p\n", ch_str);
+  	  // Serial.print(buf);
+	  // sprintf(buf, "*vol_str= %p\n", vol_str);
+  	  // Serial.print(buf);
+  	  
     }
 
     if (read_cnt_str != NULL)
@@ -80,6 +93,7 @@ void serialEvent() {
     if (inChar == '\n') {
       stringComplete = true;
     }
+    Serial.println(stringComplete);
   }
 }
 
@@ -97,8 +111,8 @@ void SetVoltage(unsigned char ch, unsigned int vol)
   else if (ch == 5)
     ltc2615.write(CH_E, vol);
 #else
-    char tempStr[20];
-    sprintf(tempStr, "ch = %d, value = %d", ch, vol);
+    char tempStr[30];
+    sprintf(tempStr, "ch = %d, value = %u", ch, vol);
     Serial.println(tempStr);
 #endif
 }
@@ -111,7 +125,8 @@ void AddCounter()
 void ReadVoltage()
 {
   unsigned int ui_ReadVoltage = 0;
-  //ui_ReadVoltage = ltc2451.Read();
-  ui_ReadVoltage = 12345;
+  Serial.println("rd");
+  ui_ReadVoltage = ltc2451.Read();
+  // ui_ReadVoltage = 12345;
   Serial.println(ui_ReadVoltage);
 }
