@@ -3,10 +3,19 @@
 #include <Arduino.h>
 #include <Wire.h>
 
+#define DAC_BIT_16
+// #define DAC_BIT_14
+
 #define ADD 0x10
 #define CC 0b0011
-#define _ref 3.3
-#define max 16383
+#define _ref 5.0
+	
+#ifdef DAC_BIT_14
+	#define max 16383
+#endif
+#ifdef DAC_BIT_16
+	#define max 65535
+#endif
 
 #define CH_A 0b0000
 #define CH_B 0b0001
