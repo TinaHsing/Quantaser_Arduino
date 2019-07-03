@@ -63,9 +63,13 @@ void loop() {
 
     if (read_vol_str != NULL)
     {
+#if 0
       char *mv_str = c_inputString + 12;
       unsigned int mv = atoi(mv_str);
       ReadVoltage(mv);
+#else
+      ReadVoltage();
+#endif
     }
 
     // clear the string:
@@ -115,6 +119,7 @@ void AddCounter()
   ul_Counter++;
 }
 
+#if 0
 void ReadVoltage(unsigned int mv)
 {
   unsigned int ui_ReadVoltage = 0, ui_TotalVoltage = 0, i = 0;
@@ -128,3 +133,11 @@ void ReadVoltage(unsigned int mv)
   ui_ReadVoltage = ui_TotalVoltage / mv;
   Serial.println(ui_ReadVoltage);
 }
+#else
+void ReadVoltage()
+{
+  unsigned int ui_ReadVoltage = 0;
+  ui_ReadVoltage = ltc2451.Read();
+  Serial.println(ui_ReadVoltage);
+}
+#endif
