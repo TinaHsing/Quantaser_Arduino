@@ -31,7 +31,8 @@ class LTC2615
 	public:	
 		LTC2615(); 
 		void init();
-		void write(uint8_t, float);//(CH_#, 0~3.3V)
+		void write(uint8_t, float);//(CH_#, 0~5V)
+		void write(uint8_t, unsigned int);//(CH_#, 0~5V)
 		
 	private:
 		
