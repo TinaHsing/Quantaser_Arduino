@@ -47,21 +47,12 @@ void loop() {
     {
       char *ch_str = c_inputString + 11;
       unsigned char ch = atoi(ch_str);
+      //Serial.println(ch);
       char *vol_str = ch_str + 2;
       unsigned int vol = atoi(vol_str);
-	  // char buf[30];
-	  Serial.println("hi");
+      //Serial.println(vol);
       SetVoltage(ch, vol);
 	  
-	  // Serial.println(ch);
-	  // Serial.println(vol);
-	  // sprintf(buf, "*c_inputString= %p\n", c_inputString);
-  	  // Serial.print(buf);
-	  // sprintf(buf, "*ch_str= %p\n", ch_str);
-  	  // Serial.print(buf);
-	  // sprintf(buf, "*vol_str= %p\n", vol_str);
-  	  // Serial.print(buf);
-  	  
     }
 
     if (read_cnt_str != NULL)
@@ -72,7 +63,9 @@ void loop() {
 
     if (read_vol_str != NULL)
     {
-      ReadVoltage();
+      char *mv_str = c_inputString + 12;
+      unsigned int mv = atoi(mv_str);
+      ReadVoltage(mv);
     }
 
     // clear the string:
@@ -93,7 +86,7 @@ void serialEvent() {
     if (inChar == '\n') {
       stringComplete = true;
     }
-    Serial.println(stringComplete);
+    //Serial.println(stringComplete);
   }
 }
 
@@ -101,15 +94,15 @@ void SetVoltage(unsigned char ch, unsigned int vol)
 {
 #if 1
   if (ch == 1)
-    ltc2615.write(CH_A, vol);
+    ltc2615.writeint(CH_A, vol);
   else if (ch == 2)
-    ltc2615.write(CH_B, vol);
+    ltc2615.writeint(CH_B, vol);
   else if (ch == 3)
-    ltc2615.write(CH_C, vol);
+    ltc2615.writeint(CH_C, vol);
   else if (ch == 4)
-    ltc2615.write(CH_D, vol);
+    ltc2615.writeint(CH_D, vol);
   else if (ch == 5)
-    ltc2615.write(CH_E, vol);
+    ltc2615.writeint(CH_E, vol);
 #else
     char tempStr[30];
     sprintf(tempStr, "ch = %d, value = %u", ch, vol);
@@ -122,11 +115,16 @@ void AddCounter()
   ul_Counter++;
 }
 
-void ReadVoltage()
+void ReadVoltage(unsigned int mv)
 {
-  unsigned int ui_ReadVoltage = 0;
-  Serial.println("rd");
-  ui_ReadVoltage = ltc2451.Read();
-  // ui_ReadVoltage = 12345;
+  unsigned int ui_ReadVoltage = 0, ui_TotalVoltage = 0, i = 0;
+  //Serial.println(mv);
+  for (i = 0; i < mv; i++)
+  {
+    ui_ReadVoltage = ltc2451.Read();
+    ui_TotalVoltage += ui_ReadVoltage;
+  }
+  //Serial.println(ui_TotalVoltage);
+  ui_ReadVoltage = ui_TotalVoltage / mv;
   Serial.println(ui_ReadVoltage);
 }
