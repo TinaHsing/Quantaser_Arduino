@@ -96,22 +96,38 @@ void serialEvent() {
 
 void SetVoltage(unsigned char ch, unsigned int vol)
 {
-#if 1
-  if (ch == 1)
-    ltc2615.writeint(CH_A, vol);
-  else if (ch == 2)
-    ltc2615.writeint(CH_B, vol);
-  else if (ch == 3)
-    ltc2615.writeint(CH_C, vol);
-  else if (ch == 4)
-    ltc2615.writeint(CH_D, vol);
-  else if (ch == 5)
-    ltc2615.writeint(CH_E, vol);
-#else
     char tempStr[30];
+
+  if (ch == 1)
+  {
+    ltc2615.writeint(CH_A, vol);
+    //sprintf(tempStr, "ch = %d, value = %u", ch, vol);
+    //Serial.println(tempStr);
+  }
+  else if (ch == 2)
+  {
+    ltc2615.writeint(CH_B, vol);
+    //sprintf(tempStr, "ch = %d, value = %u", ch, vol);
+    //Serial.println(tempStr);
+  }
+  else if (ch == 3)
+  {
+    ltc2615.writeint(CH_C, vol);
+    //sprintf(tempStr, "ch = %d, value = %u", ch, vol);
+    //Serial.println(tempStr);
+  }
+  else if (ch == 4)
+  {
+    ltc2615.writeint(CH_D, vol);
+    //sprintf(tempStr, "ch = %d, value = %u", ch, vol);
+    //Serial.println(tempStr);
+  }
+  else if (ch == 5)
+  {
+    ltc2615.writeint(CH_E, vol);
     sprintf(tempStr, "ch = %d, value = %u", ch, vol);
     Serial.println(tempStr);
-#endif
+  }
 }
 
 void AddCounter()
