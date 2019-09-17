@@ -2,7 +2,7 @@
 #include <SPI.h>
 
 #define DACC 9
-#define DACout 60000
+#define DACout 0
 
 AD5541 ad5541;
 
