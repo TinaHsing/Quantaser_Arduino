@@ -14,7 +14,7 @@ boolean stringComplete = false;  // whether the string is complete
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
-  pinMode(PD2, INPUT);
+  pinMode(PD2, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(PD2),AddCounter,RISING);
   inputString.reserve(20);
   ltc2615.init();
