@@ -125,8 +125,8 @@ void SetVoltage(unsigned char ch, unsigned int vol)
   else if (ch == 5)
   {
     ltc2615.writeint(CH_E, vol);
-    sprintf(tempStr, "ch = %d, value = %u", ch, vol);
-    Serial.println(tempStr);
+    //sprintf(tempStr, "ch = %d, value = %u", ch, vol);
+    //Serial.println(tempStr);
   }
 }
 
