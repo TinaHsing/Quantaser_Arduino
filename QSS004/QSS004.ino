@@ -4,6 +4,8 @@
 LTC2615 ltc2615;
 LTC2451 ltc2451;
 
+#define DEGUG 0
+
 unsigned long ul_time_begin = 0, ul_time_current = 0;
 unsigned long ul_ReadCounter = 0;
 volatile unsigned long ul_Counter = 0;
@@ -101,32 +103,42 @@ void SetVoltage(unsigned char ch, unsigned int vol)
   if (ch == 1)
   {
     ltc2615.writeint(CH_A, vol);
-    //sprintf(tempStr, "ch = %d, value = %u", ch, vol);
-    //Serial.println(tempStr);
+#if DEBUG
+    sprintf(tempStr, "ch = %d, value = %u", ch, vol);
+    Serial.println(tempStr);
+#endif
   }
   else if (ch == 2)
   {
     ltc2615.writeint(CH_B, vol);
-    //sprintf(tempStr, "ch = %d, value = %u", ch, vol);
-    //Serial.println(tempStr);
+#if DEBUG
+    sprintf(tempStr, "ch = %d, value = %u", ch, vol);
+    Serial.println(tempStr);
+#endif
   }
   else if (ch == 3)
   {
     ltc2615.writeint(CH_C, vol);
-    //sprintf(tempStr, "ch = %d, value = %u", ch, vol);
-    //Serial.println(tempStr);
+#if DEBUG
+    sprintf(tempStr, "ch = %d, value = %u", ch, vol);
+    Serial.println(tempStr);
+#endif
   }
   else if (ch == 4)
   {
     ltc2615.writeint(CH_D, vol);
-    //sprintf(tempStr, "ch = %d, value = %u", ch, vol);
-    //Serial.println(tempStr);
+#if DEBUG
+    sprintf(tempStr, "ch = %d, value = %u", ch, vol);
+    Serial.println(tempStr);
+#endif
   }
   else if (ch == 5)
   {
     ltc2615.writeint(CH_E, vol);
-    //sprintf(tempStr, "ch = %d, value = %u", ch, vol);
-    //Serial.println(tempStr);
+#if DEBUG
+    sprintf(tempStr, "ch = %d, value = %u", ch, vol);
+    Serial.println(tempStr);
+#endif
   }
 }
 
