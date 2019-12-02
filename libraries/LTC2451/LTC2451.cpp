@@ -13,7 +13,7 @@ void LTC2451::Init(unsigned char mode)
 			p_waitTime = 35; //30Hz mode
 			break;		
 	}
-	p_timeStart = millis();	
+	p_timeStart = millis();
 	Wire.begin();
 	Wire.beginTransmission(LTC2451ADD);
 	Wire.write(mode);

@@ -30,7 +30,7 @@ byte is=0, js=0;
 unsigned int i=0 ;
 unsigned long loop_time[5];
 void setup() {
-  Serial.begin(9600);
+//  Serial.begin(9600);
   Wire.begin(DTC03P05);
   Wire.onReceive(ReceiveEvent);
   Wire.onRequest(RequestEvent);
@@ -88,7 +88,8 @@ void loop() {
     isense =abs( ( (long)(dtc.g_itecread)-(long)(dtc.g_isense0) )<<ISENSE_GAIN );
     ierr = isense - iset;
     ioutput=ipid.Compute(dtc.g_en_state, ierr, 20, 10, 1);//old :kp=58,ki=1,ls=2, new : 20,10,1
-    output = (long)(abs(ioutput)+dtc.g_fbc_base);
+    output = (long)(abs(toutput)+dtc.g_fbc_base); //single loop
+//    output = (long)(abs(ioutput)+dtc.g_fbc_base); //double loop
     if (output>PIDOUTPUTLIMIT) output= PIDOUTPUTLIMIT;
     if(toutput<=0) dtc.SetMos(HEATING,output);
     else dtc.SetMos(COOLING,output);

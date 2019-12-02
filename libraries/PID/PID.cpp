@@ -97,7 +97,7 @@ long PID::Compute(bool en, long errin, unsigned char kp, unsigned char ki, unsig
         g_p_term=p_term;
         g_out=output;
         
-        #ifdef DEBUGFLAG01
+        #ifdef PIDDEBUGFLAG01
 		
 		g_index++;
 		t1= micros();
