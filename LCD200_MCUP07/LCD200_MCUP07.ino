@@ -12,7 +12,7 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 #include <EEPROM.h>
-#include "LCD200_P06.h"
+#include "LCD200_MCUV07.h"
 
 
 
@@ -30,6 +30,7 @@ int addrlim = ADDLIM, addrvth1 =ADDVTH1, addrvth2=ADDVTH2;
 
 
 void setup() {
+//  Serial.begin(9600);
   pinmodeSetting(); //setting pin-mode
   
   SPI.begin();
@@ -155,6 +156,8 @@ void loop()
   Vf = float(analogRead(VLD))*5/1024.0;
   
   cursorBottom();
+//  Serial.print("SW: ");
+//  Serial.println(digitalRead(ENC2_SW));
   if (curState == 0 || curState == 2)
   {
     lcd.clear();
