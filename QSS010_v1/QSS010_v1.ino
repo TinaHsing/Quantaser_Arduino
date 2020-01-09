@@ -14,12 +14,17 @@
 #define INJECTION_CHARGE_TIME 5
 #define NEGATIVE_SAMPLING 1
 
+#define TEST 0
 
 AD5541 ad5541;
 LTC1865 ltc1865;
 long cnt=0;
 void setup() {
+#if TEST
 	Serial.begin(9600);
+#else
+  Serial.begin(115200);
+#endif
 	pinMode(DACC,OUTPUT);
 	ad5541.init();
 	ad5541.SetPin(DACC);
@@ -59,12 +64,14 @@ void loop() {
 	v0 = (v_init/5.0)*65535;
 	dv = (v_step/5.0)*65535;
 //  for(int j=0; j<mv_times; j++)sum_data1+=adc_read_ch1;
+#if TEST
 	Serial.println(v0);
 	Serial.println(dv);
 	Serial.println(pts); //scan half period points
 	Serial.println(dt);
 	Serial.println(1000000/delay_time_us);
 //  Serial.println(mv_times);
+#endif
 
 //  t0 = millis();
 	while(1)
@@ -126,7 +133,9 @@ void checkStop(bool &stop_flag)
 void scanVar(String s, unsigned long &var)
 {
 	char r;
+#if TEST
 	Serial.print(s);
+#endif
 	while(Serial.available() == 0); // hold here till input from uart
 	var = Serial.parseInt();
 	r=Serial.read(); //read "\n"
@@ -136,7 +145,9 @@ void scanVar(String s, unsigned long &var)
 void scanVar(String s, float &var)
 {
 	char r;
+#if TEST
 	Serial.print(s);
+#endif
 	while(Serial.available() == 0);
 	var = Serial.parseFloat();
 	r=Serial.read(); //read "\n"
