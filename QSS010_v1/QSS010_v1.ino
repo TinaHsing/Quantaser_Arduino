@@ -21,7 +21,7 @@ LTC1865 ltc1865;
 long cnt=0;
 void setup() {
 #if TEST
-	Serial.begin(9600);
+	Serial.begin(115200);
 #else
   Serial.begin(115200);
 #endif
@@ -115,9 +115,15 @@ void updataData(long &start_time, unsigned long delay_time_us, unsigned int data
 {
 	while((micros() - start_time) < delay_time_us);
 	start_time = micros();
+  #if TEST
+  Serial.print(start_time);
+  Serial.print(",");
+  #endif
 	Serial.print(data0);
 	Serial.print(",");
 	Serial.println(data1);
+  
+  
 }
 
 void checkStop(bool &stop_flag)
