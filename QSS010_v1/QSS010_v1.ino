@@ -20,11 +20,7 @@ AD5541 ad5541;
 LTC1865 ltc1865;
 long cnt=0;
 void setup() {
-#if TEST
 	Serial.begin(115200);
-#else
-  Serial.begin(115200);
-#endif
 	pinMode(DACC,OUTPUT);
 	ad5541.init();
 	ad5541.SetPin(DACC);
