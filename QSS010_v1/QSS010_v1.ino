@@ -124,11 +124,11 @@ void updataData(long &start_time, unsigned long delay_time_us, unsigned int data
   dataH = (data0 & 0xFF00) >> 8;
   Serial.write(dataH);
   dataL = data0 & 0x00FF;
-  Serial.write(data0);
+  Serial.write(dataL);
   dataH = (data1 & 0xFF00) >> 8;
   Serial.write(dataH);
   dataL = data1 & 0x00FF;
-  Serial.write(data1);
+  Serial.write(dataL);
 #endif
   
 }
