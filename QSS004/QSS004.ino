@@ -27,19 +27,20 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
+
   ul_time_current = millis();
   if ( (ul_time_current - ul_time_begin) > 1000 )
   {
     ul_ReadCounter = ul_Counter;
     ul_Counter = 0;
     ul_time_begin = millis();
-    //Serial.print("inside:");
+//    Serial.print("inside:");
     //Serial.println(ul_ReadCounter);
   }
 
   if (stringComplete)
   {
-    //Serial.println(inputString);
+    
     char *c_inputString = (char*)inputString.c_str();
     char *set_vol_str = strstr(c_inputString, "SetVoltage");
     char *read_cnt_str = strstr(c_inputString, "ReadCounter");
@@ -92,7 +93,7 @@ void serialEvent() {
     if (inChar == '\n') {
       stringComplete = true;
     }
-    //Serial.println(stringComplete);
+//    Serial.print(inChar);
   }
 }
 
