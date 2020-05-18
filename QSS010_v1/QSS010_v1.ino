@@ -20,11 +20,7 @@ AD5541 ad5541;
 LTC1865 ltc1865;
 long cnt=0;
 void setup() {
-#if TEST
 	Serial.begin(115200);
-#else
-  Serial.begin(115200);
-#endif
 	pinMode(DACC,OUTPUT);
 	ad5541.init();
 	ad5541.SetPin(DACC);
@@ -113,16 +109,27 @@ void loop() {
 }
 void updataData(long &start_time, unsigned long delay_time_us, unsigned int data0, unsigned int data1)
 {
+  unsigned int dataH = 0, dataL = 0;
 	while((micros() - start_time) < delay_time_us);
 	start_time = micros();
   #if TEST
   Serial.print(start_time);
   Serial.print(",");
   #endif
+#if 0
 	Serial.print(data0);
 	Serial.print(",");
 	Serial.println(data1);
-  
+#else
+  dataH = (data0 & 0xFF00) >> 8;
+  Serial.write(dataH);
+  dataL = data0 & 0x00FF;
+  Serial.write(dataL);
+  dataH = (data1 & 0xFF00) >> 8;
+  Serial.write(dataH);
+  dataL = data1 & 0x00FF;
+  Serial.write(dataL);
+#endif
   
 }
 
