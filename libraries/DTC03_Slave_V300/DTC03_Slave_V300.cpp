@@ -283,10 +283,13 @@ void DTC03::ReadIsense()
   g_itecavgsum -= Itecarray[g_currentindex];
   Itecarray[g_currentindex] = analogRead(ISENSE0);
   g_itecavgsum += Itecarray[g_currentindex]; 
-  
+  // Serial.print(Itecarray[g_currentindex]);
+  // Serial.print(", ");
+  // Serial.println(analogRead(ISENSE0));
   g_itecread = Itecarray[g_currentindex];
   g_currentindex ++;
   if(g_currentindex == AVGTIME) g_currentindex = 0;
+  
   interrupts(); 
 }
 void DTC03::ReadVpcb() 
