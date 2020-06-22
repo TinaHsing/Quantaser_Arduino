@@ -53,7 +53,7 @@ void DTC03Master::WelcomeScreen()
   lcd.SelectFont(SystemFont5x7);
   lcd.GotoXY(0,0);
 //  lcd.print("DTC03 Ver.3.01");
-  lcd.print("DTC03 Ver.3.01"); // 3.02 for autotune
+  lcd.print("DTC03 Ver.3.03"); // 3.02 for autotune
   lcd.GotoXY(0,ROWPIXEL0507*1);
   lcd.print("Initializing");
   for (byte i=5; i>0; i--)
@@ -1144,8 +1144,8 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
 
       case 1:
         g_tset += g_tsetstep*g_counter;
-        if(g_tset>200) g_tset=200;
-        if(g_tset<7) g_tset=7;
+        if(g_tset>25) g_tset=25;
+        if(g_tset<-10) g_tset=-10;
         g_vset = ReturnVset(g_tset, g_sensortype);
         I2CWriteData(I2C_COM_VSET);
         PrintTset();
