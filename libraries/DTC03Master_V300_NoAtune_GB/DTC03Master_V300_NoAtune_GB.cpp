@@ -468,7 +468,11 @@ void DTC03Master::PrintTset()
 {
   lcd.SelectFont(fixed_bold10x15);
   lcd.GotoXY(TSET_COORD_X2,TSET_COORD_Y);
-  if(g_tset<10.000)
+  if(g_tset<= -10.000)
+    lcd.print("");
+  else if(g_tset<0.000)
+    lcd.print(" ");
+  else if(g_tset<10.000)
     lcd.print("  ");
   else if(g_tset<100.000)
     lcd.print(" ");
