@@ -498,7 +498,9 @@ void DTC03Master::PrintTact(float tact)
   if(tact<=0.000)
    {
     if(abs(tact)<10.000)
-    lcd.print(" ");
+      lcd.print("  ");
+    else
+      lcd.print(" ");
     lcd.print(tact,3);
    }
   else
