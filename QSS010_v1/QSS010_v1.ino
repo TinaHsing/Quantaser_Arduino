@@ -75,9 +75,10 @@ void loop() {
 		ad5541.NormalWrite(v0);
 		/////// integrate process /////
 		reset(30);//不得<30, int hold end
-		hold(1);
+		hold(10);
 		integrate(dt);
-		hold_sample(1); 
+    hold(10);
+//		hold_sample(1); 
 		///////////////////////////////
 		data0 = ltc1865.Read(1); // read the ch0 data and next channel is ch1
 		data1 = ltc1865.Read(0); // read the ch1 data and next chanel is ch0
@@ -121,14 +122,14 @@ void updataData(long &start_time, unsigned long delay_time_us, unsigned int data
 	Serial.print(",");
 	Serial.println(data1);
 #else
-  dataH = (data0 & 0xFF00) >> 8;
-  Serial.write(dataH);
-  dataL = data0 & 0x00FF;
-  Serial.write(dataL);
-  dataH = (data1 & 0xFF00) >> 8;
-  Serial.write(dataH);
-  dataL = data1 & 0x00FF;
-  Serial.write(dataL);
+//  dataH = (data0 & 0xFF00) >> 8;
+//  Serial.write(dataH);
+//  dataL = data0 & 0x00FF;
+//  Serial.write(dataL);
+//  dataH = (data1 & 0xFF00) >> 8;
+//  Serial.write(dataH);
+//  dataL = data1 & 0x00FF;
+//  Serial.write(dataL);
 #endif
   
 }
@@ -184,17 +185,28 @@ void hold_sample(int wait) //11
 //  PORTD = ((PORTD & B10001111) | (1<<S1) | (1<<S2) | (1<<S3)); //start sampling ad620 positive input
   PORTD = ((PORTD & B10000111) | (1<<S1) | (1<<S2) | (1<<S4)); //start sampling ad620 negative input
   delayMicroseconds(wait);
-  PORTD = (PORTD & B11100111) ; // //stop sampling ad620 positive input
+  PORTD = (PORTD & B11100111) ; // //stop sampling ad620 negative input
 }
 
-void integrate(int wait) //01
+//void integrate(int wait) //01
+//{
+//  unsigned int bg;
+//  PORTD = ((PORTD & B10011111) | (1<<S2)); //int start
+//  delayMicroseconds(INJECTION_CHARGE_TIME); 
+////  PORTD = ((PORTD & B11100111) | (1<<S4) ); //start sampling ad620 negative input
+//  PORTD = ((PORTD & B11100111) | (1<<S3) ); //start sampling ad620 positive input
+//  delayMicroseconds(NEGATIVE_SAMPLING); 
+//  PORTD = (PORTD & B11100111); //stop sampling ad620 positive input
+//  delayMicroseconds(wait);
+//}
+void integrate(unsigned long wait) //01
 {
   unsigned int bg;
   PORTD = ((PORTD & B10011111) | (1<<S2)); //int start
-  delayMicroseconds(INJECTION_CHARGE_TIME); 
-//  PORTD = ((PORTD & B11100111) | (1<<S4) ); //start sampling ad620 negative input
-  PORTD = ((PORTD & B11100111) | (1<<S3) ); //start sampling ad620 positive input
-  delayMicroseconds(NEGATIVE_SAMPLING); 
-  PORTD = (PORTD & B11100111); //stop sampling ad620 negative input
+//  delayMicroseconds(INJECTION_CHARGE_TIME); 
+//  PORTD = ((PORTD & B11100111) | (1<<S3) ); //start sampling ad620 positive input
+//  delayMicroseconds(NEGATIVE_SAMPLING); 
+//  PORTD = (PORTD & B11100111); //stop sampling ad620 positive input
+//  delay(wait);
   delayMicroseconds(wait);
 }

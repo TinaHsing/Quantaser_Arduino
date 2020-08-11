@@ -2,15 +2,18 @@
 #define I2CSENDDELAY 100 //delay100us
 #include <Wire.h>
 #include "QSS014_cmn.h"
+#include <LTC2451.h>
+
 
 String inputString = "";         // a String to hold incoming data
 boolean stringComplete = false;  // whether the string is complete
 
 /********number of uart command number **********/
-#define COMMAND_NUM 2
+#define COMMAND_NUM 3
 
 /********glogal variable***************/
 int g_freq, g_phase;
+
 
 
 typedef struct table {
@@ -19,6 +22,7 @@ typedef struct table {
 } table_t;
 
 table_t cmd_list[COMMAND_NUM];
+LTC2451 adc;
 
 void setup() {
 /***** register command and act function here ******/
@@ -28,19 +32,26 @@ void setup() {
   cmd_list[1].cmd = "MOD_PHASE";
   cmd_list[1].action = ACT_setModPhase;
 
+  cmd_list[2].cmd = "READ_ADC";
+  cmd_list[2].action = ACT_readAdc;
+
 
 /****************************************************/
+
+  adc.Init(MODE60HZ);
+  
   Serial.begin(9600);
   Wire.begin();
 }
 
 void loop() {
+
   if (stringComplete)
   {
     char *c_inputString = (char*)inputString.c_str();
-
+//    Serial.print("loop: ");
+//    Serial.println(inputString);
     match_cmd(c_inputString, cmd_list);
-        
     // clear the string:
     inputString = "";
     stringComplete = false;
@@ -75,6 +86,14 @@ void ACT_setModPhase(char *string)
    Serial.println(g_phase);
 }
 
+void ACT_readAdc(char *string)
+{
+   unsigned int value;
+
+   value = adc.Read();
+   Serial.println(float(value)*2.5/65535.0);
+}
+
 
 void I2CWriteData(unsigned char com)
 {
@@ -106,6 +125,8 @@ void serialEvent() {
     inputString += inChar;
     // if the incoming character is a newline, set a flag so the main loop can
     // do something about it:
+//    Serial.print("event: ");
+//    Serial.println(inputString);
     if (inChar == '\n') {
       stringComplete = true;
     }
