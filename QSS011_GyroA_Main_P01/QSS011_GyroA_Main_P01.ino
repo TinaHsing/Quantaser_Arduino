@@ -1,5 +1,6 @@
 #include <SoftSPI.h>
 
+
 String inputString = ""; // a String to hold incoming data
 
 boolean stringComplete = false;  // whether the string is complete
