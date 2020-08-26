@@ -100,11 +100,15 @@ unsigned long sendSPI( unsigned int reg, unsigned int data)
   temp1 =mySPI.transfer(high);
   temp2 =mySPI.transfer(low);
   out = (temp1 << 24)|(temp2 << 16);
+  Serial.print("first two bytes:");
+  Serial.pirntln(HEX,out); 
   low = data;
   high = data >>8;
   temp1 = mySPI.transfer(high);
   temp2 = mySPI.transfer(low);
   out = (temp1 << 8)|temp2|out;
+  Serial.print("total:");
+  Serial.pirntln(HEX,out); 
   digitalWrite(SPICHIPSEL,HIGH);
   return out;
   
@@ -121,7 +125,7 @@ void readSPI(char *string)
   Serial.println("readSPI");
   sscanf(string, "%s %x %x", cmd, &reg, &data);
   sendSPI(reg, data);
-  out = sendSPI(56, 34);
+  out = sendSPI(54, 34);
   Serial.println(HEX,out);
   //Serial.println(HEX,out>>24);
   //Serial.println(HEX,(out<<8)>>16);
