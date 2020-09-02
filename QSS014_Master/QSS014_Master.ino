@@ -91,7 +91,7 @@ void ACT_readAdc(char *string)
    unsigned int value;
 
    value = adc.Read();
-   Serial.println(float(value)*2.5/65535.0);
+   Serial.println(float(value)*ADC_REF/65535.0, 5);
 }
 
 
