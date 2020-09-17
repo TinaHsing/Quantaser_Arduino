@@ -1,10 +1,13 @@
 #include <LTC2615.h>
 #include <LTC2451.h>
+#include <Wire.h>
+#include "QSS015_cmn.h"
 
 LTC2615 ltc2615;
 LTC2451 ltc2451;
 
 #define DEGUG 0
+#define I2CSENDDELAY 100 //delay100us
 
 unsigned long ul_time_begin = 0, ul_time_current = 0;
 unsigned long ul_ReadCounter = 0;
@@ -12,6 +15,7 @@ volatile unsigned long ul_Counter = 0;
 
 String inputString = "";         // a String to hold incoming data
 boolean stringComplete = false;  // whether the string is complete
+unsigned long g_int_time = 0;
 
 void setup() {
   // put your setup code here, to run once:
@@ -22,6 +26,7 @@ void setup() {
   ltc2615.init();
   ltc2451.Init(0);
   ul_time_begin = millis();
+  Wire.begin();
 
 }
 
@@ -42,9 +47,10 @@ void loop() {
   {
     
     char *c_inputString = (char*)inputString.c_str();
-    char *set_vol_str = strstr(c_inputString, "SetVoltage");
-    char *read_cnt_str = strstr(c_inputString, "ReadCounter");
-    char *read_vol_str = strstr(c_inputString, "ReadVoltage");
+    char *set_vol_str  = strstr(c_inputString, "SetVoltage ");  //11
+    char *read_cnt_str = strstr(c_inputString, "ReadCounter");  //11
+    char *read_vol_str = strstr(c_inputString, "ReadVoltage "); //12
+    char *set_int_time = strstr(c_inputString, "SetIntTime ");  //11
  
     if (set_vol_str != NULL)
     {
@@ -55,7 +61,6 @@ void loop() {
       unsigned int vol = atoi(vol_str);
       //Serial.println(vol);
       SetVoltage(ch, vol);
-	  
     }
 
     if (read_cnt_str != NULL)
@@ -73,6 +78,14 @@ void loop() {
 #else
       ReadVoltage();
 #endif
+    }
+
+    if (set_int_time != NULL)
+    {
+      char *int_str = c_inputString + 11;
+      g_int_time = atoi(int_str);
+      //Serial.println(g_int_time);
+      I2CWriteData(I2C_MOD_INT);
     }
 
     // clear the string:
@@ -170,3 +183,23 @@ void ReadVoltage()
   Serial.println(ui_ReadVoltage);
 }
 #endif
+
+void I2CWriteData(unsigned char com)
+{
+  unsigned char temp[2];
+  switch (com)
+  {
+    case I2C_MOD_INT:
+      temp[0] = g_int_time >> 24;
+      temp[1] = g_int_time >> 16;
+      temp[2] = g_int_time >> 8;
+      temp[3] = g_int_time;
+      break;
+
+  }
+  Wire.beginTransmission(SLAVE_MCU_I2C_ADDR);//
+  Wire.write(com);//
+  Wire.write(temp, 2);//
+  Wire.endTransmission();//
+  delayMicroseconds(I2CSENDDELAY);//
+}

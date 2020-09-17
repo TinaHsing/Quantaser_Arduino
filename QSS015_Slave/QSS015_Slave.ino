@@ -1,3 +1,6 @@
+#include <Wire.h>
+#include "QSS015_cmn.h"
+
 //for integrator usage 
 #define S1 6
 #define S2 5
@@ -8,7 +11,8 @@
 
 #define TEST 0
 
-long cnt=0;
+unsigned long g_int_time = 1000;
+
 void setup() {
 	//for integrator usage 
 	pinMode(S1, OUTPUT);
@@ -18,6 +22,8 @@ void setup() {
 	digitalWrite(S3, LOW);
 	digitalWrite(S4, LOW);
 	reset(30);
+  Wire.begin(SLAVE_MCU_I2C_ADDR);
+  Wire.onReceive(I2CReceive);
 }
 
 void loop() {
@@ -49,6 +55,7 @@ void hold(int wait) //11
   delayMicroseconds(wait);
 }
 
+#if 0
 void hold_sample(int wait) //11
 {
 //  PORTD = ((PORTD & B10001111) | (1<<S1) | (1<<S2) | (1<<S3)); //start sampling ad620 positive input
@@ -56,6 +63,7 @@ void hold_sample(int wait) //11
   delayMicroseconds(wait);
   PORTD = (PORTD & B11100111) ; // //stop sampling ad620 negative input
 }
+#endif
 
 void integrate(unsigned long wait) //01
 {
@@ -67,4 +75,40 @@ void integrate(unsigned long wait) //01
 //  PORTD = (PORTD & B11100111); //stop sampling ad620 positive input
 //  delay(wait);
   delayMicroseconds(wait);
+}
+
+void I2CReceive()
+{
+  unsigned char temp[4], com;
+//  unsigned char fbc_lower, fbc_upper, vmodoffset_upper, vmodoffset_lower;
+  unsigned long t1,t2,t_delta;
+
+  for (int i = 0; i < 4; i++)
+  {
+    temp[i]=0;
+  }
+
+  while(Wire.available() == 1)
+  {
+    t1=micros();
+    com=Wire.read();
+    temp[0]=Wire.read();
+    temp[1]=Wire.read();
+    temp[2]=Wire.read();
+    temp[3]=Wire.read();
+    t2=micros();
+    t_delta=t2-t1;//
+  }
+  
+ if(t_delta<500) 
+ { 
+  switch(com)
+  {
+    case I2C_MOD_INT:
+      g_int_time = temp[0]<<24 | temp[1]<<16 | temp[2]<<8 | temp[3];
+      Serial.print("g_int_time: ");
+      Serial.println(g_int_time);
+    break;
+  }
+ }
 }
