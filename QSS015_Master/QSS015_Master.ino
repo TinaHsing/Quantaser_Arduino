@@ -83,7 +83,7 @@ void loop() {
     if (set_int_time != NULL)
     {
       char *int_str = c_inputString + 11;
-      g_int_time = atoi(int_str);
+      g_int_time = atol(int_str);
       //Serial.println(g_int_time);
       I2CWriteData(I2C_MOD_INT);
     }
