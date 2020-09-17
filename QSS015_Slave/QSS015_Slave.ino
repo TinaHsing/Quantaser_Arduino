@@ -11,7 +11,7 @@
 
 #define TEST 0
 
-unsigned long g_int_time = 1000;
+unsigned long g_int_time = 100*1000;
 
 void setup() {
 	//for integrator usage 
@@ -27,7 +27,7 @@ void setup() {
 }
 
 void loop() {
-  unsigned long dt;
+  //unsigned long dt;
 #if TEST
 	Serial.println(dt);
 #endif
@@ -37,7 +37,7 @@ void loop() {
 		/////// integrate process /////
 		reset(30);//不得<30, int hold end
 		hold(10);
-		integrate(dt);
+		integrate(g_int_time);
     hold(10);
 	}
   
