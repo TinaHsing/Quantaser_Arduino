@@ -34,6 +34,7 @@ void setup() {
 
   cmd_list[2].cmd = "READ_ADC";
   cmd_list[2].action = ACT_readAdc;
+  // heloo
 
 
 /****************************************************/
