@@ -7,7 +7,6 @@ LTC2615 ltc2615;
 LTC2451 ltc2451;
 
 #define DEGUG 0
-#define I2CSENDDELAY 100 //delay100us
 
 unsigned long ul_time_begin = 0, ul_time_current = 0;
 unsigned long ul_ReadCounter = 0;
@@ -21,7 +20,7 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
   pinMode(PD2, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(PD2),AddCounter,RISING);
+  attachInterrupt(digitalPinToInterrupt(PD2), AddCounter, RISING);
   inputString.reserve(20);
   ltc2615.init();
   ltc2451.Init(0);
@@ -39,19 +38,19 @@ void loop() {
     ul_ReadCounter = ul_Counter;
     ul_Counter = 0;
     ul_time_begin = millis();
-//    Serial.print("inside:");
+    //    Serial.print("inside:");
     //Serial.println(ul_ReadCounter);
   }
 
   if (stringComplete)
   {
-    
+
     char *c_inputString = (char*)inputString.c_str();
     char *set_vol_str  = strstr(c_inputString, "SetVoltage ");  //11
     char *read_cnt_str = strstr(c_inputString, "ReadCounter");  //11
     char *read_vol_str = strstr(c_inputString, "ReadVoltage "); //12
     char *set_int_time = strstr(c_inputString, "SetIntTime ");  //11
- 
+
     if (set_vol_str != NULL)
     {
       char *ch_str = c_inputString + 11;
@@ -59,13 +58,17 @@ void loop() {
       //Serial.println(ch);
       char *vol_str = ch_str + 2;
       unsigned int vol = atoi(vol_str);
-      //Serial.println(vol);
+#if DEBUG
+      Serial.println(set_vol_str);
+#endif
       SetVoltage(ch, vol);
     }
 
     if (read_cnt_str != NULL)
     {
-      //Serial.print("asked:");
+#if DEBUG
+      Serial.println(read_cnt_str);
+#endif
       Serial.println(ul_ReadCounter);
     }
 
@@ -76,6 +79,9 @@ void loop() {
       unsigned int mv = atoi(mv_str);
       ReadVoltage(mv);
 #else
+#if DEBUG
+      Serial.println(read_vol_str);
+#endif
       ReadVoltage();
 #endif
     }
@@ -84,8 +90,10 @@ void loop() {
     {
       char *int_str = c_inputString + 11;
       g_int_time = atol(int_str);
-      //Serial.println(g_int_time);
-      I2CWriteData(I2C_MOD_INT);
+#if DEBUG
+      Serial.println(set_int_time);
+#endif
+      I2CWriteData(I2C_SEND_INT);
     }
 
     // clear the string:
@@ -106,13 +114,13 @@ void serialEvent() {
     if (inChar == '\n') {
       stringComplete = true;
     }
-//    Serial.print(inChar);
+    //    Serial.print(inChar);
   }
 }
 
 void SetVoltage(unsigned char ch, unsigned int vol)
 {
-    char tempStr[30];
+  char tempStr[30];
 
   if (ch == 1)
   {
@@ -189,17 +197,53 @@ void I2CWriteData(unsigned char com)
   unsigned char temp[2];
   switch (com)
   {
-    case I2C_MOD_INT:
+    case I2C_SEND_INT:
       temp[0] = g_int_time >> 24;
       temp[1] = g_int_time >> 16;
       temp[2] = g_int_time >> 8;
       temp[3] = g_int_time;
       break;
-
   }
+
   Wire.beginTransmission(SLAVE_MCU_I2C_ADDR);//
   Wire.write(com);//
-  Wire.write(temp, 2);//
+  Wire.write(temp, 4);//
   Wire.endTransmission();//
   delayMicroseconds(I2CSENDDELAY);//
+}
+
+void I2CReceive()
+{
+  unsigned char temp[4], com;
+  //  unsigned char fbc_lower, fbc_upper, vmodoffset_upper, vmodoffset_lower;
+  unsigned long t1, t2, t_delta;
+
+  for (int i = 0; i < 4; i++)
+  {
+    temp[i] = 0;
+  }
+
+  while (Wire.available() == 1)
+  {
+    t1 = micros();
+    com = Wire.read();
+    temp[0] = Wire.read();
+    temp[1] = Wire.read();
+    temp[2] = Wire.read();
+    temp[3] = Wire.read();
+    t2 = micros();
+    t_delta = t2 - t1; //
+  }
+
+  if (t_delta < 500)
+  {
+    switch (com)
+    {
+      case I2C_GET_INT:
+        g_int_time = temp[0] << 24 | temp[1] << 16 | temp[2] << 8 | temp[3];
+        Serial.print("g_int_time: ");
+        Serial.println(g_int_time);
+        break;
+    }
+  }
 }

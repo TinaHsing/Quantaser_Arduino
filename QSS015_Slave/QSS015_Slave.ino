@@ -9,7 +9,7 @@
 #define INJECTION_CHARGE_TIME 5
 #define NEGATIVE_SAMPLING 1
 
-#define TEST 0
+#define DEGUG 0
 
 unsigned long g_int_time = 100*1000;
 
@@ -27,10 +27,6 @@ void setup() {
 }
 
 void loop() {
-  //unsigned long dt;
-#if TEST
-	Serial.println(dt);
-#endif
 
 	while(1)
 	{
@@ -99,16 +95,36 @@ void I2CReceive()
     t2=micros();
     t_delta=t2-t1;//
   }
-  
+
  if(t_delta<500) 
  { 
   switch(com)
   {
-    case I2C_MOD_INT:
+    case I2C_SEND_INT:
       g_int_time = temp[0]<<24 | temp[1]<<16 | temp[2]<<8 | temp[3];
-      Serial.print("g_int_time: ");
-      Serial.println(g_int_time);
+#if DEBUG
+      I2CWriteData(I2C_GET_INT);
+#endif
     break;
   }
  }
+}
+
+void I2CWriteData(unsigned char com)
+{
+  unsigned char temp[2];
+  switch (com)
+  {
+    case I2C_GET_INT:
+      temp[0] = g_int_time >> 24;
+      temp[1] = g_int_time >> 16;
+      temp[2] = g_int_time >> 8;
+      temp[3] = g_int_time;
+      break;
+  }
+
+  Wire.write(com);//
+  Wire.write(temp, 2);//
+  Wire.endTransmission();//
+  delayMicroseconds(I2CSENDDELAY);//
 }
