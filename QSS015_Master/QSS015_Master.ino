@@ -6,7 +6,7 @@
 LTC2615 ltc2615;
 LTC2451 ltc2451;
 
-#define DEBUG 0
+#define DEBUG 1
 
 unsigned long ul_time_begin = 0, ul_time_current = 0;
 unsigned long ul_ReadCounter = 0;
@@ -14,7 +14,6 @@ volatile unsigned long ul_Counter = 0;
 
 String inputString = "";         // a String to hold incoming data
 boolean stringComplete = false;  // whether the string is complete
-unsigned long g_int_time = 0;
 
 void setup() {
   // put your setup code here, to run once:
@@ -31,6 +30,7 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
+  unsigned long g_int_time = 0;
 
   ul_time_current = millis();
   if ( (ul_time_current - ul_time_begin) > 1000 )
@@ -57,18 +57,15 @@ void loop() {
       //Serial.println(ch);
       char *vol_str = ch_str + 2;
       unsigned int vol = atoi(vol_str);
-#if DEBUG
-      Serial.println("loop 1");
-#endif
       SetVoltage(ch, vol);
     }
 
     if (read_cnt_str != NULL)
     {
 #if DEBUG
-      Serial.println("loop 2");
-#endif
+      Serial.print("ReadCounter = ");
       Serial.println(ul_ReadCounter);
+#endif
     }
 
     if (read_vol_str != NULL)
@@ -78,9 +75,6 @@ void loop() {
       unsigned int mv = atoi(mv_str);
       ReadVoltage(mv);
 #else
-#if DEBUG
-      Serial.println("loop 3");
-#endif
       ReadVoltage();
 #endif
     }
@@ -89,10 +83,7 @@ void loop() {
     {
       char *int_str = c_inputString + 11;
       g_int_time = atol(int_str);
-#if DEBUG
-      Serial.println("loop 4");
-#endif
-      I2CWriteData(I2C_SEND_INT);
+      I2CReadData(g_int_time);
     }
 
     // clear the string:
@@ -114,7 +105,7 @@ void serialEvent() {
       stringComplete = true;
     }
 #if DEBUG
-    Serial.print(inChar);
+    //Serial.print(inChar);
 #endif
   }
 }
@@ -189,62 +180,69 @@ void ReadVoltage()
 {
   unsigned int ui_ReadVoltage = 0;
   ui_ReadVoltage = ltc2451.Read();
+#if DEBUG
+  Serial.print("ReadVoltage = ");
+#endif
   Serial.println(ui_ReadVoltage);
 }
 #endif
 
-void I2CWriteData(unsigned char com)
+void I2CReadData(unsigned long g_int_time)
 {
-  unsigned char temp[2];
-  switch (com)
-  {
-    case I2C_SEND_INT:
-      temp[0] = g_int_time >> 24;
-      temp[1] = g_int_time >> 16;
-      temp[2] = g_int_time >> 8;
-      temp[3] = g_int_time;
-      break;
-  }
-
-  Wire.beginTransmission(SLAVE_MCU_I2C_ADDR);//
-  Wire.write(com);//
-  Wire.write(temp, 4);//
-  Wire.endTransmission();//
-  delayMicroseconds(I2CSENDDELAY);//
-}
-
-void I2CReceive()
-{
-  unsigned char temp[4], com;
-  //  unsigned char fbc_lower, fbc_upper, vmodoffset_upper, vmodoffset_lower;
-  unsigned long t1, t2, t_delta;
+  unsigned char temp[4];
+  unsigned long r_int_time = 0;
 
   for (int i = 0; i < 4; i++)
   {
     temp[i] = 0;
   }
 
-  while (Wire.available() == 1)
+  temp[0] = g_int_time >> 24;
+  temp[1] = g_int_time >> 16;
+  temp[2] = g_int_time >> 8;
+  temp[3] = g_int_time;
+#if DEBUG
+  Serial.print(temp[0]);
+  Serial.print(",");
+  Serial.print(temp[1]);
+  Serial.print(",");
+  Serial.print(temp[2]);
+  Serial.print(",");
+  Serial.print(temp[3]);
+  Serial.print("====");
+#endif
+
+  Wire.beginTransmission(SLAVE_MCU_I2C_ADDR);//
+  Wire.write(temp, 4);//
+  Wire.endTransmission();//
+  delayMicroseconds(I2CSENDDELAY);//
+  Wire.requestFrom(SLAVE_MCU_I2C_ADDR, 4);
+
+  while(Wire.available()==4)
   {
-    t1 = micros();
-    com = Wire.read();
+#if DEBUG
+    Serial.print("OK==");
+#endif
     temp[0] = Wire.read();
     temp[1] = Wire.read();
     temp[2] = Wire.read();
     temp[3] = Wire.read();
-    t2 = micros();
-    t_delta = t2 - t1; //
   }
 
-  if (t_delta < 500)
-  {
-    switch (com)
-    {
-      case I2C_GET_INT:
-        g_int_time = temp[0] << 24 | temp[1] << 16 | temp[2] << 8 | temp[3];
-        Serial.print("g_int_time: ");
-        Serial.println(g_int_time);
-        break;
-    }
-  }
+#if DEBUG
+  Serial.print(temp[0]);
+  Serial.print(",");
+  Serial.print(temp[1]);
+  Serial.print(",");
+  Serial.print(temp[2]);
+  Serial.print(",");
+  Serial.print(temp[3]);
+  Serial.print("====");
+#endif
+  r_int_time = temp[0] << 24 | temp[1] << 16 | temp[2] << 8 | temp[3];
+#if DEBUG
+  Serial.print("r_int_time: ");
+  Serial.println(r_int_time);
+#endif
+
 }

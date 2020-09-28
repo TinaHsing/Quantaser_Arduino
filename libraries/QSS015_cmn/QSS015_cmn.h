@@ -5,7 +5,6 @@
 
 /********I2c command***************/
 #define I2C_SEND_INT 1
-#define I2C_GET_INT 1
 
 #define I2CSENDDELAY 100 //delay100us
 
