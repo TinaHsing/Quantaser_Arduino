@@ -6,7 +6,7 @@
 LTC2615 ltc2615;
 LTC2451 ltc2451;
 
-#define DEGUG 0
+#define DEBUG 0
 
 unsigned long ul_time_begin = 0, ul_time_current = 0;
 unsigned long ul_ReadCounter = 0;
@@ -44,7 +44,6 @@ void loop() {
 
   if (stringComplete)
   {
-
     char *c_inputString = (char*)inputString.c_str();
     char *set_vol_str  = strstr(c_inputString, "SetVoltage ");  //11
     char *read_cnt_str = strstr(c_inputString, "ReadCounter");  //11
@@ -59,7 +58,7 @@ void loop() {
       char *vol_str = ch_str + 2;
       unsigned int vol = atoi(vol_str);
 #if DEBUG
-      Serial.println(set_vol_str);
+      Serial.println("loop 1");
 #endif
       SetVoltage(ch, vol);
     }
@@ -67,7 +66,7 @@ void loop() {
     if (read_cnt_str != NULL)
     {
 #if DEBUG
-      Serial.println(read_cnt_str);
+      Serial.println("loop 2");
 #endif
       Serial.println(ul_ReadCounter);
     }
@@ -80,7 +79,7 @@ void loop() {
       ReadVoltage(mv);
 #else
 #if DEBUG
-      Serial.println(read_vol_str);
+      Serial.println("loop 3");
 #endif
       ReadVoltage();
 #endif
@@ -91,7 +90,7 @@ void loop() {
       char *int_str = c_inputString + 11;
       g_int_time = atol(int_str);
 #if DEBUG
-      Serial.println(set_int_time);
+      Serial.println("loop 4");
 #endif
       I2CWriteData(I2C_SEND_INT);
     }
@@ -114,7 +113,9 @@ void serialEvent() {
     if (inChar == '\n') {
       stringComplete = true;
     }
-    //    Serial.print(inChar);
+#if DEBUG
+    Serial.print(inChar);
+#endif
   }
 }
 

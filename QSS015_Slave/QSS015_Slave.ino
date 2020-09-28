@@ -9,7 +9,7 @@
 #define INJECTION_CHARGE_TIME 5
 #define NEGATIVE_SAMPLING 1
 
-#define DEGUG 0
+#define DEBUG 0
 
 unsigned long g_int_time = 100*1000;
 
