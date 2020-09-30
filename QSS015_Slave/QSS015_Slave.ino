@@ -2,12 +2,8 @@
 #include "QSS015_cmn.h"
 
 //for integrator usage
-#define S1 6
-#define S2 5
-#define S3 4
-#define S4 3
-#define INJECTION_CHARGE_TIME 5
-#define NEGATIVE_SAMPLING 1
+#define S1 0
+#define S2 1
 
 #define DEBUG 1
 
@@ -17,11 +13,8 @@ void setup() {
   //for integrator usage
   pinMode(S1, OUTPUT);
   pinMode(S2, OUTPUT);
-  pinMode(S3, OUTPUT);
-  pinMode(S4, OUTPUT);
-  digitalWrite(S3, LOW);
-  digitalWrite(S4, LOW);
   reset(30);
+  Serial.begin(115200);
   Wire.begin(SLAVE_MCU_I2C_ADDR);
   Wire.onReceive(I2CReceive);
 }
@@ -50,16 +43,6 @@ void hold(int wait) //11
   PORTD = ((PORTD & B10011111) | (1 << S1) | (1 << S2));
   delayMicroseconds(wait);
 }
-
-#if 0
-void hold_sample(int wait) //11
-{
-  //  PORTD = ((PORTD & B10001111) | (1<<S1) | (1<<S2) | (1<<S3)); //start sampling ad620 positive input
-  PORTD = ((PORTD & B10000111) | (1 << S1) | (1 << S2) | (1 << S4)); //start sampling ad620 negative input
-  delayMicroseconds(wait);
-  PORTD = (PORTD & B11100111) ; // //stop sampling ad620 negative input
-}
-#endif
 
 void integrate(unsigned long wait) //01
 {
@@ -99,5 +82,17 @@ void I2CReceive()
   {
     Wire.write(temp, 4);
     g_int_time = temp[0] << 24 | temp[1] << 16 | temp[2] << 8 | temp[3];
+#if DEBUG
+    Serial.print(temp[0]);
+    Serial.print(",");
+    Serial.print(temp[1]);
+    Serial.print(",");
+    Serial.print(temp[2]);
+    Serial.print(",");
+    Serial.print(temp[3]);
+    Serial.print("====");
+    Serial.print(g_int_time);
+    Serial.print("====");
+#endif
   }
 }
