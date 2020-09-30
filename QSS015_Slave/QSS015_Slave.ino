@@ -5,7 +5,7 @@
 #define S1 0
 #define S2 1
 
-#define DEBUG 1
+#define DEBUG 0
 
 unsigned long g_int_time = 100 * 1000;
 
@@ -14,7 +14,9 @@ void setup() {
   pinMode(S1, OUTPUT);
   pinMode(S2, OUTPUT);
   reset(30);
+#if DEBUG
   Serial.begin(115200);
+#endif
   Wire.begin(SLAVE_MCU_I2C_ADDR);
   Wire.onReceive(I2CReceive);
 }
@@ -34,13 +36,13 @@ void loop() {
 
 void reset(int wait) //10
 {
-  PORTD = ((PORTD & B10011111) | (1 << S1));
+  PORTD = ((PORTD & B11111100) | (1 << S1));
   delayMicroseconds(wait);
 }
 
 void hold(int wait) //11
 {
-  PORTD = ((PORTD & B10011111) | (1 << S1) | (1 << S2));
+  PORTD = ((PORTD & B11111100) | (1 << S1) | (1 << S2));
   delayMicroseconds(wait);
 }
 
@@ -92,7 +94,7 @@ void I2CReceive()
     Serial.print(temp[3]);
     Serial.print("====");
     Serial.print(g_int_time);
-    Serial.print("====");
+    Serial.println("====");
 #endif
   }
 }
