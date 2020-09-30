@@ -37,24 +37,25 @@ void loop() {
 void reset(int wait) //10
 {
   PORTD = ((PORTD & B11111100) | (1 << S1));
+  //digitalWrite(S1, HIGH);
+  //digitalWrite(S2, LOW);
   delayMicroseconds(wait);
 }
 
 void hold(int wait) //11
 {
   PORTD = ((PORTD & B11111100) | (1 << S1) | (1 << S2));
+  //digitalWrite(S1, HIGH);
+  //digitalWrite(S2, HIGH);
   delayMicroseconds(wait);
 }
 
 void integrate(unsigned long wait) //01
 {
   unsigned int bg;
-  PORTD = ((PORTD & B10011111) | (1 << S2)); //int start
-  //  delayMicroseconds(INJECTION_CHARGE_TIME);
-  //  PORTD = ((PORTD & B11100111) | (1<<S3) ); //start sampling ad620 positive input
-  //  delayMicroseconds(NEGATIVE_SAMPLING);
-  //  PORTD = (PORTD & B11100111); //stop sampling ad620 positive input
-  //  delay(wait);
+  PORTD = ((PORTD & B11111100) | (1 << S2)); //int start
+  //digitalWrite(S1, LOW);
+  //digitalWrite(S2, HIGH);
   delayMicroseconds(wait);
 }
 
