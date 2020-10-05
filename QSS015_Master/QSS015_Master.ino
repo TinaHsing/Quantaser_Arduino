@@ -6,7 +6,7 @@
 LTC2615 ltc2615;
 LTC2451 ltc2451;
 
-#define DEBUG 1
+#define DEBUG 0
 
 unsigned long ul_time_begin = 0, ul_time_current = 0;
 unsigned long ul_ReadCounter = 0;
