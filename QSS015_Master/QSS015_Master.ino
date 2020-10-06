@@ -64,8 +64,8 @@ void loop() {
     {
 #if DEBUG
       Serial.print("ReadCounter = ");
-      Serial.println(ul_ReadCounter);
 #endif
+      Serial.println(ul_ReadCounter);
     }
 
     if (read_vol_str != NULL)
