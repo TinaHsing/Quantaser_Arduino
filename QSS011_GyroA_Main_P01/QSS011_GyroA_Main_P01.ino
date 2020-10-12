@@ -133,9 +133,13 @@ void readSPI(char *string)
   reg = (int)((address<<8) | ((var>>16) & 0x00ff));
   data = var;
   sendSPI(reg, data);
-  delay(10);
+//  delay(10);
   out = sendSPI(0xffff, 0xffff);
-  Serial.println(out);
+//  Serial.println(out);
+  Serial.write(out>>24);
+  Serial.write(out>>16);
+  Serial.write(out>>8);
+  Serial.write(out);
 }
 void serialEvent() {
   while (Serial.available()) {
