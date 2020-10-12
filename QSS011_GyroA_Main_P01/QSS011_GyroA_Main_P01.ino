@@ -5,7 +5,7 @@ String inputString = ""; // a String to hold incoming data
 
 boolean stringComplete = false;  // whether the string is complete
 
-#define SPICHIPSEL 9 // CHIPSELECT PIN FOR SPI
+#define SPICHIPSEL 10 // CHIPSELECT PIN FOR SPI
 #define MISO 12
 #define MOSI 11
 #define SCK 13
@@ -37,31 +37,31 @@ void setup() {
 /****************************************************/
   pinMode(SPICHIPSEL, OUTPUT);
   digitalWrite(SPICHIPSEL,HIGH);
-  Serial.begin(115200);
+  Serial.begin(184320);
   mySPI.setClockDivider(CLOCK_DIV256);
   mySPI.setBitOrder(MSBFIRST);
   mySPI.setDataMode(MODE0);
   mySPI.begin();
 
 
-  //SPI.setClockDivider(SPI_CLOCK_DIV128);
-  //SPI.setDataMode(SPI_MODE0);
-  //SPI.setBitOrder(MSBFIRST);
-  //SPI.begin();
 
   inputString.reserve(40);
 }
 
 void loop() {
+  
   if (stringComplete)
   {
-
+    
     char *c_inputString = (char*)inputString.c_str();
+//    Serial.print(c_inputString); 
+    
     match_cmd(c_inputString, cmd_list);    
     // clear the string:
     inputString = "";
     stringComplete = false;
   }
+  
 }
 
 
@@ -77,13 +77,21 @@ void match_cmd(char *input_string, table_t cmd[])
 
 void setSPI(char *string)
 {
-  //String str = string;
   char sperator = ' ';
   char cmd[20];
-  int reg, data;
+  unsigned int reg, data;
+  byte address;
+  long var;
   
-  Serial.println("setSPI");
-  sscanf(string, "%s %x %x", cmd, &reg, &data);
+//  Serial.println("setSPI");
+  sscanf(string, "%s %x %ld", cmd, &address, &var);
+  reg = (int)((address<<8) | ((var>>16) & 0x00ff));
+  data = var;
+//  Serial.println(address, HEX);
+//  Serial.println(var, HEX);
+//  Serial.println(reg, HEX);
+//  Serial.println(data, HEX);
+
   sendSPI(reg, data);
 
 }
@@ -91,25 +99,21 @@ void setSPI(char *string)
 unsigned long sendSPI( unsigned int reg, unsigned int data)
 {
   byte high, low;
-  unsigned long out, temp1, temp2;
+  unsigned long temp1, temp2;
+  long out;
   digitalWrite(SPICHIPSEL,LOW);
-  Serial.print("sendSPI");
-  Serial.println(reg, DEC);
-  Serial.println(data, DEC);
   low = reg;
   high = reg >>8;
   temp1 =mySPI.transfer(high);
   temp2 =mySPI.transfer(low);
   out = (temp1 << 24)|(temp2 << 16);
-  Serial.print("first two bytes:");
-  Serial.pirntln(HEX,out); 
+
   low = data;
   high = data >>8;
   temp1 = mySPI.transfer(high);
   temp2 = mySPI.transfer(low);
   out = (temp1 << 8)|temp2|out;
-  Serial.print("total:");
-  Serial.pirntln(HEX,out); 
+
   digitalWrite(SPICHIPSEL,HIGH);
   return out;
   
@@ -117,22 +121,21 @@ unsigned long sendSPI( unsigned int reg, unsigned int data)
  
 void readSPI(char *string)
 {
-  //String str = string;
   char sperator = ' ';
   char cmd[20];
-  int reg, data;
+  unsigned int reg, data;
+  byte address;
+  long var;
   byte high, low;
-  unsigned long out;
-  Serial.println("readSPI");
-  sscanf(string, "%s %x %x", cmd, &reg, &data);
+  long out;
+//  Serial.println("readSPI");
+  sscanf(string, "%s %x %ld", cmd, &address, &var);
+  reg = (int)((address<<8) | ((var>>16) & 0x00ff));
+  data = var;
   sendSPI(reg, data);
-  out = sendSPI(54, 34);
-  Serial.println(HEX,out);
-  //Serial.println(HEX,out>>24);
-  //Serial.println(HEX,(out<<8)>>16);
-  //Serial.println(HEX,(out<<16)>>8);
-  // Serial.println(HEX,(out<<24)>>24);
-  
+  delay(10);
+  out = sendSPI(0xffff, 0xffff);
+  Serial.println(out);
 }
 void serialEvent() {
   while (Serial.available()) {
@@ -144,7 +147,7 @@ void serialEvent() {
     // do something about it:
     if (inChar == '\n') {
       stringComplete = true;
-
+    
     }
   }
 }
