@@ -26,6 +26,7 @@ typedef struct table {
 } table_t;
 table_t cmd_list[COMMAND_NUM];
 
+//long cnt=0, t1, t2;
 void setup() {
 
 /***** register command and act function here ******/
@@ -37,7 +38,8 @@ void setup() {
 /****************************************************/
   pinMode(SPICHIPSEL, OUTPUT);
   digitalWrite(SPICHIPSEL,HIGH);
-  Serial.begin(184320);
+//  Serial.begin(184320);
+  Serial.begin(115200);
   mySPI.setClockDivider(CLOCK_DIV256);
   mySPI.setBitOrder(MSBFIRST);
   mySPI.setDataMode(MODE0);
@@ -46,22 +48,37 @@ void setup() {
 
 
   inputString.reserve(40);
+//  t1 = millis();
 }
 
+
 void loop() {
-  
+  /***test ***/
+//  char *c_inputString = "readSPI 0";
+//  stringComplete = true;
+//  delay(100); 
+/***test ***/ 
   if (stringComplete)
   {
     
     char *c_inputString = (char*)inputString.c_str();
+  /***test ***/
 //    Serial.print(c_inputString); 
-    
+    /***test ***/
     match_cmd(c_inputString, cmd_list);    
     // clear the string:
     inputString = "";
     stringComplete = false;
   }
-  
+  /***test ***/
+//  if(cnt==100) {
+//    cnt=0;
+//    t2 = millis();
+//    Serial.print("dt: ");
+//    Serial.println(t2-t1);
+//    t1 = t2;
+//  }
+  /***test ***/
 }
 
 
@@ -113,7 +130,7 @@ unsigned long sendSPI( unsigned int reg, unsigned int data)
   temp1 = mySPI.transfer(high);
   temp2 = mySPI.transfer(low);
   out = (temp1 << 8)|temp2|out;
-
+//  cnt++;
   digitalWrite(SPICHIPSEL,HIGH);
   return out;
   
@@ -132,14 +149,21 @@ void readSPI(char *string)
   sscanf(string, "%s %x %ld", cmd, &address, &var);
   reg = (int)((address<<8) | ((var>>16) & 0x00ff));
   data = var;
-  sendSPI(reg, data);
-//  delay(10);
-  out = sendSPI(0xffff, 0xffff);
-//  Serial.println(out);
-  Serial.write(out>>24);
-  Serial.write(out>>16);
-  Serial.write(out>>8);
-  Serial.write(out);
+  if(var) 
+  {
+      while(1){
+      sendSPI(reg, data);
+      delay(5);
+      out = sendSPI(0xffff, 0xffff);
+  //  Serial.println(out);
+      Serial.write(out>>24);
+      Serial.write(out>>16);
+      Serial.write(out>>8);
+      Serial.write(out);
+    }
+  }
+  
+  
 }
 void serialEvent() {
   while (Serial.available()) {
