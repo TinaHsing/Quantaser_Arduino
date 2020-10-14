@@ -4,6 +4,11 @@
 String inputString = ""; // a String to hold incoming data
 
 boolean stringComplete = false;  // whether the string is complete
+// sherry++ 2020.10.14
+boolean readSPI_flag = false;
+unsigned int g_reg, g_data;
+unsigned long g_test = 0;
+#define READ_DATA_TIME 10
 
 #define SPICHIPSEL 10 // CHIPSELECT PIN FOR SPI
 #define MISO 12
@@ -17,7 +22,6 @@ SoftSPI mySPI(MOSI, MISO, SCK);
 #define SPICMD_GETADC 0x54
 #define GETADC_DATALEN 200
 
-#define TESTMODE false
 /********glogal variable***************/
 
 typedef struct table {
@@ -27,6 +31,7 @@ typedef struct table {
 table_t cmd_list[COMMAND_NUM];
 
 //long cnt=0, t1, t2;
+
 void setup() {
 
 /***** register command and act function here ******/
@@ -45,7 +50,7 @@ void setup() {
   mySPI.setDataMode(MODE0);
   mySPI.begin();
 
-
+  g_test = 0;
 
   inputString.reserve(40);
 //  t1 = millis();
@@ -70,6 +75,14 @@ void loop() {
     inputString = "";
     stringComplete = false;
   }
+
+  // sherry++ 2020.10.14
+  if (readSPI_flag)
+  {
+    readSPI_data();
+    g_test++;
+  }
+
   /***test ***/
 //  if(cnt==100) {
 //    cnt=0;
@@ -121,8 +134,8 @@ unsigned long sendSPI( unsigned int reg, unsigned int data)
   digitalWrite(SPICHIPSEL,LOW);
   low = reg;
   high = reg >>8;
-  temp1 =mySPI.transfer(high);
-  temp2 =mySPI.transfer(low);
+  temp1 = mySPI.transfer(high);
+  temp2 = mySPI.transfer(low);
   out = (temp1 << 24)|(temp2 << 16);
 
   low = data;
@@ -144,27 +157,42 @@ void readSPI(char *string)
   byte address;
   long var;
   byte high, low;
-  long out;
 //  Serial.println("readSPI");
   sscanf(string, "%s %x %ld", cmd, &address, &var);
   reg = (int)((address<<8) | ((var>>16) & 0x00ff));
   data = var;
-  if(var) 
-  {
-      while(1){
-      sendSPI(reg, data);
+
+  // sherry++ 2020.10.14
+  if (var == 1)
+    readSPI_flag = true;
+  else
+    readSPI_flag = false;
+  g_reg = reg;
+  g_data = data;
+  g_test = 0;
+
+}
+
+void readSPI_data()
+{
+  long out, t_begin, t_end, t_diff;
+
+      t_begin = millis();
+      sendSPI(g_reg, g_data);
       delay(5);
       out = sendSPI(0xffff, 0xffff);
+      //out = g_test;
   //  Serial.println(out);
       Serial.write(out>>24);
       Serial.write(out>>16);
       Serial.write(out>>8);
       Serial.write(out);
-    }
-  }
-  
-  
+      t_end = millis();
+      t_diff = t_end - t_begin;
+      delay(READ_DATA_TIME - t_diff);
+
 }
+
 void serialEvent() {
   while (Serial.available()) {
     // get the new byte:
