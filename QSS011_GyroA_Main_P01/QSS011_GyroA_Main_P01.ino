@@ -42,6 +42,8 @@ void setup() {
 
 /****************************************************/
   pinMode(SPICHIPSEL, OUTPUT);
+  pinMode(A2, OUTPUT);
+  digitalWrite(A2, HIGH);
   digitalWrite(SPICHIPSEL,HIGH);
 //  Serial.begin(184320);
   Serial.begin(115200);
