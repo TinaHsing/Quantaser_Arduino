@@ -113,7 +113,6 @@ void setSPI(char *string)
   byte address;
   long var;
   
-//  Serial.println("setSPI");
   sscanf(string, "%s %x %ld", cmd, &address, &var);
   reg = (int)((address<<8) | ((var>>16) & 0x00ff));
   data = var;
@@ -145,6 +144,9 @@ unsigned long sendSPI( unsigned int reg, unsigned int data)
   out = (temp1 << 8)|temp2|out;
 //  cnt++;
   digitalWrite(SPICHIPSEL,HIGH);
+
+  Serial.println("setSPI OK");
+
   return out;
   
 }
