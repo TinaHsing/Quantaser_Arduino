@@ -183,6 +183,9 @@ void ReadVoltage()
 
   ui_ReadVoltage = ltc2451.Read();
 
+#if DEBUG
+  Serial.print("ReadVoltage = ");
+#endif
   Serial.println(ui_ReadVoltage);
 }
 
