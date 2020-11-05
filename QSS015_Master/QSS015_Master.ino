@@ -163,12 +163,11 @@ void AddCounter()
 }
 
 
-#else
 void ReadVoltage()
 {
   unsigned int ui_ReadVoltage = 0;
 
-  SetTime()
+  SetTime();
   delayMicroseconds(g_int_time+50);
 
   ui_ReadVoltage = ltc2451.Read();
