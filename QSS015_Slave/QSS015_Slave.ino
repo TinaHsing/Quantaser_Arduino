@@ -8,6 +8,7 @@
 #define DEBUG 0
 
 unsigned long g_int_time = 100 * 1000;
+bool g_b_flag = false;
 
 void setup() {
   //for integrator usage
@@ -23,13 +24,14 @@ void setup() {
 
 void loop() {
 
-  while (1)
+  while (g_b_flag)
   {
     /////// integrate process /////
     reset(30);//不得<30, int hold end
     hold(10);
     integrate(g_int_time);
     hold(10);
+    g_b_flag = false;
   }
 
 }
@@ -85,6 +87,8 @@ void I2CReceive()
   {
     Wire.write(temp, 4);
     g_int_time = temp[0] << 24 | temp[1] << 16 | temp[2] << 8 | temp[3];
+    g_b_flag= true;
+
 #if DEBUG
     Serial.print(temp[0]);
     Serial.print(",");
