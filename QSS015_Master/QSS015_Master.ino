@@ -22,7 +22,7 @@ void setup() {
   Serial.begin(115200);
   pinMode(PD2, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(PD2), AddCounter, RISING);
-  // attachInterrupt(digitalPinToInterrupt(PD3), InterLock, LOW);
+  attachInterrupt(digitalPinToInterrupt(PD3), InterLock, FALLING);
   inputString.reserve(20);
   ltc2615.init();
   ltc2451.Init(0);
