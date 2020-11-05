@@ -124,6 +124,7 @@ void setSPI(char *string)
 //  Serial.println(data, HEX);
 
   sendSPI(reg, data);
+  Serial.println("setSPI");
 
 }
 
