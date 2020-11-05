@@ -10,6 +10,7 @@ LTC2451 ltc2451;
 
 unsigned long ul_time_begin = 0, ul_time_current = 0;
 unsigned long ul_ReadCounter = 0;
+bool g_lock = true;
 volatile unsigned long ul_Counter = 0;
 unsigned long g_int_time = 100000;
 
@@ -21,6 +22,7 @@ void setup() {
   Serial.begin(115200);
   pinMode(PD2, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(PD2), AddCounter, RISING);
+  attachInterrupt(digitalPinToInterrupt(PDˇ), InterLock, LOW);
   inputString.reserve(20);
   ltc2615.init();
   ltc2451.Init(0);
@@ -48,7 +50,7 @@ void loop() {
     char *c_inputString = (char*)inputString.c_str();
     char *set_vol_str  = strstr(c_inputString, "SetVoltage ");  //11
     char *read_cnt_str = strstr(c_inputString, "ReadCounter");  //11
-    char *read_vol_str = strstr(c_inputString, "ReadVoltage");  //11
+    char *read_vol_str = strstr(c_inputString, "ReadVoltage "); //12
     char *set_int_time = strstr(c_inputString, "SetIntTime ");  //11
 
     if (set_vol_str != NULL)
@@ -67,11 +69,18 @@ void loop() {
       Serial.print("ReadCounter = ");
 #endif
       Serial.println(ul_ReadCounter);
+      Serial.println(g_lock);
     }
 
     if (read_vol_str != NULL)
     {
+#if 0
+      char *mv_str = c_inputString + 12;
+      unsigned int mv = atoi(mv_str);
+      ReadVoltage(mv);
+#else
       ReadVoltage();
+#endif
     }
 
     if (set_int_time != NULL)
@@ -79,10 +88,6 @@ void loop() {
       char *int_str = c_inputString + 11;
       g_int_time = atol(int_str);
       //I2CReadData(g_int_time);
-#if DEBUG
-      Serial.print("SetIntTime in loop() = ");
-      Serial.println(g_int_time);
-#endif
     }
 
     // clear the string:
@@ -155,17 +160,25 @@ void SetVoltage(unsigned char ch, unsigned int vol)
   }
 }
 
+void InterLock()
+{
+  int i;
+  for (i = 1 ; i < 6; i ++)
+    SetVoltage(i, 0);
+  g_lock = false;
+}
 void AddCounter()
 {
   ul_Counter++;
 }
 
 
+#else
 void ReadVoltage()
 {
   unsigned int ui_ReadVoltage = 0;
 
-  SetTime();
+  SetTime()
   delayMicroseconds(g_int_time+50);
 
   ui_ReadVoltage = ltc2451.Read();
@@ -184,10 +197,6 @@ void SetTime()
   temp[2] = g_int_time >> 8;
   temp[3] = g_int_time;
 
-#if DEBUG
-  Serial.print("SetIntTime in SetTime() = ");
-  Serial.println(g_int_time);
-#endif
 
   Wire.beginTransmission(SLAVE_MCU_I2C_ADDR);//
   Wire.write(temp, 4);//
