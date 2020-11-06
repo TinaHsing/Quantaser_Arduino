@@ -115,7 +115,7 @@ void ACT_setTime(char *string)
 
    if ( (index >= 0) && (index <= 2) )
    {
-     g_time[index-1] = value;
+     g_time[index] = value;
 #if TEST_MODE
      Serial.print("set Time");
      Serial.print(index);
