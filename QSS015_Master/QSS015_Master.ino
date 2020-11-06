@@ -22,7 +22,7 @@ void setup() {
   Serial.begin(115200);
   pinMode(PD2, INPUT_PULLUP);
   pinMode(PD3, INPUT_PULLUP);
-
+  InterLock();
   attachInterrupt(digitalPinToInterrupt(PD2), AddCounter, RISING);
   attachInterrupt(digitalPinToInterrupt(PD3), InterLock, CHANGE);
   inputString.reserve(20);
