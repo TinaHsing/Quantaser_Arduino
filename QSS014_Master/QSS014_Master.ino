@@ -113,7 +113,7 @@ void ACT_setTime(char *string)
    Serial.println(value_str);
 #endif
 
-   if ( (index >= 1) && (index <= 3) )
+   if ( (index >= 0) && (index <= 2) )
    {
      g_time[index-1] = value;
 #if TEST_MODE
@@ -122,7 +122,7 @@ void ACT_setTime(char *string)
      Serial.print(" = ");
      Serial.println(value);
 #endif
-     Serial.println(g_time[index-1]);
+     Serial.println(g_time[index]);
    }
 #if TEST_MODE
    else
