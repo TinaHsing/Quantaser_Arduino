@@ -1,20 +1,19 @@
-
-#define I2CSENDDELAY 100 //delay100us
 #include <Wire.h>
 #include "QSS014_cmn.h"
 #include <LTC2451.h>
-
 
 String inputString = "";         // a String to hold incoming data
 boolean stringComplete = false;  // whether the string is complete
 
 /********number of uart command number **********/
-#define COMMAND_NUM 3
+#define COMMAND_NUM 5
+#define I2CSENDDELAY 100 //delay100us
+#define TEST_MODE false
 
 /********glogal variable***************/
 int g_freq, g_phase;
 
-
+int g_time[3], g_loop;
 
 typedef struct table {
   char *cmd;
@@ -35,12 +34,17 @@ void setup() {
   cmd_list[2].cmd = "READ_ADC";
   cmd_list[2].action = ACT_readAdc;
 
+  cmd_list[3].cmd = "SET_TIME";
+  cmd_list[3].action = ACT_setTime;
+
+  cmd_list[4].cmd = "SET_LOOP";
+  cmd_list[4].action = ACT_setLoop;
 
 /****************************************************/
 
   adc.Init(MODE60HZ);
   
-  Serial.begin(9600);
+  Serial.begin(115200);
   Wire.begin();
 }
 
@@ -49,8 +53,10 @@ void loop() {
   if (stringComplete)
   {
     char *c_inputString = (char*)inputString.c_str();
-//    Serial.print("loop: ");
-//    Serial.println(inputString);
+#if TEST_MODE
+    Serial.print("loop: ");
+    Serial.println(inputString);
+#endif
     match_cmd(c_inputString, cmd_list);
     // clear the string:
     inputString = "";
@@ -94,6 +100,46 @@ void ACT_readAdc(char *string)
    Serial.println(value);
 }
 
+void ACT_setTime(char *string)
+{
+   String str = string;
+   char *time_str = string + str.indexOf(' ') + 1;
+   char *value_str = string + str.indexOf(' ') + 3;
+   int index = atoi(time_str);
+   int value = atoi(value_str);
+
+#if TEST_MODE
+   Serial.println(time_str);
+   Serial.println(value_str);
+#endif
+
+   if ( (index >= 1) && (index <= 3) )
+   {
+     g_time[index-1] = value;
+#if TEST_MODE
+     Serial.print("set Time");
+     Serial.print(index);
+     Serial.print(" = ");
+     Serial.println(value);
+#endif
+     Serial.println(g_time[index-1]);
+   }
+#if TEST_MODE
+   else
+   {
+      Serial.println("out of range");
+      ;
+   }
+#endif
+}
+
+void ACT_setLoop(char *string)
+{
+   String str = string;
+   g_loop = atoi(string + str.indexOf(' ') + 1);
+   Serial.println(g_loop);
+
+}
 
 void I2CWriteData(unsigned char com)
 {
