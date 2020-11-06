@@ -6,7 +6,7 @@
 LTC2615 ltc2615;
 LTC2451 ltc2451;
 
-#define DEBUG 1
+#define DEBUG 0
 
 unsigned long ul_time_begin = 0, ul_time_current = 0;
 unsigned long ul_ReadCounter = 0;
@@ -21,8 +21,10 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
   pinMode(PD2, INPUT_PULLUP);
+  pinMode(PD3, INPUT_PULLUP);
+
   attachInterrupt(digitalPinToInterrupt(PD2), AddCounter, RISING);
-  attachInterrupt(digitalPinToInterrupt(PD3), InterLock, FALLING);
+  attachInterrupt(digitalPinToInterrupt(PD3), InterLock, CHANGE);
   inputString.reserve(20);
   ltc2615.init();
   ltc2451.Init(0);
@@ -34,7 +36,6 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   
-
   ul_time_current = millis();
   if ( (ul_time_current - ul_time_begin) > 1000 )
   {
@@ -94,6 +95,11 @@ void loop() {
       Serial.print("CheckInterLock = ");
 #endif
       Serial.println(g_lock);
+      if (g_lock == false)
+      {
+        for (int i = 1 ; i < 6; i ++)
+          SetVoltage(i, 0);
+      }
     }
 
     // clear the string:
@@ -168,10 +174,10 @@ void SetVoltage(unsigned char ch, unsigned int vol)
 
 void InterLock()
 {
-  int i;
-  for (i = 1 ; i < 6; i ++)
-    SetVoltage(i, 0);
-  g_lock = false;
+  if (digitalRead(PD3) == LOW)
+    g_lock = false;
+  else
+    g_lock = true;
 }
 
 
