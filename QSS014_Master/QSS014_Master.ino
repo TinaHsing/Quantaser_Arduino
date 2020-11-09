@@ -6,14 +6,13 @@ String inputString = "";         // a String to hold incoming data
 boolean stringComplete = false;  // whether the string is complete
 
 /********number of uart command number **********/
-#define COMMAND_NUM 5
+#define COMMAND_NUM 6
 #define I2CSENDDELAY 100 //delay100us
 #define TEST_MODE false
 
 /********glogal variable***************/
 int g_freq, g_phase;
-
-int g_time[3], g_loop;
+int g_time[3], g_loop, g_temp[3];
 
 typedef struct table {
   char *cmd;
@@ -39,6 +38,9 @@ void setup() {
 
   cmd_list[4].cmd = "SET_LOOP";
   cmd_list[4].action = ACT_setLoop;
+
+  cmd_list[5].cmd = "SET_TEMP";
+  cmd_list[5].action = ACT_setTemp;
 
 /****************************************************/
 
@@ -139,6 +141,39 @@ void ACT_setLoop(char *string)
    g_loop = atoi(string + str.indexOf(' ') + 1);
    Serial.println(g_loop);
 
+}
+
+void ACT_setTemp(char *string)
+{
+   String str = string;
+   char *temp_str = string + str.indexOf(' ') + 1;
+   char *value_str = string + str.indexOf(' ') + 3;
+   int index = atoi(temp_str);
+   int value = atoi(value_str);
+
+#if TEST_MODE
+   Serial.println(temp_str);
+   Serial.println(value_str);
+#endif
+
+   if ( (index >= 0) && (index <= 2) )
+   {
+     g_temp[index] = value;
+#if TEST_MODE
+     Serial.print("set Temp");
+     Serial.print(index);
+     Serial.print(" = ");
+     Serial.println(value);
+#endif
+     Serial.println(g_temp[index]);
+   }
+#if TEST_MODE
+   else
+   {
+      Serial.println("out of range");
+      ;
+   }
+#endif
 }
 
 void I2CWriteData(unsigned char com)
