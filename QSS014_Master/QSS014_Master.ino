@@ -1,6 +1,7 @@
 #include <Wire.h>
 #include "QSS014_cmn.h"
 #include <LTC2451.h>
+#include <DTC03_MS.h>
 
 String inputString = "";         // a String to hold incoming data
 boolean stringComplete = false;  // whether the string is complete
@@ -13,6 +14,7 @@ boolean stringComplete = false;  // whether the string is complete
 /********glogal variable***************/
 int g_freq, g_phase;
 int g_time[3], g_loop, g_temp[3];
+unsigned int g_vact, g_vset;
 
 typedef struct table {
   char *cmd;
@@ -192,6 +194,23 @@ void I2CWriteData(unsigned char com)
       break;
   }
   Wire.beginTransmission(SLAVE_MCU_I2C_ADDR);//
+  Wire.write(com);//
+  Wire.write(temp, 2);//
+  Wire.endTransmission();//
+  delayMicroseconds(I2CSENDDELAY);//
+}
+
+void DTC03_I2CWriteData(unsigned char addr, unsigned char com)
+{
+  unsigned char temp[2];
+  switch(com)
+  {
+    case I2C_COM_VSET:
+        temp[0]=g_vset;
+        temp[1]=g_vset>>8;
+        break;
+  }
+  Wire.beginTransmission(addr);//
   Wire.write(com);//
   Wire.write(temp, 2);//
   Wire.endTransmission();//
