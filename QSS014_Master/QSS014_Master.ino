@@ -9,12 +9,23 @@ boolean stringComplete = false;  // whether the string is complete
 /********number of uart command number **********/
 #define COMMAND_NUM 6
 #define I2CSENDDELAY 100 //delay100us
+#define I2CREADDELAY 100 //delay100us
 #define TEST_MODE false
+
+#define fbcbase1    23400
+#define vmodoffset1 32768
+#define Rmeas1      34500
+
+#define fbcbase2    23400
+#define vmodoffset2 32768
+#define Rmeas2      34500
 
 /********glogal variable***************/
 int g_freq, g_phase;
 int g_time[3], g_loop, g_temp[3];
-unsigned int g_vact, g_vset;
+unsigned int g_vact, g_vset, g_otp, g_Rmeas, g_bconst, g_fbcbase, g_vmodoffset;
+unsigned char g_p, g_ki, g_currentlim, g_tpidoff, g_r1, g_r2, g_kiindex, g_stableCode_atune;
+
 
 typedef struct table {
   char *cmd;
@@ -205,10 +216,65 @@ void DTC03_I2CWriteData(unsigned char addr, unsigned char com)
   unsigned char temp[2];
   switch(com)
   {
-    case I2C_COM_VSET:
-        temp[0]=g_vset;
-        temp[1]=g_vset>>8;
+    case I2C_COM_INIT:
+        temp[0] = g_bconst;
+        temp[1] = g_bconst >> 8;
         break;
+
+    case I2C_COM_CTR:
+        temp[0] = g_currentlim;
+        temp[1] = g_p;
+        break;
+
+    case I2C_COM_VSET:
+        temp[0] = g_vset;
+        temp[1] = g_vset>>8;
+        break;
+
+    case I2C_COM_R1R2:
+        temp[0] = g_r1;
+        temp[1] = g_r2;
+        break;
+
+    case I2C_COM_TPIDOFF:
+        temp[0] = g_tpidoff;
+        temp[1] = 0;
+        break;
+
+    case I2C_COM_FBC:
+        temp[0] = g_fbcbase;
+        temp[1] = g_fbcbase>>8;
+        break;
+
+    case I2C_COM_VMOD:
+        temp[0] = g_vmodoffset;
+        temp[1] = g_vmodoffset >>8;
+        break;
+    
+    case I2C_COM_KI:
+        temp[0] = pgm_read_word_near(kilstable230+g_kiindex*2);
+        temp[1] = pgm_read_word_near(kilstable230+g_kiindex*2+1);
+        break;
+    
+    case I2C_COM_RMEAS:
+        temp[0] = g_Rmeas;
+        temp[1] = g_Rmeas>>8;
+        break;
+      
+    case I2C_COM_OTP:
+        temp[0] = g_otp;
+        temp[1] = g_otp>>8;
+      break;
+      
+    case I2C_COM_WAKEUP:
+        temp[0] = 1;
+        temp[1] = 0; // overshoot cancelation, set 0 in DTC03
+        break;
+      
+    case I2C_COM_ATSTABLE:
+        temp[0] = g_stableCode_atune;
+        break;  
+      
   }
   Wire.beginTransmission(addr);//
   Wire.write(com);//
@@ -216,6 +282,31 @@ void DTC03_I2CWriteData(unsigned char addr, unsigned char com)
   Wire.endTransmission();//
   delayMicroseconds(I2CSENDDELAY);//
 }
+
+void DTC03_I2CReadData(unsigned char addr, unsigned char com)
+{
+  unsigned char temp[2], b_upper, b_lower;
+  unsigned int itectemp;
+  bool itecsign;
+
+  Wire.beginTransmission(addr);
+  Wire.write(com);
+  Wire.endTransmission();
+  delayMicroseconds(I2CREADDELAY);
+  Wire.requestFrom(DTC03P05,2);
+  while(Wire.available()==2)
+  {
+    temp[0] = Wire.read();
+    temp[1] = Wire.read();
+  }
+  switch(com)
+  {
+    case I2C_COM_VACT:
+        g_vact =(temp[1] <<8) | temp[0];
+        break;
+  }
+}
+
 
 void serialEvent() {
   while (Serial.available()) {
