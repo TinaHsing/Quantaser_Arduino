@@ -165,7 +165,7 @@ void readSPI(char *string)
   byte address;
   long var;
   byte high, low;
-//  Serial.println("readSPI");
+  //Serial.println("readSPI");
   sscanf(string, "%s %x %ld", cmd, &address, &var);
   reg = (int)((address<<8) | ((var>>16) & 0x00ff));
   data = var;
@@ -190,7 +190,7 @@ void readSPI_data()
       delay(5);
       out = sendSPI(0xffff, 0xffff);
       //out = g_test;
-  //  Serial.println(out);
+      // Serial.println(out);
       Serial.write(out>>24);
       Serial.write(out>>16);
       Serial.write(out>>8);
