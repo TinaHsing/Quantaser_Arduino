@@ -48,7 +48,8 @@ void setup() {
   digitalWrite(A2, HIGH);
   digitalWrite(SPICHIPSEL,HIGH);
 //  Serial.begin(184320);
-  Serial.begin(92160);  // real clock rate = 92160 / 0.8 = 115,200 Hz
+//  Serial.begin(92160);  // real clock rate = 92160 / 0.8 = 115,200 Hz
+    Serial.begin(115200);
   mySPI.setClockDivider(CLOCK_DIV256);
   mySPI.setBitOrder(MSBFIRST);
   mySPI.setDataMode(MODE0);
@@ -126,7 +127,7 @@ void setSPI(char *string)
 //  Serial.println(data, HEX);
 
   sendSPI(reg, data);
-  Serial.println("setSPI");
+  //Serial.println("setSPI");
 
 }
 
@@ -150,7 +151,7 @@ unsigned long sendSPI( unsigned int reg, unsigned int data)
 //  cnt++;
   digitalWrite(SPICHIPSEL,HIGH);
 
-  Serial.println("setSPI OK");
+  //Serial.println("setSPI OK");
 
   return out;
   
