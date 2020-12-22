@@ -10,19 +10,27 @@ boolean stringComplete = false;  // whether the string is complete
 boolean readSPI_flag = false;
 unsigned int g_reg, g_data;
 unsigned long g_test = 0;
-#define READ_DATA_TIME 10
+#define READ_DATA_TIME 12500 // for clock = 10MHz
 
 #define SPICHIPSEL 10 // CHIPSELECT PIN FOR SPI
 #define MISO 12
 #define MOSI 11
 #define SCK 13
+#define TESTMODE 1
 
 SoftSPI mySPI(MOSI, MISO, SCK);
 
 /*******number of uart command number **********/
-#define COMMAND_NUM 2
+#define COMMAND_NUM 3
 #define SPICMD_GETADC 0x54
 #define GETADC_DATALEN 200
+
+/******ADC channel**********/
+#define TEMPCH1 A5
+#define TEMPCH2 A4
+#define TEMPCH3 A3
+#define TEMPCH4 A2
+
 
 /********glogal variable***************/
 
@@ -41,15 +49,21 @@ void setup() {
   cmd_list[0].action = setSPI;
   cmd_list[1].cmd ="readSPI";
   cmd_list[1].action = readSPI;
-
+  cmd_list[2].cmd ="readTemp";
+  cmd_list[2].action = readTemp;
 /****************************************************/
   pinMode(SPICHIPSEL, OUTPUT);
   pinMode(A2, OUTPUT);
   digitalWrite(A2, HIGH);
   digitalWrite(SPICHIPSEL,HIGH);
 //  Serial.begin(184320);
-  Serial.begin(92160);  // real clock rate = 92160 / 0.8 = 115,200 Hz
-  //  Serial.begin(115200);
+  
+  #ifdef TESTMODE
+    Serial.begin(115200);
+    //Serial.print("test");
+  #else
+    Serial.begin(92160);  // real clock rate = 92160 / 0.8 = 115,200 Hz
+  #endif
   mySPI.setClockDivider(CLOCK_DIV256);
   mySPI.setBitOrder(MSBFIRST);
   mySPI.setDataMode(MODE0);
@@ -63,18 +77,10 @@ void setup() {
 
 
 void loop() {
-  /***test ***/
-//  char *c_inputString = "readSPI 0";
-//  stringComplete = true;
-//  delay(100); 
-/***test ***/ 
+
   if (stringComplete)
   {
-    
     char *c_inputString = (char*)inputString.c_str();
-  /***test ***/
-//    Serial.print(c_inputString); 
-    /***test ***/
     match_cmd(c_inputString, cmd_list);    
     // clear the string:
     inputString = "";
@@ -87,16 +93,6 @@ void loop() {
     readSPI_data();
     g_test++;
   }
-
-  /***test ***/
-//  if(cnt==100) {
-//    cnt=0;
-//    t2 = millis();
-//    Serial.print("dt: ");
-//    Serial.println(t2-t1);
-//    t1 = t2;
-//  }
-  /***test ***/
 }
 
 
@@ -121,14 +117,7 @@ void setSPI(char *string)
   sscanf(string, "%s %x %ld", cmd, &address, &var);
   reg = (int)((address<<8) | ((var>>16) & 0x00ff));
   data = var;
-//  Serial.println(address, HEX);
-//  Serial.println(var, HEX);
-//  Serial.println(reg, HEX);
-//  Serial.println(data, HEX);
-
   sendSPI(reg, data);
-  //Serial.println("setSPI");
-
 }
 
 unsigned long sendSPI( unsigned int reg, unsigned int data)
@@ -148,13 +137,9 @@ unsigned long sendSPI( unsigned int reg, unsigned int data)
   temp1 = mySPI.transfer(high);
   temp2 = mySPI.transfer(low);
   out = (temp1 << 8)|temp2|out;
-//  cnt++;
+
   digitalWrite(SPICHIPSEL,HIGH);
-
-  //Serial.println("setSPI OK");
-
   return out;
-  
 }
  
 void readSPI(char *string)
@@ -165,7 +150,7 @@ void readSPI(char *string)
   byte address;
   long var;
   byte high, low;
-  //Serial.println("readSPI");
+ 
   sscanf(string, "%s %x %ld", cmd, &address, &var);
   reg = (int)((address<<8) | ((var>>16) & 0x00ff));
   data = var;
@@ -183,24 +168,67 @@ void readSPI(char *string)
 
 void readSPI_data()
 {
-  long out, t_begin, t_end, t_diff;
+  long out; 
+  unsigned long t_begin, t_end, t_diff;
 
-      t_begin = millis();
+      t_begin = micros();
       sendSPI(g_reg, g_data);
-      delay(5);
-      out = sendSPI(0xffff, 0xffff);
-      //out = g_test;
-      // Serial.println(out);
+      delayMicroseconds(5000);
+      #ifdef TESTMODE
+        if (g_test % 1000 == 0)
+          out = 284562111;
+         else
+          out = g_test;
+      #else
+        out = sendSPI(0xffff, 0xffff);
+      #endif
       Serial.write(out>>24);
       Serial.write(out>>16);
       Serial.write(out>>8);
       Serial.write(out);
-      t_end = millis();
+      t_end = micros();
       t_diff = t_end - t_begin;
-      delay(READ_DATA_TIME - t_diff);
+      delayMicroseconds(READ_DATA_TIME - t_diff);
 
 }
 
+void readTemp(char *string)
+{
+  char sperator = ' ';
+  byte high, low;
+  char cmd[20];
+  unsigned int ch;
+  unsigned long temperature = 0;
+  sscanf(string, "%s %d %ld", cmd, &ch);
+  for(int i = 0; i< 32; i++)
+  {
+    
+    switch (ch)
+    {
+      case 1:
+        temperature  = temperature + analogRead(TEMPCH1);
+      break;
+      case 2:
+        temperature  = temperature + analogRead(TEMPCH2);
+      break;
+      case 3:
+        temperature  = temperature + analogRead(TEMPCH3);
+      break;
+      case 4:
+        temperature  = temperature + analogRead(TEMPCH4);
+      break;
+      default:
+        temperature  = temperature + analogRead(TEMPCH1);
+      break;
+    }
+  }
+
+  high = temperature >> 13;
+  low = temperature>>5;
+  Serial.write(high);
+  Serial.write(low);
+
+}
 void serialEvent() {
   while (Serial.available()) {
     // get the new byte:
