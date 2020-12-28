@@ -78,7 +78,7 @@ void setup() {
   mySPI.setBitOrder(MSBFIRST);
   mySPI.setDataMode(MODE0);
   mySPI.begin();
-
+  analogReference(EXTERNAL);
   g_test = 0;
 
   inputString.reserve(40);
