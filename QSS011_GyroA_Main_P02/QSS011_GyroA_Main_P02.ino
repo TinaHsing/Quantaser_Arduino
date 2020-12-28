@@ -27,7 +27,7 @@ unsigned char g_ch;
 #define MISO 12
 #define MOSI 11
 #define SCK 13
-#define TESTMODE 1
+#define TESTMODE 0
 
 SoftSPI mySPI(MOSI, MISO, SCK);
 
@@ -179,7 +179,7 @@ void readSPI(char *string)
 
 void readSPI_data()
 {
-  unsinged int temperature;
+  unsigned long temperature;
   long out; 
   unsigned long t_begin, t_end, t_diff;
 
@@ -190,19 +190,19 @@ void readSPI_data()
       switch(g_ch)
       {
         case 1:
-          tempearature = readTemp("temp 1 1");
+          temperature = readTemp("temp 1 1");
         break;
         case 2:
-          tempearature = readTemp("temp 2 1");
+          temperature = readTemp("temp 2 1");
         break;
         case 3:
-          tempearature = readTemp("temp 3 1");
+          temperature = readTemp("temp 3 1");
         break;
         case 4:
-          tempearature = readTemp("temp 4 1");
+          temperature = readTemp("temp 4 1");
         break;
         default:
-          tempearature = readTemp("temp 1 1");
+          temperature = readTemp("temp 1 1");
         break;
 
       }     
@@ -218,8 +218,10 @@ void readSPI_data()
       Serial.write(out>>16);
       Serial.write(out>>8);
       Serial.write(out);
-      Serial.write(temperature >> 13)
-      Serial.write(temperature >> 5)
+      Serial.write(0);
+      Serial.write(0);
+      Serial.write(temperature >> 13);
+      Serial.write(temperature >> 5);
       t_end = micros();
       t_diff = t_end - t_begin;
       delayMicroseconds(READ_DATA_TIME - t_diff);
@@ -227,7 +229,7 @@ void readSPI_data()
 }
 
 
-void readTemp(char *string)
+unsigned long readTemp(char *string)
 {
   char sperator = ' ';
   byte high, low;
@@ -260,9 +262,14 @@ void readTemp(char *string)
 
   high = temperature >> 13;
   low = temperature>>5;
-  Serial.write(high);
-  Serial.write(low);
+  if (!readSPI_flag)
+   {
+    Serial.write(high);
+    Serial.write(low);
+    }
+  
 
+  return temperature;
 }
 void serialEvent() {
   while (Serial.available()) {
