@@ -68,8 +68,8 @@ void setup() {
   digitalWrite(A2, HIGH);
   digitalWrite(SPICHIPSEL,HIGH);
 //  Serial.begin(184320);
-  
-  #ifdef TESTMODE
+
+  #if TESTMODE
     Serial.begin(115200);
   #else
     Serial.begin(92160);  // real clock rate = 92160 / 0.8 = 115,200 Hz
@@ -206,7 +206,7 @@ void readSPI_data()
         break;
 
       }     
-      #ifdef TESTMODE
+      #if TESTMODE
         if (g_test % 1000 == 0)
           out = 284562111;
          else
