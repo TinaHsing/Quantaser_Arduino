@@ -27,7 +27,7 @@ unsigned char g_ch;
 #define MISO 12
 #define MOSI 11
 #define SCK 13
-#define TESTMODE 0
+#define TESTMODE 1
 
 SoftSPI mySPI(MOSI, MISO, SCK);
 
@@ -180,13 +180,12 @@ void readSPI(char *string)
 void readSPI_data()
 {
   unsigned long temperature;
+
   long out; 
   unsigned long t_begin, t_end, t_diff;
 
       t_begin = micros();
-      sendSPI(g_reg, g_data);
-      delayMicroseconds(2000);
-     
+      sendSPI(g_reg, g_data);    
       switch(g_ch)
       {
         case 1:
@@ -218,8 +217,6 @@ void readSPI_data()
       Serial.write(out>>16);
       Serial.write(out>>8);
       Serial.write(out);
-      Serial.write(0);
-      Serial.write(0);
       Serial.write(temperature >> 13);
       Serial.write(temperature >> 5);
       t_end = micros();
@@ -260,14 +257,12 @@ unsigned long readTemp(char *string)
     }
   }
 
-  high = temperature >> 13;
-  low = temperature>>5;
-  if (!readSPI_flag)
-   {
-    Serial.write(high);
-    Serial.write(low);
-    }
-  
+
+  //high = temperature >> 13;
+  //low = temperature>>5;
+
+  Serial.write(high);
+  Serial.write(low);
 
   return temperature;
 }
