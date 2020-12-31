@@ -27,7 +27,7 @@ unsigned char g_ch;
 #define MISO 12
 #define MOSI 11
 #define SCK 13
-#define TESTMODE 1
+#define TESTMODE 0
 
 #define VERSION "QSS011_GyroA_Main_P02"
 
@@ -101,7 +101,7 @@ void match_cmd(char *input_string)
 }
 void getVersion()
 {
-  Serial.println(VERSION);
+  Serial.print(VERSION);
 }
 
 
