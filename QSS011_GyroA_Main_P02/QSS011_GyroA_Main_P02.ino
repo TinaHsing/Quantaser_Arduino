@@ -29,12 +29,9 @@ unsigned char g_ch;
 #define SCK 13
 #define TESTMODE 1
 
-SoftSPI mySPI(MOSI, MISO, SCK);
+#define VERSION "QSS011_GyroA_Main_P02"
 
-/*******number of uart command number **********/
-#define COMMAND_NUM 3
-#define SPICMD_GETADC 0x54
-#define GETADC_DATALEN 200
+SoftSPI mySPI(MOSI, MISO, SCK);
 
 /******ADC channel**********/
 #define TEMPCH1 A5
@@ -42,27 +39,11 @@ SoftSPI mySPI(MOSI, MISO, SCK);
 #define TEMPCH3 A3
 #define TEMPCH4 A2
 
-
-/********glogal variable***************/
-
-typedef struct table {
-  char *cmd;
-  void (*action)(char *);
-} table_t;
-table_t cmd_list[COMMAND_NUM];
-
 //long cnt=0, t1, t2;
 
 void setup() {
 
-/***** register command and act function here ******/
-  cmd_list[0].cmd = "setSPI";
-  cmd_list[0].action = setSPI;
-  cmd_list[1].cmd ="readSPI";
-  cmd_list[1].action = readSPI;
-  cmd_list[2].cmd ="readTemp";
-  cmd_list[2].action = readTemp;
-/****************************************************/
+
   pinMode(SPICHIPSEL, OUTPUT);
   pinMode(A2, OUTPUT);
   digitalWrite(A2, HIGH);
@@ -91,7 +72,7 @@ void loop() {
   if (stringComplete)
   {
     char *c_inputString = (char*)inputString.c_str();
-    match_cmd(c_inputString, cmd_list);    
+    match_cmd(c_inputString);    
     // clear the string:
     inputString = "";
     stringComplete = false;
@@ -106,19 +87,26 @@ void loop() {
 }
 
 
-void match_cmd(char *input_string, table_t cmd[])
+void match_cmd(char *input_string)
 {
-
-  for(int i=0; i<COMMAND_NUM; i++)
-  {
-    if (strstr(input_string, cmd[i].cmd) != NULL) cmd[i].action(input_string);   
-  }
+ 
+    if (strstr(input_string, "setSPI") != NULL) 
+      setSPI(input_string);
+    else if (strstr(input_string, "readSPI") != NULL)
+      readSPI(input_string);
+    else if (strstr(input_string, "readTemp") != NULL)
+      readTemp(input_string);
+    else if (strstr(input_string, "getVersion") != NULL)
+      getVersion();
+}
+void getVersion()
+{
+  Serial.println(VERSION);
 }
 
 
 void setSPI(char *string)
 {
-  char sperator = ' ';
   char cmd[20];
   unsigned int reg, data;
   byte address;
@@ -206,9 +194,6 @@ void readSPI_data()
 
       }     
       #if TESTMODE
-        if (g_test % 1000 == 0)
-          out = 284562111;
-         else
           out = g_test;
       #else
         out = sendSPI(0xffff, 0xffff);
@@ -217,9 +202,8 @@ void readSPI_data()
       Serial.write(out>>16);
       Serial.write(out>>8);
       Serial.write(out);
-
-      Serial.write(temperature >> 11);
-      Serial.write(temperature >> 3);
+      Serial.write(temperature >> 13);
+      Serial.write(temperature >> 5);
       t_end = micros();
       t_diff = t_end - t_begin;
       if (t_diff < READ_DATA_TIME)
@@ -236,7 +220,7 @@ unsigned long readTemp(char *string)
   unsigned int ch;
   unsigned long temperature = 0;
   sscanf(string, "%s %d %ld", cmd, &ch);
-  for(int i = 0; i< 8; i++)
+  for(int i = 0; i< 32; i++)
   {
     
     switch (ch)
@@ -261,8 +245,8 @@ unsigned long readTemp(char *string)
  
   if (!readSPI_flag)
    {
-    high = temperature >> 11;
-    low = temperature>>3;
+    high = temperature >> 13;
+    low = temperature>>5;
     Serial.write(high);
     Serial.write(low);
     }
