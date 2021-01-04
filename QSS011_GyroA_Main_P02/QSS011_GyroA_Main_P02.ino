@@ -101,7 +101,7 @@ void match_cmd(char *input_string)
 }
 void getVersion()
 {
-  Serial.print(VERSION);
+  Serial.println(VERSION);
 }
 
 
@@ -109,12 +109,13 @@ void setSPI(char *string)
 {
   char cmd[20];
   unsigned int reg, data;
-  byte address;
+  unsigned int address;
   long var;
   
   sscanf(string, "%s %x %ld", cmd, &address, &var);
   reg = (int)((address<<8) | ((var>>16) & 0x00ff));
   data = var;
+
   sendSPI(reg, data);
 }
 
@@ -129,11 +130,15 @@ unsigned long sendSPI( unsigned int reg, unsigned int data)
   temp1 = mySPI.transfer(high);
   temp2 = mySPI.transfer(low);
   out = (temp1 << 24)|(temp2 << 16);
+  Serial.println(high,HEX);
+  Serial.println(low, HEX);
 
   low = data;
   high = data >>8;
   temp1 = mySPI.transfer(high);
   temp2 = mySPI.transfer(low);
+  Serial.println(high, HEX);
+  Serial.println(low, HEX);
   out = (temp1 << 8)|temp2|out;
 
   digitalWrite(SPICHIPSEL,HIGH);
@@ -145,7 +150,7 @@ void readSPI(char *string)
   char sperator = ' ';
   char cmd[20];
   unsigned int reg, data;
-  byte address;
+  unsigned int address;
   long var;
   byte high, low;
  
