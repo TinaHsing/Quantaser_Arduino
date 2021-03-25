@@ -78,7 +78,7 @@ void loop() {
         board.gui_rp =1;
       }
 //      delayMicroseconds(board.gul_tw);      
-      delay(board.gul_tw);      
+      //delay(board.gul_tw);      
       for (unsigned int i =0; i <board.gui_rp; i++)
       {
         Serial.print("\nRun");
