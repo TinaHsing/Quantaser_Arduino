@@ -10,7 +10,7 @@ I3=(value)
 LED3 的電流
 
 Rp=(value)
-重複 Run 的次數
+掃描的次數
 
 Ta=(value)
 光譜儀 A 的時間(ms)
