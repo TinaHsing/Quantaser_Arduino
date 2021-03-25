@@ -1,0 +1,28 @@
+serial input
+
+I1=(value)
+LED1 的電流
+
+I2=(value)
+LED2 的電流
+
+I3=(value)
+LED3 的電流
+
+Rp=(value)
+重複 Run 的次數
+
+Ta=(value)
+光譜儀 A 的時間(ms)
+
+Tb=(value)
+光譜儀 b 的時間(ms)
+
+Tw=(value)
+等待時間
+
+St=
+顯示目前的設定
+
+Run=
+執行

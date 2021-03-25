@@ -31,6 +31,7 @@
 #define COM_Tw "Tw"
 #define COM_Rp "Rp"
 #define COM_St "St"
+#define COM_Run "Run"
 
 //----------NOEE Default value------
 #define NOEE_DUMMY	103
@@ -73,7 +74,7 @@ class QSS003
 public:
 	QSS003();
 	void Initialize(void);
-	void checkParam();
+	bool checkParam();
 	void currentOut(unsigned char ch, unsigned int cur);
 	void SaveEEPROM();
     void ReadEEPROM();

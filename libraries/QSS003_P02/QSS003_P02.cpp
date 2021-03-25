@@ -20,23 +20,23 @@ void QSS003::Initialize()
 	p_ee_changed = 0;
 	
 }
-void QSS003::checkParam()
+bool QSS003::checkParam()
 {
 	String command;
 	long val;
+	bool run = 0;
+
 	if(Serial.available())
 	{
 		command = Serial.readStringUntil('=');
 		val = Serial.parseInt();
 		if (strcmp(command.c_str(), COM_St)==0)
 		{
-			Serial.println(gui_i1);
-			Serial.println(gui_i2);
-			Serial.println(gui_i3);
-			Serial.println(gul_ta);
-			Serial.println(gul_tb);
-			Serial.println(gul_tw);
-			Serial.println(gui_rp);
+			QSS003::printVar();
+		}
+		else if (strcmp(command.c_str(), COM_Run)==0)
+		{
+			run = 1;
 		}
 		else if (strcmp(command.c_str(), COM_Tw)==0)
 		{
@@ -81,6 +81,7 @@ void QSS003::checkParam()
 			gui_rp = val;
 		}
 	}
+	return run;
 }
 void QSS003::currentOut(unsigned char ch, unsigned int cur)
 {
@@ -104,19 +105,32 @@ unsigned long QSS003::us2cyc(unsigned long t_int)
 }
 void QSS003::printVar()
 {
-	Serial.print("gui_i1= ");
+	Serial.print(COM_I1);
+	Serial.print("=");
 	Serial.println(gui_i1);
-	Serial.print("gui_i2= ");
+
+	Serial.print(COM_I2);
+	Serial.print("=");
 	Serial.println(gui_i2);
-	Serial.print("gui_i3= ");
+
+	Serial.print(COM_I3);
+	Serial.print("=");
 	Serial.println(gui_i3);
-	Serial.print("gui_rp= ");
+
+	Serial.print(COM_Rp);
+	Serial.print("=");
 	Serial.println(gui_rp);
-	Serial.print("gul_ta= ");
+
+	Serial.print(COM_Ta);
+	Serial.print("=");
 	Serial.println(gul_ta);
-	Serial.print("gul_tb= ");
+
+	Serial.print(COM_Tb);
+	Serial.print("=");
 	Serial.println(gul_tb);
-	Serial.print("gul_tw= ");
+
+	Serial.print(COM_Tw);
+	Serial.print("=");
 	Serial.println(gul_tw);
 }
 void QSS003::ReadEEPROM()
