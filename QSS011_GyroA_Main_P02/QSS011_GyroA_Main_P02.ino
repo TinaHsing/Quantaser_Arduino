@@ -27,6 +27,9 @@ unsigned char g_ch;
 #define MISO 12
 #define MOSI 11
 #define SCK 13
+
+// if use single arduino to test QSS011 , MUST set TESTMODE 1
+// if use QSS011 PCB , set TESTMODE 0
 #define TESTMODE 0
 
 #define VERSION "QSS011_GyroA_Main_P02"
