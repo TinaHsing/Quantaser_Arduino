@@ -133,8 +133,7 @@ unsigned long sendSPI( unsigned int reg, unsigned int data)
   temp1 = mySPI.transfer(high);
   temp2 = mySPI.transfer(low);
   out = (temp1 << 24)|(temp2 << 16);
-  Serial.println(high,HEX);
-  Serial.println(low, HEX);
+
 
   low = data;
   high = data >>8;
@@ -202,7 +201,7 @@ void readSPI_data()
 
       }     
       #if TESTMODE
-          out = g_test;
+          out = 0;
       #else
         out = sendSPI(0xffff, 0xffff);
       #endif
