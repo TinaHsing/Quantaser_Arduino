@@ -139,8 +139,7 @@ unsigned long sendSPI( unsigned int reg, unsigned int data)
   high = data >>8;
   temp1 = mySPI.transfer(high);
   temp2 = mySPI.transfer(low);
-  Serial.println(high, HEX);
-  Serial.println(low, HEX);
+
   out = (temp1 << 8)|temp2|out;
 
   digitalWrite(SPICHIPSEL,HIGH);
