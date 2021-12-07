@@ -18,12 +18,12 @@ void setup() {
   master.SetPinMode();
   master.ParamInit();
   master.ReadEEPROM();
-  master.I2CWriteAll();
+  master.I2CWriteAll(); //
   master.WelcomeScreen();
   master.BackGroundPrint();
-  master.PrintNormalAll();
-  master.CheckStatus();
-  master.UpdateEnable();
+  master.PrintNormalAll(); //
+  master.CheckStatus(); //
+  master.UpdateEnable(); //
   
   attachInterrupt(digitalPinToInterrupt(ENC_A),CheckEncoder,CHANGE);
   attachInterrupt(digitalPinToInterrupt(ENC_B),CheckEncoder,CHANGE);
@@ -37,11 +37,11 @@ void loop() {
     master.CheckStatus();
     //delay(400);//20161103
 //  }
-  master.UpdateEnable(); 
+  master.UpdateEnable(); //
   master.CursorState();
   master.HoldCursortate();
   master.blinkTsetCursor();
-  master.UpdateParam();
+  master.UpdateParam(); //
   master.SaveEEPROM();
 
 }

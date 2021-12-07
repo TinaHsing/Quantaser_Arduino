@@ -189,6 +189,10 @@
 
 class DTC03Master
 {
+private:
+	unsigned char QCP0_CRC_Calculate(unsigned char *pData, unsigned char Length);
+	void QCP0_Package(unsigned char RorW, unsigned short Command, unsigned short Data, unsigned char *pData);
+	void QCP0_Unpackage(unsigned char *pData, unsigned char *RorW, unsigned short *Command, unsigned short *Data);
 public:
 	DTC03Master();
 	void SetPinMode();
