@@ -31,19 +31,13 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  
-//  if(master.g_cursorstate<7) //do it when normal-mode
-//  {
-    master.CheckStatus();
-    //delay(400);//20161103
-//  }
+  master.CheckStatus();
   master.UpdateEnable(); //
   master.CursorState();
   master.HoldCursortate();
   master.blinkTsetCursor();
   master.UpdateParam(); //
   master.SaveEEPROM();
-
 }
 void CheckEncoder()
 {

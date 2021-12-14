@@ -1,6 +1,6 @@
 #include <Wire.h>
 #include <openGLCD.h>
-#include <DTC03_MS.h>
+#include <DTC03A_MS.h>
 #include <EEPROM.h>
 #include <Wire.h>
 #include <fonts/SystemFont5x7.h>
@@ -29,9 +29,6 @@
 #define CURSORSTATE_STAYTIME	700
 #define ACCUMULATE_TH			50
 #define DEBOUNCE_WAIT			ACCUMULATE_TH * 4
-#define MV_STATUS				1
-#define MVTIME					16
-#define MVTIME_POWER			4
 //=================pin definition=========================
 #define ENC_B					3
 #define ENC_A					2
@@ -189,10 +186,6 @@
 
 class DTC03Master
 {
-private:
-	unsigned char QCP0_CRC_Calculate(unsigned char *pData, unsigned char Length);
-	void QCP0_Package(unsigned char RorW, unsigned short Command, unsigned short Data, unsigned char *pData);
-	void QCP0_Unpackage(unsigned char *pData, unsigned char *RorW, unsigned short *Command, unsigned short *Data);
 public:
 	DTC03Master();
 	void SetPinMode();
@@ -204,7 +197,7 @@ public:
 	void VarrayInit();
 	void IarrayInit();
 	void BackGroundPrint();
-	float ReturnTemp(unsigned int vact, bool type);
+	float ReturnTemp(unsigned int vact);
 	void PrintTset();
 	void PrintTact(float tact);
 	void PrintItec(float itec);
@@ -212,31 +205,15 @@ public:
 	void PrintP();
 	void PrintKi();
 	void PrintB();
-	void PrintModStatus();
 	void Encoder();
 	void CursorState();
 	void UpdateParam();
-	unsigned int ReturnVset(float tset, bool type);
-	void PrintFactaryMode();
+	unsigned int ReturnVset(float tset);
 	void CheckStatus();
-	void PrintEngBG();
 	void PrintNormalAll();
-	void PrintEngAll();
-	void PrintR1();
-	void PrintR2();
-	void PrintTpidoff();
-	void PrintVfbc();
-	void PrintVmod();
-	void PrintRmeas();
-	void PrintTotp();
-	void PrintTpcb(float);
 	void PrintEnable();
 	void PrintAtune();
 	void PrintAtuneDone();
-	void PrintTestValue();
-	void PrintP_Atune();
-	void PrintTbias();
-	void PrintATStable();
 
 	void ShowCursor(unsigned char);
 	void UpdateEnable();
@@ -245,26 +222,28 @@ public:
 	void ReadEEPROM();
 	void I2CWriteAll();
 	void HoldCursortate();
-	void vact_MV();
 
 	//working variable-------------------
-	unsigned int g_vact, g_vact_MV, g_vset, g_tpcb, g_otp, g_Rmeas, g_bconst, g_fbcbase, g_vmodoffset;
-	unsigned char g_p, g_ki, g_ls, g_currentlim, g_tpidoff, g_r1, g_r2, g_kiindex, g_cursorstate, g_p_atune, g_T_atune, g_stableCode_atune;
+	unsigned int g_vact, g_vset, g_tpcb, g_bconst;
+	unsigned char g_p, g_ki, g_ls, g_currentlim, g_kiindex, g_cursorstate;
 	int g_itec;
-	bool g_mod_status, g_atune_status, g_atunDone, g_DBRflag, g_runTimeflag, g_LCDlock_flag;
+	bool g_atune_status, g_atunDone, g_DBRflag, g_runTimeflag, g_LCDlock_flag;
 	float g_tset;
 	//------------------------------------
-	bool g_sensortype, g_en_state, g_kpkiFromAT;
+	bool g_en_state, g_kpkiFromAT;
 	int en_temp, test_at = 0;
 
 private:
+	unsigned char QCP0_CRC_Calculate(unsigned char *pData, unsigned char Length);
+	void QCP0_Package(unsigned char RorW, unsigned short Command, unsigned short Data, unsigned char *pData);
+	void QCP0_Unpackage(unsigned char *pData, unsigned char *RorW, unsigned short *Command, unsigned short *Data);
+
 	glcd lcd;
 	int g_counter;
 	unsigned int g_icount, p_cursorStateCounter[3], p_temp, p_cursorStayTime;
-	unsigned int p_tBlink, p_tcursorStateBounce, p_holdCursorTimer, p_vact_array[16];
-	unsigned long p_vact_MV_sum, p_mvindex;
+	unsigned int p_tBlink, p_tcursorStateBounce, p_holdCursorTimer;
 	unsigned char g_iarrayindex, g_varrayindex, g_lastencoded, p_engmodeCounter, p_ee_change_state;
-	bool g_errcode1, g_errcode2, g_flag, g_paramupdate, g_countersensor, g_testgo, p_tBlink_toggle, p_engModeFlag, p_blinkTsetCursorFlag, g_wakeup;
+	bool g_errcode1, g_errcode2, g_flag, g_paramupdate, g_countersensor, g_testgo, p_tBlink_toggle, p_blinkTsetCursorFlag, g_wakeup;
 	bool p_ee_changed, p_HoldCursortateFlag, p_timerResetFlag, p_keyflag, p_atunProcess_flag;
 	unsigned long g_tenc, p_loopindex;
 	float g_tsetstep;
