@@ -224,8 +224,8 @@ public:
 	void HoldCursortate();
 
 	//working variable-------------------
-	unsigned int g_vact, g_vset, g_tpcb, g_bconst;
-	unsigned char g_p, g_ki, g_ls, g_currentlim, g_kiindex, g_cursorstate;
+	unsigned int g_vact, g_vset, g_bconst;
+	unsigned char g_p, g_currentlim, g_cursorstate;
 	int g_itec;
 	bool g_atune_status, g_atunDone, g_DBRflag, g_runTimeflag, g_LCDlock_flag;
 	float g_tset;

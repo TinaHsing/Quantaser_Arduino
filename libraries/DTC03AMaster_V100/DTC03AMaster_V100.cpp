@@ -104,7 +104,6 @@ void DTC03Master::ReadEEPROM()
         g_vset = EEPROM.read(EEADD_VSET_UPPER) << 8 | EEPROM.read(EEADD_VSET_LOWER);
         g_currentlim = EEPROM.read(EEADD_currentlim);
         g_p = EEPROM.read(EEADD_P);
-        g_kiindex = EEPROM.read(EEADD_KIINDEX);
         g_bconst = EEPROM.read(EEADD_BCONST_UPPER) << 8 | EEPROM.read(EEADD_BCONST_LOWER);
     }
     else
@@ -136,7 +135,6 @@ void DTC03Master::ReadEEPROM()
         g_vset = NOEE_VSET;
         g_currentlim = NOEE_ILIM;
         g_p = NOEE_P;
-        g_kiindex = NOEE_kiindex;
         g_bconst = NOEE_BCONST;
     }
     g_tset = ReturnTemp(g_vset);
@@ -163,9 +161,6 @@ void DTC03Master::SaveEEPROM()
         case EEADD_P:
             EEPROM.write(EEADD_P, g_p);
             break;
-        case EEADD_KIINDEX:
-            EEPROM.write(EEADD_KIINDEX, g_kiindex);
-            break;
         }
     }
 }
@@ -178,7 +173,6 @@ void DTC03Master::CheckStatus()
         I2CReadData(I2C_COM_ITEC_ER);
         itec_f = float(g_itec) * CURRENTRatio;
         PrintItec(itec_f);
-            
         if (!g_wakeup)
             I2CWriteAll();
     }
@@ -191,12 +185,11 @@ void DTC03Master::CheckStatus()
     if (p_loopindex % 300 == 2)
     {
         I2CReadData(I2C_COM_PCB);
-        tpcb_f = float(g_tpcb) / 4.0 - 20.5;
+        tpcb_f = 0;
     }
     if (p_loopindex % 300 == 3)
     {
         I2CReadData(I2C_COM_ATUN);
-
         if (g_atunDone)
         {
             I2CReadData(I2C_COM_ATKpKi);
@@ -296,7 +289,6 @@ void DTC03Master::I2CReadData(unsigned char com)
     case I2C_COM_VACT:
         g_vact = (temp[1] << 8) | temp[0];
         break;
-
     case I2C_COM_ITEC_ER:
 
         itectemp = ((temp[1] & REQMSK_ITECU) << 8) | temp[0];
@@ -311,11 +303,6 @@ void DTC03Master::I2CReadData(unsigned char com)
         else
             g_itec = (int)itectemp;
         break;
-
-    case I2C_COM_PCB:
-        g_tpcb = (temp[1] << 8) | temp[0];
-        break;
-
     case I2C_COM_ATUN:
         g_runTimeflag = temp[0] & REQMSK_ATUNE_RUNTIMEERR;
         g_atunDone = temp[0] & REQMSK_ATUNE_DONE;
@@ -323,7 +310,6 @@ void DTC03Master::I2CReadData(unsigned char com)
         break;
     case I2C_COM_ATKpKi:
         g_p = temp[0];
-        g_kiindex = temp[1];
         g_paramupdate = 1;
         g_cursorstate = 3;
         g_kpkiFromAT = 1;
@@ -491,17 +477,9 @@ void DTC03Master::PrintKi()
     lcd.SelectFont(SystemFont5x7);
     tconst = 0;//float(pgm_read_word_near(timeconst + g_kiindex)) / 100.0;
     lcd.GotoXY(I_COORD_X2, I_COORD_Y);
-    if (g_kiindex < 3)
+    if(tconst == 0)
     {
-        if (g_kiindex == 1)
-            lcd.print(" OFF");
-        else
-            lcd.print(tconst, 2);
-    }
-    else if (g_kiindex < 33)
-    {
-        lcd.print(" ");
-        lcd.print(tconst, 1);
+        lcd.print(" OFF");
     }
     else
     {
@@ -857,17 +835,13 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
             else
                 p_ee_changed = 1;
         case 4:
-            if (!g_kpkiFromAT)
-                g_kiindex += g_counter;
-            else
-            {
-                g_kpkiFromAT = 0;
-                g_cursorstate = 1;
-            }
-            if (g_kiindex > 50)
-                g_kiindex = 50;
-            if (g_kiindex < 1)
-                g_kiindex = 1;
+            // if (!g_kpkiFromAT)
+            //     g_kiindex += g_counter;
+            // else
+            // {
+            //     g_kpkiFromAT = 0;
+            //     g_cursorstate = 1;
+            // }
             I2CWriteData(I2C_COM_KI);
             PrintKi();
             p_ee_change_state = EEADD_KIINDEX;
