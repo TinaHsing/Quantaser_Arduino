@@ -103,7 +103,7 @@ void DTC03Master::ReadEEPROM()
     {
         g_vset = EEPROM.read(EEADD_VSET_UPPER) << 8 | EEPROM.read(EEADD_VSET_LOWER);
         g_currentlim = EEPROM.read(EEADD_currentlim);
-        g_p = EEPROM.read(EEADD_P);
+        g_k = EEPROM.read(EEADD_P);
         g_bconst = EEPROM.read(EEADD_BCONST_UPPER) << 8 | EEPROM.read(EEADD_BCONST_LOWER);
     }
     else
@@ -134,7 +134,7 @@ void DTC03Master::ReadEEPROM()
 
         g_vset = NOEE_VSET;
         g_currentlim = NOEE_ILIM;
-        g_p = NOEE_P;
+        g_k = NOEE_P;
         g_bconst = NOEE_BCONST;
     }
     g_tset = ReturnTemp(g_vset);
@@ -159,7 +159,7 @@ void DTC03Master::SaveEEPROM()
             EEPROM.write(EEADD_currentlim, g_currentlim);
             break;
         case EEADD_P:
-            EEPROM.write(EEADD_P, g_p);
+            EEPROM.write(EEADD_P, g_k);
             break;
         }
     }
@@ -212,6 +212,38 @@ void DTC03Master::I2CWriteData(unsigned char com)
     unsigned short Temp;
     switch (com)
     {
+    case I2C_PID_MODE:
+        break;
+    case I2C_PID_TARGET:
+        break;
+    case I2C_PID_K:
+        break;
+    case I2C_PID_Ti:
+        break;
+    case I2C_PID_Td:
+        break;
+    case I2C_PID_HiLimit:
+        break;
+    case I2C_PID_LoLimit:
+        break;
+    case I2C_V_Limit:
+        break;
+    case I2C_I_Limit:
+        break;
+    case I2C_TEMP_SENSOR_EN:
+        break;
+    case I2C_TEMP_SENSOR_MODE:
+        break;
+    case I2C_ATUN_TYPE:
+        break;
+    case I2C_ATUN_DeltaDuty:
+        break;
+    default:
+        break;
+    }
+
+    switch (com)
+    {
     case I2C_COM_INIT:
         temp[0] = g_bconst - BCONSTOFFSET;
         temp[1] = (g_bconst - BCONSTOFFSET) >> 8;
@@ -221,7 +253,7 @@ void DTC03Master::I2CWriteData(unsigned char com)
 
     case I2C_COM_CTR:
         temp[0] = g_currentlim;
-        temp[1] = g_p;
+        temp[1] = g_k;
         break;
 
     case I2C_COM_VSET:
@@ -244,11 +276,6 @@ void DTC03Master::I2CWriteData(unsigned char com)
     Wire.write(Package, 8);
     Wire.endTransmission();
     delayMicroseconds(I2CSENDDELAY);
-    // Wire.beginTransmission(SLAVE_ADDR); //
-    // Wire.write(com);                  //
-    // Wire.write(temp, 2);              //
-    // Wire.endTransmission();           //
-    // delayMicroseconds(I2CSENDDELAY);  //
 }
 
 void DTC03Master::I2CReadData(unsigned char com)
@@ -273,17 +300,6 @@ void DTC03Master::I2CReadData(unsigned char com)
         Package[i] = Wire.read();
     }
     QCP0_Unpackage((unsigned char*)&Package, (unsigned char *)&RorW, (unsigned short *)&com, (unsigned short *)&Data);
-
-    // Wire.beginTransmission(SLAVE_ADDR);
-    // Wire.write(com);
-    // Wire.endTransmission();
-    // delayMicroseconds(I2CREADDELAY);
-    // Wire.requestFrom(SLAVE_ADDR, 2);
-    // while (Wire.available() == 2)
-    // {
-    //     temp[0] = Wire.read();
-    //     temp[1] = Wire.read();
-    // }
     switch (com)
     {
     case I2C_COM_VACT:
@@ -309,10 +325,52 @@ void DTC03Master::I2CReadData(unsigned char com)
         g_DBRflag = temp[0] & REQMSK_ATUNE_DBR;
         break;
     case I2C_COM_ATKpKi:
-        g_p = temp[0];
+        g_k = temp[0];
         g_paramupdate = 1;
         g_cursorstate = 3;
         g_kpkiFromAT = 1;
+        break;
+    }
+
+    switch (com)
+    {
+    case I2C_DEVICE_STATE:
+        break;
+    case I2C_FW_VERSION:
+        break;
+    case I2C_IO_STATE:
+        break;
+    case I2C_PID_MODE:
+        break;
+    case I2C_PID_TARGET:
+        break;
+    case I2C_PID_K:
+        break;
+    case I2C_PID_Ti:
+        break;
+    case I2C_PID_Td:
+        break;
+    case I2C_PID_HiLimit:
+        break;
+    case I2C_PID_LoLimit:
+        break;
+    case I2C_V_Limit:
+        break;
+    case I2C_I_Limit:
+        break;
+    case I2C_V_TEC:
+        break;
+    case I2C_I_TEC:
+        break;
+    case I2C_TEMP_DATA:
+        break;
+    case I2C_TEMP_AVERAGE_DATA:
+        break;
+    case I2C_ATUN_TYPE:
+        break;
+    case I2C_ATUN_DeltaDuty:
+        break;
+    default:
         break;
     }
 }
@@ -457,11 +515,11 @@ void DTC03Master::PrintP()
     lcd.GotoXY(P_COORD_X2, P_COORD_Y);
     if (!g_runTimeflag)
     {
-        if (g_p < 10)
+        if (g_k < 10)
             lcd.print("  ");
-        else if (g_p < 100)
+        else if (g_k < 100)
             lcd.print(" ");
-        lcd.print(g_p);
+        lcd.print(g_k);
     }
     else
     {
@@ -805,7 +863,8 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
             if (g_tset < 7)
                 g_tset = 7;
             g_vset = ReturnVset(g_tset);
-            I2CWriteData(I2C_COM_VSET);
+            //I2CWriteData(I2C_COM_VSET);
+            I2CWriteData(I2C_PID_TARGET);
             PrintTset();
             p_blinkTsetCursorFlag = 0;
             p_ee_change_state = EEADD_VSET_UPPER;
@@ -816,18 +875,20 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
                 g_currentlim = 51;
             if (g_currentlim < 1)
                 g_currentlim = 1;
-            I2CWriteData(I2C_COM_CTR);
+            //I2CWriteData(I2C_COM_CTR);
+            I2CWriteData(I2C_I_Limit);
             PrintIlim();
             p_ee_change_state = EEADD_currentlim;
             break;
         case 3:
             if (!g_kpkiFromAT)
-                g_p += g_counter;
-            if (g_p > 150)
-                g_p = 150;
-            if (g_p < 1)
-                g_p = 1;
-            I2CWriteData(I2C_COM_CTR);
+                g_k += g_counter;
+            if (g_k > 150)
+                g_k = 150;
+            if (g_k < 1)
+                g_k = 1;
+            //I2CWriteData(I2C_COM_CTR);
+            I2CWriteData(I2C_PID_K);
             PrintP();
             p_ee_change_state = EEADD_P;
             if (!g_kpkiFromAT)
@@ -842,7 +903,8 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
             //     g_kpkiFromAT = 0;
             //     g_cursorstate = 1;
             // }
-            I2CWriteData(I2C_COM_KI);
+            //I2CWriteData(I2C_COM_KI);
+            I2CWriteData(I2C_PID_Ti);
             PrintKi();
             p_ee_change_state = EEADD_KIINDEX;
             break;
@@ -852,9 +914,10 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
                 g_bconst = 4499;
             if (g_bconst < 3501)
                 g_bconst = 3501;
-            I2CWriteData(I2C_COM_INIT);
+            //I2CWriteData(I2C_COM_INIT);
             g_vset = ReturnVset(g_tset);
-            I2CWriteData(I2C_COM_VSET); //only send Vset, Bconst is not important for slave
+            //I2CWriteData(I2C_COM_VSET); //only send Vset, Bconst is not important for slave
+            I2CWriteData(I2C_PID_TARGET);
             PrintB();
             p_ee_change_state = EEADD_BCONST_UPPER;
             break;

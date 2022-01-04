@@ -225,7 +225,7 @@ public:
 
 	//working variable-------------------
 	unsigned int g_vact, g_vset, g_bconst;
-	unsigned char g_p, g_currentlim, g_cursorstate;
+	unsigned char g_k, g_currentlim, g_cursorstate;
 	int g_itec;
 	bool g_atune_status, g_atunDone, g_DBRflag, g_runTimeflag, g_LCDlock_flag;
 	float g_tset;

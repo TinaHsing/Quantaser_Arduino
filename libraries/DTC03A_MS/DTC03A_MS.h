@@ -21,6 +21,27 @@
 #define I2C_COM_ATSTABLE I2C_COM_ATUN+1
 #define I2C_COM_WAKEUP  I2C_COM_ATSTABLE+1 
 
+#define I2C_DEVICE_STATE		0x0000
+#define I2C_FW_VERSION			0x0001
+#define I2C_IO_STATE			0x0100
+#define I2C_PID_MODE			0x0200
+#define I2C_PID_TARGET			0x0201
+#define I2C_PID_K				0x0202
+#define I2C_PID_Ti				0x0203
+#define I2C_PID_Td				0x0204
+#define I2C_PID_HiLimit			0x0205
+#define I2C_PID_LoLimit			0x0206
+#define I2C_V_Limit				0x0300
+#define I2C_I_Limit				0x0301
+#define I2C_V_TEC				0x0304
+#define I2C_I_TEC				0x0305
+#define I2C_TEMP_SENSOR_EN		0x0400
+#define I2C_TEMP_SENSOR_MODE	0x0401
+#define I2C_TEMP_DATA			0x0402
+#define I2C_TEMP_AVERAGE_DATA	0x0403
+#define I2C_ATUN_TYPE			0x0500
+#define I2C_ATUN_DeltaDuty		0x0501
+
 //Read
 #define I2C_COM_ITEC_ER	I2C_COM_WAKEUP+1
 #define I2C_COM_VACT	I2C_COM_ITEC_ER+1
