@@ -25,21 +25,26 @@ void setup() {
   master.CheckStatus(); //
   master.UpdateEnable(); //
   
-  attachInterrupt(digitalPinToInterrupt(ENC_A),CheckEncoder,CHANGE);
-  attachInterrupt(digitalPinToInterrupt(ENC_B),CheckEncoder,CHANGE);
+  attachInterrupt(digitalPinToInterrupt(ENC_A), CheckEncoder, RISING);
+  attachInterrupt(digitalPinToInterrupt(ENC_SW), PushEncoder, CHANGE);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
   master.CheckStatus();
-  master.UpdateEnable(); //
   master.CursorState();
   master.HoldCursortate();
   master.blinkTsetCursor();
   master.UpdateParam(); //
   master.SaveEEPROM();
 }
+
 void CheckEncoder()
 {
   master.Encoder();
+}
+
+void PushEncoder()
+{
+  master.UpdateEnable();
 }

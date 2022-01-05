@@ -1,6 +1,5 @@
 #include <Wire.h>
 #include <openGLCD.h>
-#include <DTC03A_MS.h>
 #include <EEPROM.h>
 #include <Wire.h>
 #include <fonts/SystemFont5x7.h>
@@ -18,7 +17,6 @@
 #define ILIMSTART				0.45
 #define ILIMSTEP				0.05
 #define DEBOUNCETIME			2			//debounceing time(ms) for ENC
-#define COUNTRESETTIME			80
 #define LONGPRESSTIME			1000
 #define FACTORYMODETIME			20000
 #define ENGCOUNTER				10
@@ -30,10 +28,10 @@
 #define ACCUMULATE_TH			50
 #define DEBOUNCE_WAIT			ACCUMULATE_TH * 4
 //=================pin definition=========================
-#define ENC_B					3
-#define ENC_A					2
-#define PUSHB					A7
-#define ENSW					A6
+#define PUSH_ENABLE				0
+#define ENC_SW					2
+#define ENC_A					3
+#define ENC_B					1
 
 //-----------EEPROM ADDRESS---------
 #define EEADD_VSET_UPPER		0
@@ -117,59 +115,6 @@
 #define ATUNE_COORD_X2			COLUMNPIXEL0507 * 17
 #define Text_AT					"AT:"
 
-//==================ENG BG print coordinate definition=========
-#define R1_COORD_X				COLUMNPIXEL0507
-#define R1_COORD_X2				COLUMNPIXEL0507 * 7
-#define R1_COORD_Y				0
-#define Text_R1					"R1   :"
-#define R2_COORD_X				COLUMNPIXEL0507
-#define R2_COORD_X2				COLUMNPIXEL0507 * 7
-#define R2_COORD_Y				ROWPIXEL0507
-#define Text_R2					"R2   :"
-#define TPIDOFF_COORD_X			COLUMNPIXEL0507
-#define TPIDOFF_COORD_X2		COLUMNPIXEL0507 * 7
-#define TPIDOFF_COORD_Y			ROWPIXEL0507 * 2
-#define Text_pidOS				"pidOS:"
-#define VFBC_COORD_X			COLUMNPIXEL0507
-#define VFBC_COORD_X2			COLUMNPIXEL0507 * 7
-#define VFBC_COORD_Y			ROWPIXEL0507 * 3
-#define Text_Vfbc				"Vfbc :"
-#define VMOD_COOED_X			COLUMNPIXEL0507
-#define VMOD_COOED_X2			COLUMNPIXEL0507 * 7
-#define VMOD_COOED_Y			ROWPIXEL0507 * 4
-#define Text_Vmod				"Vmod  :"
-#define RMEAS_COORD_X			COLUMNPIXEL0507
-#define RMEAS_COORD_X2			COLUMNPIXEL0507 * 7
-#define RMEAS_COORD_Y			ROWPIXEL0507 * 5
-#define Text_Rmeas				"Rmeas:"
-#define TOTP_COORD_X			COLUMNPIXEL0507
-#define TOTP_COORD_X2			COLUMNPIXEL0507 * 9
-#define TOTP_COORD_Y			ROWPIXEL0507 * 6
-#define Text_Totp				"Totp :"
-#define TPCB_COORD_X			COLUMNPIXEL0507
-#define TPCB_COORD_X2			COLUMNPIXEL0507 * 9
-#define TPCB_COORD_Y			ROWPIXEL0507 * 7
-#define Text_Tpcb				"Tpcb :"
-#define P_AT_COORD_X			COLUMNPIXEL0507 * 13
-#define P_AT_COORD_X2			COLUMNPIXEL0507 * 18
-#define P_AT_COORD_Y			ROWPIXEL0507 * 0
-#define Text_PAT				"P_AT:"
-#define TBIAS_COORD_X			COLUMNPIXEL0507 * 13
-#define TBIAS_COORD_X2			COLUMNPIXEL0507 * 18
-#define TBIAS_COORD_Y			ROWPIXEL0507 * 1
-#define Text_TAT				"T_AT:"
-#define ATSTABLE_COORD_X		COLUMNPIXEL0507 * 13
-#define ATSTABLE_COORD_X2		COLUMNPIXEL0507 * 18
-#define ATSTABLE_COORD_Y		ROWPIXEL0507 * 2
-#define Text_SAT				"S_AT:"
-
-#define Test1_COORD_X			0
-#define Test1_COORD_Y			ROWPIXEL0507 * 5
-#define Test2_COORD_X			COLUMNPIXEL0507 * 9
-#define Test2_COORD_Y			ROWPIXEL0507 * 2
-#define Test3_COORD_X			0
-#define Test3_COORD_Y			ROWPIXEL0507 * 5
-
 // define GLCD parameter
 #define COLUMNPIXEL1015			11			//column pixels of fixed_bold10x15
 #define COLUMNPIXEL0507			6			//column pixels of SystemFont5x7
@@ -224,13 +169,30 @@ public:
 	void HoldCursortate();
 
 	//working variable-------------------
-	unsigned int g_vact, g_vset, g_bconst;
-	unsigned char g_k, g_currentlim, g_cursorstate;
-	int g_itec;
-	bool g_atune_status, g_atunDone, g_DBRflag, g_runTimeflag, g_LCDlock_flag;
+	unsigned short g_bconst;
+	
+	bool g_Temp_Sensor_En;
+	bool g_Temp_Sensor_Mode;
+	unsigned char g_PID_Mode;
+	unsigned char g_Auto_Type;
+	unsigned char g_Auto_Delta;
+	unsigned short g_V_Set;
+	unsigned short g_V_Act;;
+	unsigned short g_K;
+	unsigned short g_Ti;
+	unsigned short g_Td;
+	unsigned short g_HiLimit;
+	unsigned short g_LoLimit;
+	unsigned short g_V_Lim;
+	unsigned short g_V_Tec;
+	unsigned short g_I_Lim;
+	unsigned short g_I_Tec;	
+
+	unsigned char g_cursorstate;
+	bool g_atune_status, g_atunDone, g_DBRflag, g_runTimeflag, g_lock_flag;
 	float g_tset;
 	//------------------------------------
-	bool g_en_state, g_kpkiFromAT;
+	unsigned short g_pid_mode;
 	int en_temp, test_at = 0;
 
 private:
@@ -239,11 +201,11 @@ private:
 	void QCP0_Unpackage(unsigned char *pData, unsigned char *RorW, unsigned short *Command, unsigned short *Data);
 
 	glcd lcd;
-	int g_counter;
-	unsigned int g_icount, p_cursorStateCounter[3], p_temp, p_cursorStayTime;
+	bool g_EncodeDir;
+	unsigned int p_cursorStateCounter[3], p_temp, p_cursorStayTime;
 	unsigned int p_tBlink, p_tcursorStateBounce, p_holdCursorTimer;
-	unsigned char g_iarrayindex, g_varrayindex, g_lastencoded, p_engmodeCounter, p_ee_change_state;
-	bool g_errcode1, g_errcode2, g_flag, g_paramupdate, g_countersensor, g_testgo, p_tBlink_toggle, p_blinkTsetCursorFlag, g_wakeup;
+	unsigned char g_iarrayindex, g_varrayindex, p_engmodeCounter, p_ee_change_state;
+	bool g_errcode1, g_errcode2, g_flag, g_paramupdate, g_testgo, p_tBlink_toggle, p_blinkTsetCursorFlag, g_wakeup;
 	bool p_ee_changed, p_HoldCursortateFlag, p_timerResetFlag, p_keyflag, p_atunProcess_flag;
 	unsigned long g_tenc, p_loopindex;
 	float g_tsetstep;
