@@ -32,6 +32,7 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   master.CheckStatus();
+  master.UpdateEnable();
   master.CursorState();
   master.HoldCursortate();
   master.blinkTsetCursor();
@@ -46,5 +47,5 @@ void CheckEncoder()
 
 void PushEncoder()
 {
-  master.UpdateEnable();
+  master.EncoderButton();
 }

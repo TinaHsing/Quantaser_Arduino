@@ -136,8 +136,8 @@ public:
 	void SetPinMode();
 	void ParamInit();
 	void WelcomeScreen();
-	void I2CReadData(unsigned char i);
-	void I2CWriteData(unsigned char com);
+	unsigned short I2CReadData(unsigned short Command);
+	void I2CWriteData(unsigned short Command , unsigned short Data);
 	void I2CReadAll();
 	void VarrayInit();
 	void IarrayInit();
@@ -151,6 +151,7 @@ public:
 	void PrintKi();
 	void PrintB();
 	void Encoder();
+	void EncoderButton();
 	void CursorState();
 	void UpdateParam();
 	unsigned int ReturnVset(float tset);
@@ -171,7 +172,6 @@ public:
 	//working variable-------------------
 	unsigned short g_bconst;
 	
-	bool g_Temp_Sensor_En;
 	bool g_Temp_Sensor_Mode;
 	unsigned char g_PID_Mode;
 	unsigned char g_Auto_Type;
@@ -188,8 +188,9 @@ public:
 	unsigned short g_I_Lim;
 	unsigned short g_I_Tec;	
 
+	bool g_enc_pressed;
 	unsigned char g_cursorstate;
-	bool g_atune_status, g_atunDone, g_DBRflag, g_runTimeflag, g_lock_flag;
+	bool g_atune_status, g_DBRflag, g_runTimeflag, g_lock_flag;
 	float g_tset;
 	//------------------------------------
 	unsigned short g_pid_mode;
@@ -206,7 +207,7 @@ private:
 	unsigned int p_tBlink, p_tcursorStateBounce, p_holdCursorTimer;
 	unsigned char g_iarrayindex, g_varrayindex, p_engmodeCounter, p_ee_change_state;
 	bool g_errcode1, g_errcode2, g_flag, g_paramupdate, g_testgo, p_tBlink_toggle, p_blinkTsetCursorFlag, g_wakeup;
-	bool p_ee_changed, p_HoldCursortateFlag, p_timerResetFlag, p_keyflag, p_atunProcess_flag;
+	bool p_ee_changed, p_HoldCursortateFlag, p_timerResetFlag, p_atunProcess_flag;
 	unsigned long g_tenc, p_loopindex;
 	float g_tsetstep;
 };
