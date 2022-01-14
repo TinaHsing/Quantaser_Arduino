@@ -6,21 +6,6 @@
 // ==========DTC03A_P01 I2C slave address ======
 #define SLAVE_ADDR 		0x07
 // =========receive Events Command and Address======
-//Write
-#define I2C_COM_INIT 	0x11
-#define I2C_COM_CTR 	I2C_COM_INIT+1
-#define I2C_COM_KI	    I2C_COM_CTR+1
-#define I2C_COM_VSET 	I2C_COM_KI+1
-#define I2C_COM_R1R2	I2C_COM_VSET+1
-#define I2C_COM_FBC		I2C_COM_R1R2+1
-#define I2C_COM_OTP  	I2C_COM_FBC+1
-#define	I2C_COM_VMOD	I2C_COM_OTP+1
-#define	I2C_COM_TPIDOFF I2C_COM_VMOD+1
-#define	I2C_COM_RMEAS   I2C_COM_TPIDOFF+1
-#define	I2C_COM_ATUN    I2C_COM_RMEAS+1
-#define I2C_COM_ATSTABLE I2C_COM_ATUN+1
-#define I2C_COM_WAKEUP  I2C_COM_ATSTABLE+1 
-
 #define I2C_DEVICE_STATE		0x0000
 #define I2C_FW_VERSION			0x0001
 #define I2C_IO_STATE			0x0100
@@ -41,12 +26,6 @@
 #define I2C_TEMP_AVERAGE_DATA	0x0403
 #define I2C_ATUN_TYPE			0x0500
 #define I2C_ATUN_DeltaDuty		0x0501
-
-//Read
-#define I2C_COM_ITEC_ER	I2C_COM_WAKEUP+1
-#define I2C_COM_VACT	I2C_COM_ITEC_ER+1
-#define I2C_COM_PCB		I2C_COM_VACT+1
-#define I2C_COM_ATKpKi	I2C_COM_PCB+1
 
 //=========request Events Mask ============
 #define REQMSK_ENSTATE 		0x80

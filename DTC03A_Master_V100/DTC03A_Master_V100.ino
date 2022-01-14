@@ -1,6 +1,6 @@
 
 #include <DTC03AMaster_V100.h>
-#include <DTC03_MS.h>
+#include <DTC03A_MS.h>
 #include <EEPROM.h>
 //#include <Wire.h>
 #include <openGLCD.h>

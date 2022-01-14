@@ -106,10 +106,10 @@
 #define BCONST_COORD_Y			ROWPIXEL0507 * 5
 #define BCONST_COORD_X2			COLUMNPIXEL0507 * 16
 #define Text_B					"B:"
-#define VMOD_COORD_X			COLUMNPIXEL0507 * 14
-#define VMOD_COORD_Y			ROWPIXEL0507 * 6
-#define VMOD_COORD_X2			COLUMNPIXEL0507 * 17
-#define Text_MS					"MS:"
+#define ATUNE_DELTA_COORD_X		COLUMNPIXEL0507 * 14
+#define ATUNE_DELTA_COORD_Y		ROWPIXEL0507 * 6
+#define ATUNE_DELTA_COORD_X2	COLUMNPIXEL0507 * 17
+#define Text_ATUNE_DELTA		"AdT:"
 #define ATUNE_COORD_X			COLUMNPIXEL0507 * 14
 #define ATUNE_COORD_Y			ROWPIXEL0507 * 7
 #define ATUNE_COORD_X2			COLUMNPIXEL0507 * 17
@@ -127,7 +127,7 @@
 //define calculation parameter
 #define T0INV					0.003354
 #define RTHRatio				25665
-#define CURRENTRatio			0.00977		// 3A/307code=0.00977A/code
+#define CURRENTRatio			0.00064453125	// 3.3v/4096(12bit ADC) * 0.8A/V
 
 class DTC03Master
 {
@@ -136,8 +136,8 @@ public:
 	void SetPinMode();
 	void ParamInit();
 	void WelcomeScreen();
-	unsigned short I2CReadData(unsigned short Command);
 	void I2CWriteData(unsigned short Command , unsigned short Data);
+	void I2CReadData(unsigned short Command);
 	void I2CReadAll();
 	void VarrayInit();
 	void IarrayInit();
@@ -173,24 +173,25 @@ public:
 	unsigned short g_bconst;
 	
 	bool g_Temp_Sensor_Mode;
+	short g_V_Tec;
+	short g_I_Tec;
+	unsigned char g_IO_State;
 	unsigned char g_PID_Mode;
 	unsigned char g_Auto_Type;
 	unsigned char g_Auto_Delta;
 	unsigned short g_V_Set;
-	unsigned short g_V_Act;;
+	unsigned short g_V_Act;
 	unsigned short g_K;
 	unsigned short g_Ti;
 	unsigned short g_Td;
 	unsigned short g_HiLimit;
 	unsigned short g_LoLimit;
 	unsigned short g_V_Lim;
-	unsigned short g_V_Tec;
 	unsigned short g_I_Lim;
-	unsigned short g_I_Tec;	
 
 	bool g_enc_pressed;
 	unsigned char g_cursorstate;
-	bool g_atune_status, g_DBRflag, g_runTimeflag, g_lock_flag;
+	bool g_atune_status, g_runTimeflag, g_lock_flag;
 	float g_tset;
 	//------------------------------------
 	unsigned short g_pid_mode;
@@ -200,13 +201,14 @@ private:
 	unsigned char QCP0_CRC_Calculate(unsigned char *pData, unsigned char Length);
 	void QCP0_Package(unsigned char RorW, unsigned short Command, unsigned short Data, unsigned char *pData);
 	void QCP0_Unpackage(unsigned char *pData, unsigned char *RorW, unsigned short *Command, unsigned short *Data);
+	void QCP0_REG_PROCESS(unsigned short Command, unsigned short Data);
 
 	glcd lcd;
 	bool g_EncodeDir;
 	unsigned int p_cursorStateCounter[3], p_temp, p_cursorStayTime;
 	unsigned int p_tBlink, p_tcursorStateBounce, p_holdCursorTimer;
 	unsigned char g_iarrayindex, g_varrayindex, p_engmodeCounter, p_ee_change_state;
-	bool g_errcode1, g_errcode2, g_flag, g_paramupdate, g_testgo, p_tBlink_toggle, p_blinkTsetCursorFlag, g_wakeup;
+	bool g_flag, g_paramupdate, g_testgo, p_tBlink_toggle, p_blinkTsetCursorFlag;
 	bool p_ee_changed, p_HoldCursortateFlag, p_timerResetFlag, p_atunProcess_flag;
 	unsigned long g_tenc, p_loopindex;
 	float g_tsetstep;
