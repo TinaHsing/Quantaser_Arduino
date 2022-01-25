@@ -6,23 +6,12 @@
 #include <fonts/Iain5x7.h>
 #include <fonts/fixed_bold10x15.h>
 #include <avr/pgmspace.h>
+#include <DTC03A_MS.h>
 
 //========Frequently update paramter===========
-#define BCONSTOFFSET			3500
-#define KILENGTH				16
-#define VAVGTIMES				64			// Note!!!! VAVGTIMEs = 2 ^ VAVGPWR
-#define VAVGPWR					6			// Note!!!! VAVGTIMEs = 2 ^ VAVGPWR
-#define IAVGTIMES				8
-#define IAVGPWR					3
-#define ILIMSTART				0.45
-#define ILIMSTEP				0.05
 #define DEBOUNCETIME			2			//debounceing time(ms) for ENC
 #define LONGPRESSTIME			1000
-#define FACTORYMODETIME			20000
-#define ENGCOUNTER				10
 #define BLINKDELAY				350
-#define CURRENTLIMMAX			50			//maximun of g_currentlim
-#define BCONSTMAX				4500		//maximun of bconst
 #define HIGHLOWBOUNDRY			500			//
 #define CURSORSTATE_STAYTIME	700
 #define ACCUMULATE_TH			50
@@ -34,48 +23,42 @@
 #define ENC_B					1
 
 //-----------EEPROM ADDRESS---------
-#define EEADD_VSET_UPPER		0
-#define EEADD_VSET_LOWER		1
-#define EEADD_BCONST_UPPER		2
-#define EEADD_BCONST_LOWER		3
-#define EEADD_MODSTATUS			4
-#define EEADD_currentlim		5
-#define EEADD_FBC_UPPER			6
-#define EEADD_FBC_LOWER			7
-#define EEADD_P					8
-#define EEADD_KIINDEX			9
-#define EEADD_TOTP_UPPER		10
-#define EEADD_TOTP_LOWER		11
-#define EEADD_R1				12
-#define EEADD_R2				13
-#define EEADD_TPIDOFF			14
-#define EEADD_MODOFF_UPPER		15
-#define EEADD_MODOFF_LOWER		16
-#define EEADD_RMEAS_UPPER		17
-#define EEADD_RMEAS_LOWER		18
-#define EEADD_PAP				19
-#define EEADD_TBIAS				20
-#define EEADD_ATSTABLE			21
-#define EEADD_DUMMY				100
+#define EEADD_BCONST_UPPER		0x00
+#define EEADD_BCONST_LOWER		0x01
+#define EEADD_VSET_UPPER		0x02
+#define EEADD_VSET_LOWER		0x03
+#define EEADD_Ilim_UPPER		0x04
+#define EEADD_Ilim_LOWER		0x05
+#define EEADD_Vlim_UPPER		0x06
+#define EEADD_Vlim_LOWER		0x07
+#define EEADD_K_UPPER			0x08
+#define EEADD_K_LOWER			0x09
+#define EEADD_Ti_UPPER			0x0A
+#define EEADD_Ti_LOWER			0x0B
+#define EEADD_Td_UPPER			0x0C
+#define EEADD_Td_LOWER			0x0D
+#define EEADD_HiLimit_UPPER		0x0E
+#define EEADD_HiLimit_LOWER		0x0F
+#define EEADD_LoLimit_UPPER		0x10
+#define EEADD_LoLimit_LOWER		0x11
+#define EEADD_AutoType			0x12
+#define EEADD_AutoDelya_UPPER	0x13
+#define EEADD_AutoDelya_LOWER	0x14
+#define EEADD_DUMMY				0x64
 
 //----------NOEE Default value------
 #define NOEE_DUMMY				104
-#define NOEE_VSET				26214		//25C
-#define NOEE_ILIM				11			// currntlimit=0.45+0.05*11=1A
-#define NOEE_P					10
-#define NOEE_kiindex			1			//OFF
 #define NOEE_BCONST				3988
-#define NOEE_MODSTATUS			0
-#define NOEE_R1					10
-#define NOEE_R2					20
-#define NOEE_TPIDOFF			2
-#define NOEE_FBC				45000
-#define NOEE_MODOFF				32500
-#define NOEE_RMEAS				55000
-#define NOEE_TOTP				561			//120C
-#define NOEE_PAP				10
-#define NOEE_TBIAS				15
-#define NOEE_ATSTABLE			10
+#define NOEE_VSET				26214		// 25C
+#define NOEE_ILIM				248			// 1A
+#define NOEE_VLIM				745			// 2.4V
+#define NOEE_K					10
+#define NOEE_Ti					0			// OFF
+#define NOEE_Td					0			// OFF
+#define NOEE_HiLimit			840			// PWM Full
+#define NOEE_LoLimit			0			// OFF
+#define NOEE_AutoType			Autotune_P
+#define NOEE_AutoDelta			42			// PWM Full * 0.5
 
 //=====================BG print coordinate definition=========
 #define TSET_COORD_X			0
@@ -127,7 +110,9 @@
 //define calculation parameter
 #define T0INV					0.003354
 #define RTHRatio				25665
-#define CURRENTRatio			0.00064453125	// 3.3v/4096(12bit ADC) * 0.8A/V
+#define Bin_To_Itec				0.001007080078125	// 3.3V/(4096(12bit ADC) * 0.8V/A)
+#define Bin_To_Ilim				0.0040283203125		// 3.3V/(1024(10bit DAC) * 0.8V/A)
+#define Ilim_To_Bin				248.2424242424242	// 0.8V/A * (1024(10bit DAC)/3.3V)
 
 class DTC03Master
 {
@@ -135,43 +120,34 @@ public:
 	DTC03Master();
 	void SetPinMode();
 	void ParamInit();
-	void WelcomeScreen();
+	void ReadEEPROM();
+	void SaveEEPROM();
+	void I2CWriteAll();
 	void I2CWriteData(unsigned short Command , unsigned short Data);
 	void I2CReadData(unsigned short Command);
-	void I2CReadAll();
-	void VarrayInit();
-	void IarrayInit();
+	void UpdateEnable();
+	void CheckStatus();
+	void UpdateParam();
+	void WelcomeScreen();
 	void BackGroundPrint();
-	float ReturnTemp(unsigned int vact);
 	void PrintTset();
 	void PrintTact(float tact);
 	void PrintItec(float itec);
 	void PrintIlim();
-	void PrintP();
-	void PrintKi();
+	void PrintK();
+	void PrintTi();
 	void PrintB();
-	void Encoder();
-	void EncoderButton();
-	void CursorState();
-	void UpdateParam();
-	unsigned int ReturnVset(float tset);
-	void CheckStatus();
-	void PrintNormalAll();
-	void PrintEnable();
 	void PrintAtune();
 	void PrintAtuneDone();
-
-	void ShowCursor(unsigned char);
-	void UpdateEnable();
-	void blinkTsetCursor();
-	void SaveEEPROM();
-	void ReadEEPROM();
-	void I2CWriteAll();
+	void PrintNormalAll();
+	void CursorState();
 	void HoldCursortate();
+	void blinkTsetCursor();
+	void ShowCursor(unsigned char);
+	void Encoder();
+	void EncoderButton();
 
 	//working variable-------------------
-	unsigned short g_bconst;
-	
 	bool g_Temp_Sensor_Mode;
 	short g_V_Tec;
 	short g_I_Tec;
@@ -179,25 +155,29 @@ public:
 	unsigned char g_PID_Mode;
 	unsigned char g_Auto_Type;
 	unsigned char g_Auto_Delta;
+	unsigned short g_B_Const;
 	unsigned short g_V_Set;
 	unsigned short g_V_Act;
+	unsigned short g_V_Lim;
+	unsigned short g_I_Lim;
 	unsigned short g_K;
 	unsigned short g_Ti;
 	unsigned short g_Td;
 	unsigned short g_HiLimit;
 	unsigned short g_LoLimit;
-	unsigned short g_V_Lim;
-	unsigned short g_I_Lim;
+
+	float g_T_Set;
+	float g_I_Print;
 
 	bool g_enc_pressed;
-	unsigned char g_cursorstate;
 	bool g_atune_status, g_runTimeflag, g_lock_flag;
-	float g_tset;
+	unsigned char g_cursorstate;
 	//------------------------------------
 	unsigned short g_pid_mode;
-	int en_temp, test_at = 0;
 
 private:
+	float ReturnTemp(unsigned int vact);
+	unsigned int ReturnVset(float tset);
 	unsigned char QCP0_CRC_Calculate(unsigned char *pData, unsigned char Length);
 	void QCP0_Package(unsigned char RorW, unsigned short Command, unsigned short Data, unsigned char *pData);
 	void QCP0_Unpackage(unsigned char *pData, unsigned char *RorW, unsigned short *Command, unsigned short *Data);
@@ -205,10 +185,10 @@ private:
 
 	glcd lcd;
 	bool g_EncodeDir;
-	unsigned int p_cursorStateCounter[3], p_temp, p_cursorStayTime;
+	unsigned int p_cursorStateCounter[3], p_cursorStayTime;
 	unsigned int p_tBlink, p_tcursorStateBounce, p_holdCursorTimer;
-	unsigned char g_iarrayindex, g_varrayindex, p_engmodeCounter, p_ee_change_state;
-	bool g_flag, g_paramupdate, g_testgo, p_tBlink_toggle, p_blinkTsetCursorFlag;
+	unsigned char p_ee_change_state;
+	bool g_paramupdate, p_tBlink_toggle, p_blinkTsetCursorFlag;
 	bool p_ee_changed, p_HoldCursortateFlag, p_timerResetFlag, p_atunProcess_flag;
 	unsigned long g_tenc, p_loopindex;
 	float g_tsetstep;

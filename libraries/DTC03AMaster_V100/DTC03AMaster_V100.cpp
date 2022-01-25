@@ -1,11 +1,20 @@
 /* 
 	09/19/2017
 */
-#include <DTC03A_MS.h>
 #include <DTC03AMaster_V100.h>
 
 DTC03Master::DTC03Master()
 {
+}
+
+float DTC03Master::ReturnTemp(unsigned int vact)
+{
+    return (1 / (log((float)vact / RTHRatio) / (float)g_B_Const + T0INV) - 273.15);
+}
+
+unsigned int DTC03Master::ReturnVset(float tset)
+{
+    return ((unsigned int)RTHRatio * exp(-1 * (float)g_B_Const * (T0INV - 1 / (tset + 273.15))));
 }
 
 unsigned char DTC03Master::QCP0_CRC_Calculate(unsigned char *pData, unsigned char Length)
@@ -126,12 +135,13 @@ void DTC03Master::SetPinMode()
 void DTC03Master::ParamInit()
 {
     Wire.begin();
-    lcd.Init();    
+    lcd.Init();
+    g_IO_State = 0x00;
+    g_PID_Mode = PID_Off;
+    g_Temp_Sensor_Mode = false;
     g_enc_pressed = false;
     g_paramupdate = 0;
-    //g_sensortype = 0;
     g_tsetstep = 1.00;
-    g_PID_Mode = PID_Off;
     g_atune_status = 0;
     g_cursorstate = 1;
     p_cursorStateCounter[0] = 0;
@@ -152,47 +162,59 @@ void DTC03Master::ParamInit()
 
 void DTC03Master::ReadEEPROM()
 {
-    unsigned char noeedummy, temp_upper, temp_lower;
-    noeedummy = EEPROM.read(EEADD_DUMMY);
-    if (noeedummy == NOEE_DUMMY)
+    if (EEPROM.read(EEADD_DUMMY) == NOEE_DUMMY)
     {
+        g_B_Const = EEPROM.read(EEADD_BCONST_UPPER) << 8 | EEPROM.read(EEADD_BCONST_LOWER);
         g_V_Set = EEPROM.read(EEADD_VSET_UPPER) << 8 | EEPROM.read(EEADD_VSET_LOWER);
-        g_I_Lim = EEPROM.read(EEADD_currentlim);
-        g_K = EEPROM.read(EEADD_P);
-        g_bconst = EEPROM.read(EEADD_BCONST_UPPER) << 8 | EEPROM.read(EEADD_BCONST_LOWER);
+        g_I_Lim = EEPROM.read(EEADD_Ilim_UPPER) << 8 | EEPROM.read(EEADD_Ilim_LOWER);
+        g_V_Lim = EEPROM.read(EEADD_Vlim_UPPER) << 8 | EEPROM.read(EEADD_Vlim_LOWER);
+        g_K = EEPROM.read(EEADD_K_UPPER) << 8 | EEPROM.read(EEADD_K_LOWER);
+        g_Ti = EEPROM.read(EEADD_Ti_UPPER) << 8 | EEPROM.read(EEADD_Ti_LOWER);
+        g_Td = EEPROM.read(EEADD_Td_UPPER) << 8 | EEPROM.read(EEADD_Td_LOWER);
+        g_HiLimit = EEPROM.read(EEADD_HiLimit_UPPER) << 8 | EEPROM.read(EEADD_HiLimit_LOWER);
+        g_LoLimit = EEPROM.read(EEADD_LoLimit_UPPER) << 8 | EEPROM.read(EEADD_LoLimit_LOWER);
+        g_Auto_Type = EEPROM.read(EEADD_AutoType);
+        g_Auto_Delta = EEPROM.read(EEADD_AutoDelya_UPPER) << 8 | EEPROM.read(EEADD_AutoDelya_LOWER);
     }
     else
     {
         EEPROM.write(EEADD_DUMMY, NOEE_DUMMY);
-        EEPROM.write(EEADD_VSET_UPPER, NOEE_VSET >> 8);
-        EEPROM.write(EEADD_VSET_LOWER, NOEE_VSET);
-        EEPROM.write(EEADD_currentlim, NOEE_ILIM);
-        EEPROM.write(EEADD_P, NOEE_P);
-        EEPROM.write(EEADD_KIINDEX, NOEE_kiindex);
         EEPROM.write(EEADD_BCONST_UPPER, NOEE_BCONST >> 8);
         EEPROM.write(EEADD_BCONST_LOWER, NOEE_BCONST);
-        EEPROM.write(EEADD_MODSTATUS, NOEE_MODSTATUS);
-        EEPROM.write(EEADD_R1, NOEE_R1);
-        EEPROM.write(EEADD_R2, NOEE_R2);
-        EEPROM.write(EEADD_TPIDOFF, NOEE_TPIDOFF);
-        EEPROM.write(EEADD_FBC_UPPER, NOEE_FBC >> 8);
-        EEPROM.write(EEADD_FBC_LOWER, NOEE_FBC);
-        EEPROM.write(EEADD_MODOFF_UPPER, NOEE_MODOFF >> 8);
-        EEPROM.write(EEADD_MODOFF_LOWER, NOEE_MODOFF);
-        EEPROM.write(EEADD_RMEAS_UPPER, NOEE_RMEAS >> 8);
-        EEPROM.write(EEADD_RMEAS_LOWER, NOEE_RMEAS);
-        EEPROM.write(EEADD_TOTP_UPPER, NOEE_TOTP >> 8);
-        EEPROM.write(EEADD_TOTP_LOWER, NOEE_TOTP);
-        EEPROM.write(EEADD_PAP, NOEE_PAP);
-        EEPROM.write(EEADD_TBIAS, NOEE_TBIAS);
-        EEPROM.write(EEADD_ATSTABLE, NOEE_ATSTABLE);
+        EEPROM.write(EEADD_VSET_UPPER, NOEE_VSET >> 8);
+        EEPROM.write(EEADD_VSET_LOWER, NOEE_VSET);
+        EEPROM.write(EEADD_Ilim_UPPER, NOEE_ILIM >> 8);
+        EEPROM.write(EEADD_Ilim_LOWER, NOEE_ILIM);
+        EEPROM.write(EEADD_Vlim_UPPER, NOEE_VLIM >> 8);
+        EEPROM.write(EEADD_Vlim_LOWER, NOEE_VLIM);
+        EEPROM.write(EEADD_K_UPPER, NOEE_K >> 8);
+        EEPROM.write(EEADD_K_LOWER, NOEE_K);
+        EEPROM.write(EEADD_Ti_UPPER, NOEE_Ti >> 8);
+        EEPROM.write(EEADD_Ti_LOWER, NOEE_Ti);
+        EEPROM.write(EEADD_Td_LOWER, NOEE_Td >> 8);
+        EEPROM.write(EEADD_Td_LOWER, NOEE_Td);
+        EEPROM.write(EEADD_HiLimit_UPPER, NOEE_HiLimit >> 8);
+        EEPROM.write(EEADD_HiLimit_LOWER, NOEE_HiLimit);
+        EEPROM.write(EEADD_LoLimit_UPPER, NOEE_LoLimit >> 8);
+        EEPROM.write(EEADD_LoLimit_LOWER, NOEE_LoLimit);
+        EEPROM.write(EEADD_AutoType, NOEE_AutoType);
+        EEPROM.write(EEADD_AutoDelya_UPPER, NOEE_AutoDelta >> 8);
+        EEPROM.write(EEADD_AutoDelya_LOWER, NOEE_AutoDelta);
 
+        g_B_Const = NOEE_BCONST;
         g_V_Set = NOEE_VSET;
         g_I_Lim = NOEE_ILIM;
-        g_K = NOEE_P;
-        g_bconst = NOEE_BCONST;
+        g_V_Lim = NOEE_VLIM;
+        g_K = NOEE_K;
+        g_Ti = NOEE_Ti;
+        g_Td = NOEE_Td;
+        g_HiLimit = NOEE_HiLimit;
+        g_LoLimit = NOEE_LoLimit;
+        g_Auto_Type = NOEE_AutoType;
+        g_Auto_Delta = NOEE_AutoDelta;
     }
-    g_tset = ReturnTemp(g_V_Set);
+    g_T_Set = ReturnTemp(g_V_Set);
+    g_I_Print = Bin_To_Ilim * (float)(g_I_Lim);
 }
 
 void DTC03Master::SaveEEPROM()
@@ -202,74 +224,53 @@ void DTC03Master::SaveEEPROM()
         p_ee_changed = 0;
         switch (p_ee_change_state)
         {
+        case EEADD_BCONST_UPPER:
+            EEPROM.write(EEADD_BCONST_UPPER, g_B_Const >> 8);
+            EEPROM.write(EEADD_BCONST_LOWER, g_B_Const);
+            break;
         case EEADD_VSET_UPPER:
             EEPROM.write(EEADD_VSET_UPPER, g_V_Set >> 8);
             EEPROM.write(EEADD_VSET_LOWER, g_V_Set);
             break;
-        case EEADD_BCONST_UPPER:
-            EEPROM.write(EEADD_BCONST_UPPER, g_bconst >> 8);
-            EEPROM.write(EEADD_BCONST_LOWER, g_bconst);
+        case EEADD_Ilim_UPPER:
+            EEPROM.write(EEADD_Ilim_UPPER, g_I_Lim >> 8);
+            EEPROM.write(EEADD_Ilim_LOWER, g_I_Lim);
             break;
-        case EEADD_currentlim:
-            EEPROM.write(EEADD_currentlim, g_I_Lim);
+        case EEADD_Vlim_UPPER:
+            EEPROM.write(EEADD_Vlim_UPPER, g_V_Lim >> 8);
+            EEPROM.write(EEADD_Vlim_LOWER, g_V_Lim);
             break;
-        case EEADD_P:
-            EEPROM.write(EEADD_P, g_K);
+        case EEADD_K_UPPER:
+            EEPROM.write(EEADD_K_UPPER, g_K >> 8);
+            EEPROM.write(EEADD_K_LOWER, g_K);
+            break;
+        case EEADD_Ti_UPPER:
+            EEPROM.write(EEADD_Ti_UPPER, g_Ti >> 8);
+            EEPROM.write(EEADD_Ti_LOWER, g_Ti);
+            break;
+        case EEADD_Td_UPPER:
+            EEPROM.write(EEADD_Td_UPPER, g_Td >> 8);
+            EEPROM.write(EEADD_Td_LOWER, g_Td);
+            break;
+        case EEADD_HiLimit_UPPER:
+            EEPROM.write(EEADD_HiLimit_UPPER, g_HiLimit >> 8);
+            EEPROM.write(EEADD_HiLimit_LOWER, g_HiLimit);
+            break;
+        case EEADD_LoLimit_UPPER:
+            EEPROM.write(EEADD_LoLimit_UPPER, g_LoLimit >> 8);
+            EEPROM.write(EEADD_LoLimit_LOWER, g_LoLimit);
+            break;
+        case EEADD_AutoType:
+            EEPROM.write(EEADD_AutoType, g_Auto_Type);
+            break;
+        case EEADD_AutoDelya_UPPER:
+            EEPROM.write(EEADD_AutoDelya_UPPER, g_Auto_Delta >> 8);
+            EEPROM.write(EEADD_AutoDelya_LOWER, g_Auto_Delta);
+            break;
+        default:
             break;
         }
     }
-}
-
-void DTC03Master::CheckStatus()
-{
-    float Temp;
-    switch (p_loopindex)
-    {
-    case 0:
-        I2CReadData(I2C_I_TEC);
-        Temp = float(g_I_Tec) * CURRENTRatio;
-        PrintItec(Temp);
-        break;
-    case 1:
-        I2CReadData(I2C_TEMP_AVERAGE_DATA);
-        Temp = ReturnTemp(g_V_Act);
-        PrintTact(Temp);    
-        break;
-    case 2:
-        if(g_PID_Mode == PID_Autotune) {
-            I2CReadData(I2C_PID_MODE);
-            if(g_PID_Mode != PID_Autotune) {
-                I2CReadData(I2C_PID_K);
-                I2CReadData(I2C_PID_Ti);
-                PrintAtuneDone();
-            }
-        }
-        break;
-    default:
-        break;
-    }
-    if(p_loopindex == 2) {
-        p_loopindex = 0;
-    } else {
-        p_loopindex++;
-    }
-}
-
-void DTC03Master::I2CWriteAll()
-{
-    I2CWriteData(I2C_PID_MODE, g_PID_Mode);
-    I2CWriteData(I2C_PID_TARGET, g_V_Set);
-    I2CWriteData(I2C_PID_K, g_K);
-    I2CWriteData(I2C_PID_Ti, g_Ti);
-    I2CWriteData(I2C_PID_Td, 0);
-    I2CWriteData(I2C_PID_HiLimit, g_HiLimit);
-    I2CWriteData(I2C_PID_LoLimit, g_LoLimit);
-    I2CWriteData(I2C_V_Limit, g_V_Lim);
-    I2CWriteData(I2C_I_Limit, g_I_Lim);
-    I2CWriteData(I2C_TEMP_SENSOR_EN, 0x0001);
-    I2CWriteData(I2C_TEMP_SENSOR_MODE, (unsigned short)g_Temp_Sensor_Mode);
-    I2CWriteData(I2C_ATUN_TYPE, g_Auto_Type);
-    I2CWriteData(I2C_ATUN_DeltaDuty, g_Auto_Delta);
 }
 
 void DTC03Master::I2CWriteData(unsigned short Command , unsigned short Data)
@@ -319,14 +320,173 @@ void DTC03Master::I2CReadData(unsigned short Command)
     QCP0_REG_PROCESS((unsigned short)Command, (unsigned short)Data);
 }
 
-float DTC03Master::ReturnTemp(unsigned int vact)
+void DTC03Master::I2CWriteAll()
 {
-    return (1 / (log((float)vact / RTHRatio) / (float)g_bconst + T0INV) - 273.15);
+    I2CWriteData(I2C_PID_MODE, g_PID_Mode);
+    I2CWriteData(I2C_PID_TARGET, g_V_Set);
+    I2CWriteData(I2C_PID_K, g_K);
+    I2CWriteData(I2C_PID_Ti, g_Ti);
+    I2CWriteData(I2C_PID_Td, 0);
+    I2CWriteData(I2C_PID_HiLimit, g_HiLimit);
+    I2CWriteData(I2C_PID_LoLimit, g_LoLimit);
+    I2CWriteData(I2C_V_Limit, g_V_Lim);
+    I2CWriteData(I2C_I_Limit, g_I_Lim);
+    I2CWriteData(I2C_TEMP_SENSOR_EN, 0x0001);
+    I2CWriteData(I2C_TEMP_SENSOR_MODE, (unsigned short)g_Temp_Sensor_Mode);
+    I2CWriteData(I2C_ATUN_TYPE, g_Auto_Type);
+    I2CWriteData(I2C_ATUN_DeltaDuty, g_Auto_Delta);
 }
 
-unsigned int DTC03Master::ReturnVset(float tset)
+void DTC03Master::UpdateEnable()
 {
-    return ((unsigned int)RTHRatio * exp(-1 * (float)g_bconst * (T0INV - 1 / (tset + 273.15))));
+    if (analogRead(PUSH_ENABLE) > 500) {
+        if(!g_atune_status && (g_PID_Mode != PID_On)) {
+            g_PID_Mode = PID_On;
+            I2CWriteData(I2C_PID_MODE, PID_On);
+        }
+    } else {
+        if(g_PID_Mode != PID_Off) {
+            g_PID_Mode = PID_Off;
+            I2CWriteData(I2C_PID_MODE, PID_Off);
+        }
+    }
+}
+
+void DTC03Master::CheckStatus()
+{
+    float Temp;
+    switch (p_loopindex)
+    {
+    case 0:
+        I2CReadData(I2C_I_TEC);
+        Temp = float(g_I_Tec) * Bin_To_Itec;
+        PrintItec(Temp);
+        break;
+    case 1:
+        I2CReadData(I2C_TEMP_AVERAGE_DATA);
+        Temp = ReturnTemp(g_V_Act);
+        PrintTact(Temp);    
+        break;
+    case 2:
+        if(g_PID_Mode == PID_Autotune) {
+            I2CReadData(I2C_PID_MODE);
+            if(g_PID_Mode != PID_Autotune) {
+                I2CReadData(I2C_PID_K);
+                I2CReadData(I2C_PID_Ti);
+                PrintAtuneDone();
+            }
+        }
+        break;
+    default:
+        break;
+    }
+    if(p_loopindex == 2) {
+        p_loopindex = 0;
+    } else {
+        p_loopindex++;
+    }
+}
+
+void DTC03Master::UpdateParam() // Still need to add the upper and lower limit of each variable
+{
+    unsigned char ki, ls;
+    unsigned long timer1, timer2;
+    if (g_paramupdate)
+    {
+        g_paramupdate = 0;
+        switch (g_cursorstate)
+        {
+        case 0:
+            break;
+        case 1:
+            if(g_EncodeDir) {
+                g_T_Set += g_tsetstep;
+            } else {
+                g_T_Set -= g_tsetstep;
+            }
+            if (g_T_Set > 200)
+                g_T_Set = 200;
+            if (g_T_Set < 7)
+                g_T_Set = 7;
+            g_V_Set = ReturnVset(g_T_Set);
+            I2CWriteData(I2C_PID_TARGET, g_V_Set);
+            PrintTset();
+            p_blinkTsetCursorFlag = 0;
+            p_ee_changed = 1;
+            p_ee_change_state = EEADD_VSET_UPPER;
+            break;
+        case 2:
+            if(g_EncodeDir) {
+                g_I_Print += 0.1;
+            } else {
+                g_I_Print -= 0.1;
+            }
+            if (g_I_Print > 3)
+                g_I_Print = 3;
+            if (g_I_Print < 0.1)
+                g_I_Print = 0.1;
+                
+            g_I_Lim = (unsigned short)(g_I_Print * Ilim_To_Bin);
+            I2CWriteData(I2C_I_Limit, g_I_Lim);
+            PrintIlim();
+            p_ee_changed = 1;
+            p_ee_change_state = EEADD_Ilim_UPPER;
+            break;
+        case 3:
+            if(g_EncodeDir) {
+                g_K++;
+            } else {
+                g_K--;
+            }
+            if (g_K > 150)
+                g_K = 150;
+            if (g_K < 1)
+                g_K = 1;
+            I2CWriteData(I2C_PID_K, g_K);
+            PrintK();
+            p_ee_changed = 1;
+            p_ee_change_state = EEADD_K_UPPER;
+        case 4:
+            if(g_EncodeDir) {
+                if(g_Ti < 5000)
+                    g_Ti++;
+            } else {
+                if(g_Ti > 0)
+                    g_Ti--;
+            }
+            I2CWriteData(I2C_PID_Ti, g_Ti);
+            PrintTi();
+            p_ee_changed = 1;
+            p_ee_change_state = EEADD_Ti_UPPER;
+            break;
+        case 5:
+            if(g_EncodeDir) {
+                g_B_Const++;
+            } else {
+                g_B_Const--;
+            }
+            if (g_B_Const > 4499)
+                g_B_Const = 4499;
+            if (g_B_Const < 3501)
+                g_B_Const = 3501;
+            g_V_Set = ReturnVset(g_T_Set);
+            I2CWriteData(I2C_PID_TARGET, g_V_Set);
+            PrintB();
+            p_ee_changed = 1;
+            p_ee_change_state = EEADD_BCONST_UPPER;
+            break;
+        case 6:
+            break;
+        case 7:
+            g_atune_status = !g_EncodeDir;
+            if (g_atune_status) {
+                I2CWriteData(I2C_ATUN_TYPE, Autotune_PI);
+                I2CWriteData(I2C_ATUN_DeltaDuty, 42);
+            }
+            PrintAtune();
+            break;
+        }
+    }
 }
 
 void DTC03Master::WelcomeScreen()
@@ -370,27 +530,16 @@ void DTC03Master::BackGroundPrint()
     lcd.print(Text_AT);
 }
 
-void DTC03Master::PrintNormalAll()
-{
-    PrintTset();
-    PrintIlim();
-    PrintP();
-    PrintKi();
-    PrintB();
-    PrintAtune();
-    //No need to add print Itec and Vact here, checkstatus() will do this
-}
-
 void DTC03Master::PrintTset()
 {
     lcd.SelectFont(fixed_bold10x15);
     lcd.GotoXY(TSET_COORD_X2, TSET_COORD_Y);
-    if (g_tset < 10.000)
+    if (g_T_Set < 10.000)
         lcd.print("  ");
-    else if (g_tset < 100.000)
+    else if (g_T_Set < 100.000)
         lcd.print(" ");
 
-    lcd.print(g_tset, 3);
+    lcd.print(g_T_Set, 3);
 }
 
 void DTC03Master::PrintTact(float tact)
@@ -430,15 +579,13 @@ void DTC03Master::PrintItec(float itec)
 
 void DTC03Master::PrintIlim()
 {
-    float currentlim;
-    currentlim = ILIMSTART + ILIMSTEP * (float)(g_I_Lim);
     lcd.SelectFont(SystemFont5x7);
     lcd.GotoXY(ILIM_COORD_X2, ILIM_COORD_Y);
     //  lcd.print(" ");
-    lcd.print(currentlim, 2);
+    lcd.print(g_I_Print, 2);
 }
 
-void DTC03Master::PrintP()
+void DTC03Master::PrintK()
 {
     lcd.SelectFont(SystemFont5x7);
     lcd.GotoXY(P_COORD_X2, P_COORD_Y);
@@ -453,21 +600,16 @@ void DTC03Master::PrintP()
     }
 }
 
-void DTC03Master::PrintKi()
+void DTC03Master::PrintTi()
 {
-    //unsigned int tconst;
-    float tconst;
+    float Ti = float(g_Ti) * 0.01;
     lcd.SelectFont(SystemFont5x7);
-    tconst = 0;//float(pgm_read_word_near(timeconst + g_kiindex)) / 100.0;
     lcd.GotoXY(I_COORD_X2, I_COORD_Y);
-    if(tconst == 0)
-    {
+    if(Ti == 0) {
         lcd.print(" OFF");
-    }
-    else
-    {
-        lcd.print("  ");
-        lcd.print(tconst, 0);
+    } else {
+        //lcd.print("  ");
+        lcd.print(Ti, 2);
     }
 }
 
@@ -475,7 +617,7 @@ void DTC03Master::PrintB()
 {
     lcd.SelectFont(SystemFont5x7);
     lcd.GotoXY(BCONST_COORD_X2, BCONST_COORD_Y);
-    lcd.print(g_bconst);
+    lcd.print(g_B_Const);
 }
 
 void DTC03Master::PrintAtune()
@@ -512,19 +654,15 @@ void DTC03Master::PrintAtuneDone()
     PrintNormalAll();
 }
 
-void DTC03Master::UpdateEnable()
+void DTC03Master::PrintNormalAll()
 {
-    if (analogRead(PUSH_ENABLE) > 500) {
-        if(!g_atune_status && (g_PID_Mode != PID_On)) {
-            g_PID_Mode = PID_On;
-            I2CWriteData(I2C_PID_MODE, PID_On);
-        }
-    } else {
-        if(g_PID_Mode != PID_Off) {
-            g_PID_Mode = PID_Off;
-            I2CWriteData(I2C_PID_MODE, PID_Off);
-        }
-    }
+    PrintTset();
+    PrintIlim();
+    PrintK();
+    PrintTi();
+    PrintB();
+    PrintAtune();
+    //No need to add print Itec and Vact here, checkstatus() will do this
 }
 
 void DTC03Master::CursorState()
@@ -742,103 +880,6 @@ void DTC03Master::ShowCursor(unsigned char state_old)
         lcd.GotoXY(ATUNE_DELTA_COORD_X - COLUMNPIXEL0507, ATUNE_DELTA_COORD_Y);
         lcd.print(" ");
         break;
-    }
-}
-
-void DTC03Master::UpdateParam() // Still need to add the upper and lower limit of each variable
-{
-    unsigned char ki, ls;
-    unsigned long timer1, timer2;
-    if (g_paramupdate)
-    {
-        g_paramupdate = 0;
-        p_ee_changed = 1;
-        switch (g_cursorstate)
-        {
-        case 0:
-            break;
-        case 1:
-            if(g_EncodeDir) {
-                g_tset += g_tsetstep;
-            } else {
-                g_tset -= g_tsetstep;
-            }
-            if (g_tset > 200)
-                g_tset = 200;
-            if (g_tset < 7)
-                g_tset = 7;
-            g_V_Set = ReturnVset(g_tset);
-            I2CWriteData(I2C_PID_TARGET, g_V_Set);
-            PrintTset();
-            p_blinkTsetCursorFlag = 0;
-            p_ee_change_state = EEADD_VSET_UPPER;
-            break;
-        case 2:
-            if(g_EncodeDir) {
-                g_I_Lim++;
-            } else {
-                g_I_Lim--;
-            }
-            if (g_I_Lim > 51)
-                g_I_Lim = 51;
-            if (g_I_Lim < 1)
-                g_I_Lim = 1;
-            I2CWriteData(I2C_I_Limit, g_I_Lim);
-            PrintIlim();
-            p_ee_change_state = EEADD_currentlim;
-            break;
-        case 3:
-            if(g_EncodeDir) {
-                g_K++;
-            } else {
-                g_K--;
-            }
-            if (g_K > 150)
-                g_K = 150;
-            if (g_K < 1)
-                g_K = 1;
-            I2CWriteData(I2C_PID_K, g_K);
-            PrintP();
-            p_ee_change_state = EEADD_P;
-            p_ee_changed = 1;
-        case 4:
-            if(g_EncodeDir) {
-                if(g_Ti < 5000)
-                    g_Ti++;
-            } else {
-                if(g_Ti > 0)
-                    g_Ti--;
-            }
-            I2CWriteData(I2C_PID_Ti, g_Ti);
-            PrintKi();
-            p_ee_change_state = EEADD_KIINDEX;
-            break;
-        case 5:
-            if(g_EncodeDir) {
-                g_bconst++;
-            } else {
-                g_bconst--;
-            }
-            if (g_bconst > 4499)
-                g_bconst = 4499;
-            if (g_bconst < 3501)
-                g_bconst = 3501;
-            g_V_Set = ReturnVset(g_tset);
-            I2CWriteData(I2C_PID_TARGET, g_V_Set);
-            PrintB();
-            p_ee_change_state = EEADD_BCONST_UPPER;
-            break;
-        case 6:
-            break;
-        case 7:
-            g_atune_status = !g_EncodeDir;
-            if (g_atune_status) {
-                I2CWriteData(I2C_ATUN_TYPE, Autotune_PI);
-                I2CWriteData(I2C_ATUN_DeltaDuty, 42);
-            }
-            PrintAtune();
-            break;
-        }
     }
 }
 
