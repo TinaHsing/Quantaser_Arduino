@@ -4,7 +4,7 @@
 #include <avr/io.h>
 #include <avr/pgmspace.h>//
 // ==========DTC03A_P01 I2C slave address ======
-#define SLAVE_ADDR 		0x07
+#define SLAVE_ADDR 		0x5A
 // =========receive Events Command and Address======
 #define I2C_DEVICE_STATE		0x0000
 #define I2C_FW_VERSION			0x0001

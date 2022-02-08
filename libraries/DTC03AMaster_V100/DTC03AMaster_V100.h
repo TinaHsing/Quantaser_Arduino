@@ -17,10 +17,14 @@
 #define ACCUMULATE_TH			50
 #define DEBOUNCE_WAIT			ACCUMULATE_TH * 4
 //=================pin definition=========================
-#define PUSH_ENABLE				0
-#define ENC_SW					2
-#define ENC_A					3
-#define ENC_B					1
+// #define PUSH_ENABLE				0
+// #define ENC_SW					2
+// #define ENC_A					3
+// #define ENC_B					1
+#define ENC_B						3
+#define ENC_A						2
+#define ENC_SW						A7
+#define PUSH_ENABLE					A6
 
 //-----------EEPROM ADDRESS---------
 #define EEADD_BCONST_UPPER		0x00
@@ -79,8 +83,8 @@
 #define Text_ILIM				"ILIM:"
 #define P_COORD_X				COLUMNPIXEL0507 * 14
 #define P_COORD_Y				ROWPIXEL0507 * 3
-#define P_COORD_X2				COLUMNPIXEL0507 * 17
-#define Text_P					"P: "
+#define P_COORD_X2				COLUMNPIXEL0507 * 16
+#define Text_P					"P:"
 #define I_COORD_X				COLUMNPIXEL0507 * 14
 #define I_COORD_Y				ROWPIXEL0507 * 4
 #define I_COORD_X2				COLUMNPIXEL0507 * 16
@@ -91,7 +95,7 @@
 #define Text_B					"B:"
 #define ATUNE_DELTA_COORD_X		COLUMNPIXEL0507 * 14
 #define ATUNE_DELTA_COORD_Y		ROWPIXEL0507 * 6
-#define ATUNE_DELTA_COORD_X2	COLUMNPIXEL0507 * 17
+#define ATUNE_DELTA_COORD_X2	COLUMNPIXEL0507 * 18
 #define Text_ATUNE_DELTA		"AdT:"
 #define ATUNE_COORD_X			COLUMNPIXEL0507 * 14
 #define ATUNE_COORD_Y			ROWPIXEL0507 * 7
@@ -113,6 +117,7 @@
 #define Bin_To_Itec				0.001007080078125	// 3.3V/(4096(12bit ADC) * 0.8V/A)
 #define Bin_To_Ilim				0.0040283203125		// 3.3V/(1024(10bit DAC) * 0.8V/A)
 #define Ilim_To_Bin				248.2424242424242	// 0.8V/A * (1024(10bit DAC)/3.3V)
+#define PI_Freq					1000	// Timer frequency = 1KHz
 
 class DTC03Master
 {

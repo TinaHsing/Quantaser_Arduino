@@ -128,8 +128,8 @@ void DTC03Master::SetPinMode()
 {
     pinMode(ENC_A, INPUT);
     pinMode(ENC_B, INPUT);
-    pinMode(ENC_SW, INPUT);
-    pinMode(PUSH_ENABLE, INPUT);
+    // pinMode(ENC_SW, INPUT);
+    // pinMode(PUSH_ENABLE, INPUT);
 }
 
 void DTC03Master::ParamInit()
@@ -277,23 +277,23 @@ void DTC03Master::I2CWriteData(unsigned short Command , unsigned short Data)
 {
     unsigned char RorW = 0xA5;
     unsigned char Package[8];   
-    QCP0_Package((unsigned char)RorW, (unsigned short)Command, 
-                 (unsigned short)Data, (unsigned char*)&Package);
-    Wire.beginTransmission(SLAVE_ADDR);
-    Wire.write(Package, 8);
-    Wire.endTransmission();
-    delayMicroseconds(I2CSENDDELAY);
-    Wire.requestFrom(SLAVE_ADDR, 8);
-    if(Wire.available() != 8) {
-        return;
-    }
-    for(int i=0; i<8; i++) {
-        Package[i] = Wire.read();
-    }
-    QCP0_Unpackage((unsigned char*)&Package, (unsigned char *)&RorW, 
-                   (unsigned short *)&Command, (unsigned short *)&Data);
+    // QCP0_Package((unsigned char)RorW, (unsigned short)Command, 
+    //              (unsigned short)Data, (unsigned char*)&Package);
+    // Wire.beginTransmission(SLAVE_ADDR);
+    // Wire.write(Package, 8);
+    // Wire.endTransmission();
+    // delayMicroseconds(I2CSENDDELAY);
+    // Wire.requestFrom(SLAVE_ADDR, 8);
+    // if(Wire.available() != 8) {
+    //     return;
+    // }
+    // for(int i=0; i<8; i++) {
+    //     Package[i] = Wire.read();
+    // }
+    // QCP0_Unpackage((unsigned char*)&Package, (unsigned char *)&RorW, 
+    //                (unsigned short *)&Command, (unsigned short *)&Data);
     
-    QCP0_REG_PROCESS((unsigned short)Command, (unsigned short)Data);
+    // QCP0_REG_PROCESS((unsigned short)Command, (unsigned short)Data);
 }
 
 void DTC03Master::I2CReadData(unsigned short Command)
@@ -301,23 +301,23 @@ void DTC03Master::I2CReadData(unsigned short Command)
     unsigned char RorW = 0xAA;
     unsigned char Package[8];
     unsigned short Data = 0x1234;  
-    QCP0_Package((unsigned char)RorW, (unsigned short)Command, 
-                 (unsigned short)Data, (unsigned char*)&Package);
-    Wire.beginTransmission(SLAVE_ADDR);
-    Wire.write(Package, 8);
-    Wire.endTransmission();
-    delayMicroseconds(I2CSENDDELAY);
-    Wire.requestFrom(SLAVE_ADDR, 8);
-    if(Wire.available() != 8) {
-        return;
-    }
-    for(int i=0; i<8; i++) {
-        Package[i] = Wire.read();
-    }
-    QCP0_Unpackage((unsigned char*)&Package, (unsigned char *)&RorW, 
-                   (unsigned short *)&Command, (unsigned short *)&Data);
+    // QCP0_Package((unsigned char)RorW, (unsigned short)Command, 
+    //              (unsigned short)Data, (unsigned char*)&Package);
+    // Wire.beginTransmission(SLAVE_ADDR);
+    // Wire.write(Package, 8);
+    // Wire.endTransmission();
+    // delayMicroseconds(I2CSENDDELAY);
+    // Wire.requestFrom(SLAVE_ADDR, 8);
+    // if(Wire.available() != 8) {
+    //     return;
+    // }
+    // for(int i=0; i<8; i++) {
+    //     Package[i] = Wire.read();
+    // }
+    // QCP0_Unpackage((unsigned char*)&Package, (unsigned char *)&RorW, 
+    //                (unsigned short *)&Command, (unsigned short *)&Data);
     
-    QCP0_REG_PROCESS((unsigned short)Command, (unsigned short)Data);
+    // QCP0_REG_PROCESS((unsigned short)Command, (unsigned short)Data);
 }
 
 void DTC03Master::I2CWriteAll()
@@ -434,25 +434,26 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
             break;
         case 3:
             if(g_EncodeDir) {
-                g_K++;
+                g_K+=10;
             } else {
-                g_K--;
+                g_K-=10;
             }
-            if (g_K > 150)
-                g_K = 150;
-            if (g_K < 1)
-                g_K = 1;
+            if (g_K > 15000)
+                g_K = 15000;
+            if (g_K < 10)
+                g_K = 10;
             I2CWriteData(I2C_PID_K, g_K);
             PrintK();
             p_ee_changed = 1;
             p_ee_change_state = EEADD_K_UPPER;
+            break;
         case 4:
             if(g_EncodeDir) {
                 if(g_Ti < 5000)
-                    g_Ti++;
+                    g_Ti+=10;
             } else {
-                if(g_Ti > 0)
-                    g_Ti--;
+                if(g_Ti >= 10)
+                    g_Ti-=10;
             }
             I2CWriteData(I2C_PID_Ti, g_Ti);
             PrintTi();
@@ -494,7 +495,7 @@ void DTC03Master::WelcomeScreen()
     lcd.SelectFont(SystemFont5x7);
     lcd.GotoXY(0, 0);
     //  lcd.print("DTC03 Ver.3.01");
-    lcd.print("DTC03 Ver.3.02"); // 3.02 for autotune
+    lcd.print("DTC03A Ver.1.00"); // 3.02 for autotune
     lcd.GotoXY(0, ROWPIXEL0507 * 1);
     lcd.print("Initializing");
     for (byte i = 5; i > 0; i--)
@@ -587,29 +588,26 @@ void DTC03Master::PrintIlim()
 
 void DTC03Master::PrintK()
 {
+    float K = float(g_K) * 0.01;
     lcd.SelectFont(SystemFont5x7);
     lcd.GotoXY(P_COORD_X2, P_COORD_Y);
-    if (g_PID_Mode != PID_Off) {
-        if (g_K < 10)
-            lcd.print("  ");
-        else if (g_K < 100)
-            lcd.print(" ");
-        lcd.print(g_K);
-    } else {
-        lcd.print("RTE");
-    }
+    // if (K < 10)
+    //     lcd.print("  ");
+    // else if (K < 100)
+    //     lcd.print(" ");
+    lcd.print(K, 1);
 }
 
 void DTC03Master::PrintTi()
 {
-    float Ti = float(g_Ti) * 0.01;
+    float Ti = float(g_Ti) * 0.01;;
     lcd.SelectFont(SystemFont5x7);
     lcd.GotoXY(I_COORD_X2, I_COORD_Y);
     if(Ti == 0) {
-        lcd.print(" OFF");
+        lcd.print("OFF  ");
     } else {
         //lcd.print("  ");
-        lcd.print(Ti, 2);
+        lcd.print(Ti, 1);
     }
 }
 
@@ -671,7 +669,8 @@ void DTC03Master::CursorState()
     unsigned int t_temp;
     if (!g_lock_flag)
     {
-        if(g_enc_pressed)
+        if (analogRead(ENC_SW) <= HIGHLOWBOUNDRY)
+        //if(g_enc_pressed)
         {
             t_temp = millis();
 
@@ -908,10 +907,6 @@ void DTC03Master::Encoder()
 
 void DTC03Master::EncoderButton()
 {
-    if (analogRead(ENC_SW) <= HIGHLOWBOUNDRY) {//change cursorstate when push encoder switch
-        g_enc_pressed = true;
-    } else {
-        g_enc_pressed = false;
-    }
+    g_enc_pressed = !digitalRead(ENC_SW);
 }
 

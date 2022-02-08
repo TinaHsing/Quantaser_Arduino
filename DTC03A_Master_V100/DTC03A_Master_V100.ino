@@ -26,7 +26,7 @@ void setup() {
   master.UpdateEnable(); //
   
   attachInterrupt(digitalPinToInterrupt(ENC_A), CheckEncoder, RISING);
-  attachInterrupt(digitalPinToInterrupt(ENC_SW), PushEncoder, CHANGE);
+  //attachInterrupt(digitalPinToInterrupt(ENC_SW), PushEncoder, CHANGE);
 }
 
 void loop() {
