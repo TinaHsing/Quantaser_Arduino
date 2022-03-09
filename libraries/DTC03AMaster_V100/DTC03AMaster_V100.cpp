@@ -139,7 +139,6 @@ void DTC03Master::ParamInit()
     g_IO_State = 0x00;
     g_PID_Mode = PID_Off;
     g_Temp_Sensor_Mode = false;
-    g_enc_pressed = false;
     g_paramupdate = 0;
     g_tsetstep = 1.00;
     g_atune_status = 0;
@@ -670,7 +669,6 @@ void DTC03Master::CursorState()
     if (!g_lock_flag)
     {
         if (analogRead(ENC_SW) <= HIGHLOWBOUNDRY)
-        //if(g_enc_pressed)
         {
             t_temp = millis();
 
@@ -904,9 +902,3 @@ void DTC03Master::Encoder()
         g_paramupdate = 1;
     }
 }
-
-void DTC03Master::EncoderButton()
-{
-    g_enc_pressed = !digitalRead(ENC_SW);
-}
-

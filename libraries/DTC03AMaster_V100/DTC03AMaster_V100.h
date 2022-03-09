@@ -54,8 +54,8 @@
 #define NOEE_DUMMY				104
 #define NOEE_BCONST				3988
 #define NOEE_VSET				26214		// 25C
-#define NOEE_ILIM				248			// 1A
-#define NOEE_VLIM				745			// 2.4V
+#define NOEE_ILIM				204			// I_LIM = 1A
+#define NOEE_VLIM				589			// V_LIM = 6V
 #define NOEE_K					10
 #define NOEE_Ti					0			// OFF
 #define NOEE_Td					0			// OFF
@@ -115,9 +115,9 @@
 #define T0INV					0.003354
 #define RTHRatio				25665
 #define Bin_To_Itec				0.001007080078125	// 3.3V/(4096(12bit ADC) * 0.8V/A)
-#define Bin_To_Ilim				0.0040283203125		// 3.3V/(1024(10bit DAC) * 0.8V/A)
-#define Ilim_To_Bin				248.2424242424242	// 0.8V/A * (1024(10bit DAC)/3.3V)
-#define PI_Freq					1000	// Timer frequency = 1KHz
+#define Bin_To_Ilim				0.0048828125		// g_I_Lim * (5/1024(10bit DAC))
+#define Ilim_To_Bin				204.8				// g_I_Print * (1024(10bit DAC)/5)
+#define PI_Freq					1000				// Timer frequency = 1KHz
 
 class DTC03Master
 {
@@ -150,7 +150,6 @@ public:
 	void blinkTsetCursor();
 	void ShowCursor(unsigned char);
 	void Encoder();
-	void EncoderButton();
 
 	//working variable-------------------
 	bool g_Temp_Sensor_Mode;
@@ -174,7 +173,6 @@ public:
 	float g_T_Set;
 	float g_I_Print;
 
-	bool g_enc_pressed;
 	bool g_atune_status, g_runTimeflag, g_lock_flag;
 	unsigned char g_cursorstate;
 	//------------------------------------
