@@ -67,7 +67,7 @@
 //=====================BG print coordinate definition=========
 #define TSET_COORD_X			0
 #define TSET_COORD_Y			0
-#define TSET_COORD_X2			16
+#define TSET_COORD_X2			18//16
 #define Text_SET				"SET"
 #define TACT_COORD_X			0
 #define TACT_COORD_Y			ROWPIXEL0507 * 3
@@ -113,8 +113,8 @@
 
 //define calculation parameter
 #define T0INV					0.003354
-#define RTHRatio				25665
-#define Bin_To_Itec				0.001007080078125	// 3.3V/(4096(12bit ADC) * 0.8V/A)
+#define RTHRatio				26214
+#define Bin_To_Itec				0.002434716796875	// (g_I_Tec * (3.022 * 3.3V)/(4096(12bit ADC)) - 5
 #define Bin_To_Ilim				0.0048828125		// g_I_Lim * (5/1024(10bit DAC))
 #define Ilim_To_Bin				204.8				// g_I_Print * (1024(10bit DAC)/5)
 #define PI_Freq					1000				// Timer frequency = 1KHz
@@ -136,8 +136,8 @@ public:
 	void WelcomeScreen();
 	void BackGroundPrint();
 	void PrintTset();
-	void PrintTact(float tact);
-	void PrintItec(float itec);
+	void PrintTact(double tact);
+	void PrintItec(double itec);
 	void PrintIlim();
 	void PrintK();
 	void PrintTi();
@@ -155,6 +155,7 @@ public:
 	bool g_Temp_Sensor_Mode;
 	short g_V_Tec;
 	short g_I_Tec;
+	unsigned char g_Remote;
 	unsigned char g_IO_State;
 	unsigned char g_PID_Mode;
 	unsigned char g_Auto_Type;
@@ -170,8 +171,8 @@ public:
 	unsigned short g_HiLimit;
 	unsigned short g_LoLimit;
 
-	float g_T_Set;
-	float g_I_Print;
+	double g_T_Set;
+	double g_I_Print;
 
 	bool g_atune_status, g_runTimeflag, g_lock_flag;
 	unsigned char g_cursorstate;
@@ -179,8 +180,8 @@ public:
 	unsigned short g_pid_mode;
 
 private:
-	float ReturnTemp(unsigned int vact);
-	unsigned int ReturnVset(float tset);
+	double ReturnTemp(unsigned int vact);
+	unsigned int ReturnVset(double tset);
 	unsigned char QCP0_CRC_Calculate(unsigned char *pData, unsigned char Length);
 	void QCP0_Package(unsigned char RorW, unsigned short Command, unsigned short Data, unsigned char *pData);
 	void QCP0_Unpackage(unsigned char *pData, unsigned char *RorW, unsigned short *Command, unsigned short *Data);
@@ -194,5 +195,5 @@ private:
 	bool g_paramupdate, p_tBlink_toggle, p_blinkTsetCursorFlag;
 	bool p_ee_changed, p_HoldCursortateFlag, p_timerResetFlag, p_atunProcess_flag;
 	unsigned long g_tenc, p_loopindex;
-	float g_tsetstep;
+	double g_tsetstep;
 };
