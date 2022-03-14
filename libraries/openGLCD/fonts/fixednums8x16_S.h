@@ -23,7 +23,7 @@ GLCDFONTDECL(fixednums8x16_S) = {
     0x0, 0x0,	// size of zero indicates fixed width font
     8,		// width
     15,		// height
-    0x2D,	// first char (' ')
+    0x20,	// first char (' ')
     27,		// char count
 
     
