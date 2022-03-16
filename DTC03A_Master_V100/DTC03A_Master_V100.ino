@@ -18,12 +18,12 @@ void setup() {
   master.SetPinMode();
   master.ParamInit();
   master.ReadEEPROM();
-  master.I2CWriteAll(); //
   master.WelcomeScreen();
   master.BackGroundPrint();
+  master.I2CWriteAll(); //
   master.PrintNormalAll(); //
-  master.CheckStatus(); //
-  master.UpdateEnable(); //
+//  master.CheckStatus(); //
+//  master.UpdateEnable(); //  
   
   attachInterrupt(digitalPinToInterrupt(ENC_A), CheckEncoder, RISING);
 }
@@ -31,9 +31,7 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   master.CheckStatus();
-  master.UpdateEnable();
   master.CursorState();
-  master.HoldCursortate();
   master.blinkTsetCursor();
   master.UpdateParam(); //
   master.SaveEEPROM();

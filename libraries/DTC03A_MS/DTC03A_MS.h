@@ -15,8 +15,8 @@
 #define I2C_PID_K				0x0202
 #define I2C_PID_Ti				0x0203
 #define I2C_PID_Td				0x0204
-#define I2C_PID_HiLimit			0x0205
-#define I2C_PID_LoLimit			0x0206
+#define I2C_PID_HI_LIMIT		0x0205
+#define I2C_PID_LO_LIMIT		0x0206
 #define I2C_V_Limit				0x0300
 #define I2C_I_Limit				0x0301
 #define I2C_V_TEC				0x0304
@@ -25,8 +25,10 @@
 #define I2C_TEMP_SENSOR_MODE	0x0401
 #define I2C_TEMP_DATA			0x0402
 #define I2C_TEMP_AVERAGE_DATA	0x0403
+#define I2C_TEMP_B_CONSTANT		0x0404
 #define I2C_ATUN_TYPE			0x0500
 #define I2C_ATUN_DeltaDuty		0x0501
+#define I2C_ATUN_Result			0x0502
 
 //=========request Events Mask ============
 #define REQMSK_ENSTATE 		0x80
@@ -43,10 +45,22 @@
 #define REQMSK_ATUNE_DONE 		0X04
 #define REQMSK_ATUNE_STATUS		0x01
 
+//==========IO state============
+#define IO_MCU_READY		0x01 << 0
+#define IO_PWM_EN			0x01 << 1
+#define IO_TEC_EN			0x01 << 2
+#define IO_SENSOR_PWR_EN	0x01 << 3
+#define IO_SENSOR_I_MODE	0x01 << 4
+#define IO_I_LIM_MCU_n		0x01 << 5
+#define IO_V_LIM_MCU_n		0x01 << 6
+#define IO_SENSOR_FAULT_n	0x01 << 7
+#define IO_OVER_COOL_n		0x01 << 8
+
 //==========Type Enum============
 typedef enum {
 	PID_Normal = 0x00U,
-	PID_Autotune = 0x01U
+	PID_Autotune = 0x01U,
+	PID_Hold = 0x02U,
 } PID_Mode;
 
 typedef enum {
