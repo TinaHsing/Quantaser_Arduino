@@ -13,7 +13,7 @@
 #define LONGPRESSTIME			1000
 #define BLINKDELAY				350
 #define HIGHLOWBOUNDRY			500			//
-#define DEBOUNCE_WAIT			100
+#define DEBOUNCE_WAIT			50
 //=================pin definition=========================
 // #define PUSH_ENABLE				0
 // #define ENC_SW					2
@@ -129,6 +129,7 @@
 #define Ilim_To_Bin				204.8				// g_I_Print * (1024(10bit DAC) / 5)
 #define Bin_To_Idelta			0.152587890625		// g_I_AutoDelta * (5000mA / 32768(half of 16bit DAC))
 #define Idelta_To_Bin			6.5536				// g_I_AutoDelta * (32768(half of 16bit DAC) / 5000mA)
+#define PI_Zero					32768				// DAC value that current is 0
 #define PI_Freq					1000				// Timer frequency = 1KHz
 
 typedef enum {

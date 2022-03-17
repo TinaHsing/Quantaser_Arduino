@@ -148,7 +148,7 @@ void DTC03Master::QCP0_REG_PROCESS(unsigned short Command, unsigned short Data)
         }
         break;
     case I2C_PID_Td:
-        g_Td = Data;
+        //g_Td = Data;
         break;
     case I2C_PID_HI_LIMIT:
         if(g_HI_LIMIT != Data) {
@@ -299,59 +299,104 @@ void DTC03Master::ParamInit()
 
 void DTC03Master::ReadEEPROM()
 {
-    if (EEPROM.read(EEADD_DUMMY) == NOEE_DUMMY)
-    {
-        g_B_Const = EEPROM.read(EEADD_BCONST_UPPER) << 8 | EEPROM.read(EEADD_BCONST_LOWER);
-        g_V_Set = EEPROM.read(EEADD_VSET_UPPER) << 8 | EEPROM.read(EEADD_VSET_LOWER);
-        g_I_Lim = EEPROM.read(EEADD_Ilim_UPPER) << 8 | EEPROM.read(EEADD_Ilim_LOWER);
-        g_V_Lim = EEPROM.read(EEADD_Vlim_UPPER) << 8 | EEPROM.read(EEADD_Vlim_LOWER);
-        g_K = EEPROM.read(EEADD_K_UPPER) << 8 | EEPROM.read(EEADD_K_LOWER);
-        g_Ti = EEPROM.read(EEADD_Ti_UPPER) << 8 | EEPROM.read(EEADD_Ti_LOWER);
-        g_Td = EEPROM.read(EEADD_Td_UPPER) << 8 | EEPROM.read(EEADD_Td_LOWER);
-        g_HI_LIMIT = EEPROM.read(EEADD_HiLimit_UPPER) << 8 | EEPROM.read(EEADD_HiLimit_LOWER);
-        g_LO_LIMIT = EEPROM.read(EEADD_LoLimit_UPPER) << 8 | EEPROM.read(EEADD_LoLimit_LOWER);
-        g_I_Bias = EEPROM.read(EEADD_I_Bias);
-        g_Auto_Type = EEPROM.read(EEADD_AutoType);
-        g_Auto_Delta = EEPROM.read(EEADD_AutoDelta_UPPER) << 8 | EEPROM.read(EEADD_AutoDelta_LOWER);
+    unsigned char Dummy = EEPROM.read(EEADD_DUMMY);
+    if(Dummy != NOEE_DUMMY) {
+        goto MemoryError;
     }
-    else
-    {
-        EEPROM.write(EEADD_DUMMY, NOEE_DUMMY);
-        EEPROM.write(EEADD_BCONST_UPPER, NOEE_BCONST >> 8);
-        EEPROM.write(EEADD_BCONST_LOWER, NOEE_BCONST);
-        EEPROM.write(EEADD_VSET_UPPER, NOEE_VSET >> 8);
-        EEPROM.write(EEADD_VSET_LOWER, NOEE_VSET);
-        EEPROM.write(EEADD_Ilim_UPPER, NOEE_ILIM >> 8);
-        EEPROM.write(EEADD_Ilim_LOWER, NOEE_ILIM);
-        EEPROM.write(EEADD_Vlim_UPPER, NOEE_VLIM >> 8);
-        EEPROM.write(EEADD_Vlim_LOWER, NOEE_VLIM);
-        EEPROM.write(EEADD_K_UPPER, NOEE_K >> 8);
-        EEPROM.write(EEADD_K_LOWER, NOEE_K);
-        EEPROM.write(EEADD_Ti_UPPER, NOEE_Ti >> 8);
-        EEPROM.write(EEADD_Ti_LOWER, NOEE_Ti);
-        EEPROM.write(EEADD_Td_LOWER, NOEE_Td >> 8);
-        EEPROM.write(EEADD_Td_LOWER, NOEE_Td);
-        EEPROM.write(EEADD_HiLimit_UPPER, NOEE_HI_LIMIT >> 8);
-        EEPROM.write(EEADD_HiLimit_LOWER, NOEE_HI_LIMIT);
-        EEPROM.write(EEADD_LoLimit_UPPER, NOEE_LO_LIMIT >> 8);
-        EEPROM.write(EEADD_LoLimit_LOWER, NOEE_LO_LIMIT);
-        EEPROM.write(EEADD_I_Bias, NOEE_I_Bias);
-        EEPROM.write(EEADD_AutoType, NOEE_AutoType);
-        EEPROM.write(EEADD_AutoDelta_UPPER, NOEE_AutoDelta >> 8);
-        EEPROM.write(EEADD_AutoDelta_LOWER, NOEE_AutoDelta);
 
-        g_B_Const = NOEE_BCONST;
-        g_V_Set = NOEE_VSET;
-        g_I_Lim = NOEE_ILIM;
-        g_V_Lim = NOEE_VLIM;
-        g_K = NOEE_K;
-        g_Ti = NOEE_Ti;
-        g_Td = NOEE_Td;
-        g_HI_LIMIT = NOEE_HI_LIMIT;
-        g_LO_LIMIT = NOEE_LO_LIMIT;
-        g_Auto_Type = NOEE_AutoType;
-        g_Auto_Delta = NOEE_AutoDelta;
+    g_B_Const = EEPROM.read(EEADD_BCONST_UPPER) << 8 | EEPROM.read(EEADD_BCONST_LOWER);
+    if((g_B_Const > 4500) || (g_B_Const < 3000)) {
+        goto MemoryError;
     }
+
+    g_V_Set = EEPROM.read(EEADD_VSET_UPPER) << 8 | EEPROM.read(EEADD_VSET_LOWER);
+    g_T_Set = ReturnTemp(g_V_Set);
+    if((g_T_Set < 7) || (g_T_Set > 200)) {
+        goto MemoryError;
+    }
+
+    g_I_Lim = EEPROM.read(EEADD_Ilim_UPPER) << 8 | EEPROM.read(EEADD_Ilim_LOWER);
+    g_I_Print = Bin_To_Ilim * (float)(g_I_Lim);
+    if(g_I_Print > 3) {
+        goto MemoryError;
+    }
+
+    g_V_Lim = EEPROM.read(EEADD_Vlim_UPPER) << 8 | EEPROM.read(EEADD_Vlim_LOWER);
+    if(g_V_Lim > NOEE_VLIM) {
+        goto MemoryError;
+    }
+
+    g_K = EEPROM.read(EEADD_K_UPPER) << 8 | EEPROM.read(EEADD_K_LOWER);
+    g_Ti = EEPROM.read(EEADD_Ti_UPPER) << 8 | EEPROM.read(EEADD_Ti_LOWER);
+    g_Td = EEPROM.read(EEADD_Td_UPPER) << 8 | EEPROM.read(EEADD_Td_LOWER);
+    if(g_Td != NOEE_Td) {
+        goto MemoryError;
+    }
+
+    g_HI_LIMIT = EEPROM.read(EEADD_HiLimit_UPPER) << 8 | EEPROM.read(EEADD_HiLimit_LOWER);
+    if((g_HI_LIMIT > NOEE_HI_LIMIT) || (g_HI_LIMIT < PI_Zero)) {
+        goto MemoryError;
+    }
+
+    g_LO_LIMIT = EEPROM.read(EEADD_LoLimit_UPPER) << 8 | EEPROM.read(EEADD_LoLimit_LOWER);
+    if((g_LO_LIMIT > PI_Zero) || (g_LO_LIMIT < NOEE_LO_LIMIT)) {
+        goto MemoryError;
+    }
+
+    g_I_Bias = EEPROM.read(EEADD_I_Bias);
+    if(g_I_Bias > Ib_1_6mA) {
+        goto MemoryError;
+    }
+
+    g_Auto_Type = EEPROM.read(EEADD_AutoType);
+    if(g_Auto_Type > Autotune_PID) {
+        goto MemoryError;
+    }
+
+    g_Auto_Delta = EEPROM.read(EEADD_AutoDelta_UPPER) << 8 | EEPROM.read(EEADD_AutoDelta_LOWER);
+    g_I_AutoDelta = round(Bin_To_Idelta * (float)(g_Auto_Delta));
+    if((g_I_AutoDelta > 500) || (g_I_AutoDelta < -500)) {
+        goto MemoryError;
+    }
+    return;
+
+MemoryError:
+    EEPROM.write(EEADD_DUMMY, NOEE_DUMMY);
+    EEPROM.write(EEADD_BCONST_UPPER, NOEE_BCONST >> 8);
+    EEPROM.write(EEADD_BCONST_LOWER, NOEE_BCONST);
+    EEPROM.write(EEADD_VSET_UPPER, NOEE_VSET >> 8);
+    EEPROM.write(EEADD_VSET_LOWER, NOEE_VSET);
+    EEPROM.write(EEADD_Ilim_UPPER, NOEE_ILIM >> 8);
+    EEPROM.write(EEADD_Ilim_LOWER, NOEE_ILIM);
+    EEPROM.write(EEADD_Vlim_UPPER, NOEE_VLIM >> 8);
+    EEPROM.write(EEADD_Vlim_LOWER, NOEE_VLIM);
+    EEPROM.write(EEADD_K_UPPER, NOEE_K >> 8);
+    EEPROM.write(EEADD_K_LOWER, NOEE_K);
+    EEPROM.write(EEADD_Ti_UPPER, NOEE_Ti >> 8);
+    EEPROM.write(EEADD_Ti_LOWER, NOEE_Ti);
+    EEPROM.write(EEADD_Td_LOWER, NOEE_Td >> 8);
+    EEPROM.write(EEADD_Td_LOWER, NOEE_Td);
+    EEPROM.write(EEADD_HiLimit_UPPER, NOEE_HI_LIMIT >> 8);
+    EEPROM.write(EEADD_HiLimit_LOWER, NOEE_HI_LIMIT);
+    EEPROM.write(EEADD_LoLimit_UPPER, NOEE_LO_LIMIT >> 8);
+    EEPROM.write(EEADD_LoLimit_LOWER, NOEE_LO_LIMIT);
+    EEPROM.write(EEADD_I_Bias, NOEE_I_Bias);
+    EEPROM.write(EEADD_AutoType, NOEE_AutoType);
+    EEPROM.write(EEADD_AutoDelta_UPPER, NOEE_AutoDelta >> 8);
+    EEPROM.write(EEADD_AutoDelta_LOWER, NOEE_AutoDelta);
+
+    g_B_Const = NOEE_BCONST;
+    g_V_Set = NOEE_VSET;
+    g_I_Lim = NOEE_ILIM;
+    g_V_Lim = NOEE_VLIM;
+    g_K = NOEE_K;
+    g_Ti = NOEE_Ti;
+    g_Td = NOEE_Td;
+    g_HI_LIMIT = NOEE_HI_LIMIT;
+    g_LO_LIMIT = NOEE_LO_LIMIT;
+    g_Auto_Type = NOEE_AutoType;
+    g_Auto_Delta = NOEE_AutoDelta;
+
     g_T_Set = ReturnTemp(g_V_Set);
     g_I_Print = Bin_To_Ilim * (float)(g_I_Lim);
     g_I_AutoDelta = round(Bin_To_Idelta * (float)(g_Auto_Delta));
@@ -960,8 +1005,7 @@ void DTC03Master::PrintM()
 {
     lcd.SelectFont(SystemFont5x7);
     lcd.GotoXY(MODE_COORD_X2, MODE_COORD_Y);
-    // lcd.print(g_B_Const);
-    if((g_HI_LIMIT <= 32768) || (g_LO_LIMIT >= 32768)) {
+    if((g_HI_LIMIT <= PI_Zero) || (g_LO_LIMIT >= PI_Zero)) {
         lcd.print("Heat");
     } else {
         lcd.print("Both");
