@@ -198,7 +198,7 @@ void DTC03Master::QCP0_REG_PROCESS(unsigned short Command, unsigned short Data)
         }
         PrintTact(Temp);
         if(g_Remote && (g_I_Bias == Ib_Auto)) {
-            if(Temp < 60) {
+            if(Temp < 65) {
                 if(g_IO_State & IO_SENSOR_I_MODE) {
                     if(g_PID_Mode != PID_Autotune) {
                         I2CWriteData(I2C_PID_MODE, PID_Hold);
@@ -210,7 +210,7 @@ void DTC03Master::QCP0_REG_PROCESS(unsigned short Command, unsigned short Data)
                         I2CWriteData(I2C_PID_MODE, PID_Normal);
                     }
                 }
-            } else if(Temp > 65) {
+            } else if(Temp > 70) {
                 if(!(g_IO_State & IO_SENSOR_I_MODE)) {
                     if(g_PID_Mode != PID_Autotune) {
                         I2CWriteData(I2C_PID_MODE, PID_Hold);
