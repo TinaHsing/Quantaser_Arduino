@@ -89,14 +89,14 @@
 #define ATUNE_DELTA_COORD_Y		ROWPIXEL0507 * 2
 #define ATUNE_DELTA_COORD_X2	COLUMNPIXEL0507 * 17
 #define Text_dA					"dA:"
-#define P_COORD_X				COLUMNPIXEL0507 * 14
-#define P_COORD_Y				ROWPIXEL0507 * 3
-#define P_COORD_X2				COLUMNPIXEL0507 * 16
-#define Text_P					"P:"
-#define I_COORD_X				COLUMNPIXEL0507 * 14
-#define I_COORD_Y				ROWPIXEL0507 * 4
-#define I_COORD_X2				COLUMNPIXEL0507 * 16
-#define Text_I					"I:"
+#define K_COORD_X				COLUMNPIXEL0507 * 14
+#define K_COORD_Y				ROWPIXEL0507 * 3
+#define K_COORD_X2				COLUMNPIXEL0507 * 16
+#define Text_K					"K:"
+#define Ti_COORD_X				COLUMNPIXEL0507 * 14
+#define Ti_COORD_Y				ROWPIXEL0507 * 4
+#define Ti_COORD_X2				COLUMNPIXEL0507 * 17
+#define Text_Ti					"Ti:"
 #define I_BIAS_COORD_X			COLUMNPIXEL0507 * 14
 #define I_BIAS_COORD_Y			ROWPIXEL0507 * 5
 #define I_BIAS_COORD_X2			COLUMNPIXEL0507 * 17
@@ -121,7 +121,7 @@
 #define I2CREADDELAY			100			//delay100us
 
 //define calculation parameter
-#define T0INV					0.003354
+#define T0INV					0.003354016			// 1 / 298.15
 #define RTHRatio_Lo				26214
 #define RTHRatio_Hi				209712
 #define Bin_To_Itec				0.002434716796875	// (g_I_Tec * (3.022 * 3.3V) / (4096(12bit ADC)) - 5

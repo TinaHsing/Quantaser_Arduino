@@ -688,7 +688,7 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
         case 5:
             Temp = g_Ti;
             if(g_EncodeDir) {
-                if(Temp < 5000)
+                if(Temp < 9990)
                     Temp+=10;
             } else {
                 if(Temp >= 10)
@@ -783,10 +783,10 @@ void DTC03Master::BackGroundPrint()
     lcd.print(Text_AT);
     lcd.GotoXY(ATUNE_DELTA_COORD_X, ATUNE_DELTA_COORD_Y);
     lcd.print(Text_dA);
-    lcd.GotoXY(P_COORD_X, P_COORD_Y);
-    lcd.print(Text_P);
-    lcd.GotoXY(I_COORD_X, I_COORD_Y);
-    lcd.print(Text_I);
+    lcd.GotoXY(K_COORD_X, K_COORD_Y);
+    lcd.print(Text_K);
+    lcd.GotoXY(Ti_COORD_X, Ti_COORD_Y);
+    lcd.print(Text_Ti);
     lcd.GotoXY(I_BIAS_COORD_X, I_BIAS_COORD_Y);
     lcd.print(Text_Ib);
     lcd.GotoXY(BCONST_COORD_X, BCONST_COORD_Y);
@@ -859,9 +859,9 @@ void DTC03Master::PrintAtune()
         lcd.print(" ____  ");
         lcd.GotoXY(ATUNE_DELTA_COORD_X, ATUNE_DELTA_COORD_Y);
         lcd.print("|    | ");
-        lcd.GotoXY(P_COORD_X, P_COORD_Y);
+        lcd.GotoXY(K_COORD_X, K_COORD_Y);
         lcd.print("|Auto| ");
-        lcd.GotoXY(I_COORD_X, I_COORD_Y);
+        lcd.GotoXY(Ti_COORD_X, Ti_COORD_Y);
         lcd.print("|    | ");
         lcd.GotoXY(I_BIAS_COORD_X, I_BIAS_COORD_Y);
         lcd.print("|Tune| ");
@@ -874,7 +874,7 @@ void DTC03Master::PrintAtune()
         if (g_atune_status == 0)
             lcd.print("OFF");
         else
-            lcd.print(" ON");
+            lcd.print("ON ");
     }
 }
 
@@ -886,9 +886,9 @@ void DTC03Master::PrintAtuneResult()
         lcd.print(" ____  ");
         lcd.GotoXY(ATUNE_DELTA_COORD_X, ATUNE_DELTA_COORD_Y);
         lcd.print("|    | ");
-        lcd.GotoXY(P_COORD_X, P_COORD_Y);
+        lcd.GotoXY(K_COORD_X, K_COORD_Y);
         lcd.print("|    | ");
-        lcd.GotoXY(I_COORD_X, I_COORD_Y);
+        lcd.GotoXY(Ti_COORD_X, Ti_COORD_Y);
         lcd.print("|Done| ");
         lcd.GotoXY(I_BIAS_COORD_X, I_BIAS_COORD_Y);
         lcd.print("|    | ");
@@ -901,9 +901,9 @@ void DTC03Master::PrintAtuneResult()
         lcd.print(" ____  ");
         lcd.GotoXY(ATUNE_DELTA_COORD_X, ATUNE_DELTA_COORD_Y);
         lcd.print("|    | ");
-        lcd.GotoXY(P_COORD_X, P_COORD_Y);
+        lcd.GotoXY(K_COORD_X, K_COORD_Y);
         lcd.print("|    | ");
-        lcd.GotoXY(I_COORD_X, I_COORD_Y);
+        lcd.GotoXY(Ti_COORD_X, Ti_COORD_Y);
         lcd.print("|Fail| ");
         lcd.GotoXY(I_BIAS_COORD_X, I_BIAS_COORD_Y);
         lcd.print("|    | ");
@@ -946,7 +946,7 @@ void DTC03Master::PrintK()
     }
     float K = float(g_K) * 0.01;
     lcd.SelectFont(SystemFont5x7);
-    lcd.GotoXY(P_COORD_X2, P_COORD_Y);
+    lcd.GotoXY(K_COORD_X2, K_COORD_Y);
     if(K == 0) {
         lcd.print("OFF  ");
     } else {
@@ -956,8 +956,6 @@ void DTC03Master::PrintK()
         else if (K < 100)
             lcd.print(" ");
     }
-    lcd.GotoXY(P_COORD_X2 + (5 * COLUMNPIXEL0507), P_COORD_Y);
-    lcd.print("  ");
 }
 
 void DTC03Master::PrintTi()
@@ -967,18 +965,14 @@ void DTC03Master::PrintTi()
     }
     float Ti = float(g_Ti) * 0.01;;
     lcd.SelectFont(SystemFont5x7);
-    lcd.GotoXY(I_COORD_X2, I_COORD_Y);
+    lcd.GotoXY(Ti_COORD_X2, Ti_COORD_Y);
     if(Ti == 0) {
-        lcd.print("OFF  ");
+        lcd.print("OFF ");
     } else {
         lcd.print(Ti, 1);
         if (Ti < 10)
-            lcd.print("  ");
-        else if (Ti < 100)
             lcd.print(" ");
     }
-    lcd.GotoXY(P_COORD_X2 + (5 * COLUMNPIXEL0507), P_COORD_Y);
-    lcd.print("  ");
 }
 
 void DTC03Master::PrintIb()
@@ -1117,10 +1111,10 @@ void DTC03Master::ShowCursor(unsigned char CursorState)
             lcd.GotoXY(ATUNE_DELTA_COORD_X - COLUMNPIXEL0507, ATUNE_DELTA_COORD_Y);
             break;
         case 4:
-            lcd.GotoXY(P_COORD_X - COLUMNPIXEL0507, P_COORD_Y);
+            lcd.GotoXY(K_COORD_X - COLUMNPIXEL0507, K_COORD_Y);
             break;
         case 5:
-            lcd.GotoXY(I_COORD_X - COLUMNPIXEL0507, I_COORD_Y);
+            lcd.GotoXY(Ti_COORD_X - COLUMNPIXEL0507, Ti_COORD_Y);
             break;
         case 6:
             lcd.GotoXY(I_BIAS_COORD_X - COLUMNPIXEL0507, I_BIAS_COORD_Y);
@@ -1160,7 +1154,7 @@ void DTC03Master::ShowCursor(unsigned char CursorState)
         break;
     case 4:
         lcd.SelectFont(SystemFont5x7, WHITE);
-        lcd.GotoXY(P_COORD_X - COLUMNPIXEL0507, P_COORD_Y);
+        lcd.GotoXY(K_COORD_X - COLUMNPIXEL0507, K_COORD_Y);
         lcd.print(" ");
         lcd.SelectFont(SystemFont5x7);
         lcd.GotoXY(ATUNE_DELTA_COORD_X - COLUMNPIXEL0507, ATUNE_DELTA_COORD_Y);
@@ -1168,10 +1162,10 @@ void DTC03Master::ShowCursor(unsigned char CursorState)
         break;
     case 5:
         lcd.SelectFont(SystemFont5x7, WHITE);
-        lcd.GotoXY(I_COORD_X - COLUMNPIXEL0507, I_COORD_Y);
+        lcd.GotoXY(Ti_COORD_X - COLUMNPIXEL0507, Ti_COORD_Y);
         lcd.print(" ");
         lcd.SelectFont(SystemFont5x7);
-        lcd.GotoXY(P_COORD_X - COLUMNPIXEL0507, P_COORD_Y);
+        lcd.GotoXY(K_COORD_X - COLUMNPIXEL0507, K_COORD_Y);
         lcd.print(" ");
         break;
     case 6:
@@ -1179,7 +1173,7 @@ void DTC03Master::ShowCursor(unsigned char CursorState)
         lcd.GotoXY(I_BIAS_COORD_X - COLUMNPIXEL0507, I_BIAS_COORD_Y);
         lcd.print(" ");
         lcd.SelectFont(SystemFont5x7);
-        lcd.GotoXY(I_COORD_X - COLUMNPIXEL0507, I_COORD_Y);
+        lcd.GotoXY(Ti_COORD_X - COLUMNPIXEL0507, Ti_COORD_Y);
         lcd.print(" ");
         break;
     case 7:
