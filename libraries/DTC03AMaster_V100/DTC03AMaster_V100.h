@@ -149,6 +149,8 @@ public:
 	void I2CWriteAll();
 	void I2CWriteData(unsigned short Command , unsigned short Data);
 	void I2CReadData(unsigned short Command);
+	void WaitPowerOn();
+	bool MemReload();
 	void CheckStatus();
 	void UpdateParam();
 	void WelcomeScreen();
@@ -176,12 +178,14 @@ public:
 	short g_V_Tec;
 	short g_I_Tec;
 	short g_Auto_Delta;
+	unsigned char g_Mem_Load;
 	unsigned char g_Remote;
 	unsigned char g_IO_State;
 	unsigned char g_PID_Mode;
 	unsigned char g_I_Bias;
 	unsigned char g_Auto_Type;
 	unsigned char g_Auto_Result;
+	unsigned short g_Dev_State;
 	unsigned short g_B_Const;
 	unsigned short g_V_Set;
 	unsigned short g_V_Act;

@@ -8,6 +8,7 @@
 // =========receive Events Command and Address======
 #define I2C_DEVICE_STATE		0x0000
 #define I2C_FW_VERSION			0x0001
+#define I2C_MEM_LOAD			0x0002
 #define I2C_REMOTE				0x0010
 #define I2C_IO_STATE			0x0100
 #define I2C_PID_MODE			0x0200
@@ -57,6 +58,11 @@
 #define IO_OVER_COOL_n		0x01 << 8
 
 //==========Type Enum============
+typedef enum {
+	PowerOff = 0x0000U,
+	PowerOn = 0xAA55U
+} DTC03A_State;
+
 typedef enum {
 	PID_Normal = 0x00U,
 	PID_Autotune = 0x01U,

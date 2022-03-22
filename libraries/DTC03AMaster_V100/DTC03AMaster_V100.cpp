@@ -9,11 +9,15 @@ DTC03Master::DTC03Master()
 
 float DTC03Master::ReturnTemp(unsigned int vact)
 {
+    float Temp = 0;
     if(g_IO_State & IO_SENSOR_I_MODE) {
-        return (1 / (log(float(vact) / float(RTHRatio_Hi)) / float(g_B_Const) + T0INV) - 273.15);
+        Temp = (1 / (log(float(vact) / float(RTHRatio_Hi)) / float(g_B_Const) + T0INV) - 273.15);
     } else {
-        return (1 / (log(float(vact) / float(RTHRatio_Lo)) / float(g_B_Const) + T0INV) - 273.15);
+        Temp = (1 / (log(float(vact) / float(RTHRatio_Lo)) / float(g_B_Const) + T0INV) - 273.15);
     }
+    Temp = round(Temp * 1000);
+    Temp /= 1000;
+    return Temp;
 }
 
 unsigned int DTC03Master::ReturnVset(float tset)
@@ -78,8 +82,12 @@ void DTC03Master::QCP0_REG_PROCESS(unsigned short Command, unsigned short Data)
     switch (Command)
     {
     case I2C_DEVICE_STATE:
+        g_Dev_State = Data;
         break;
     case I2C_FW_VERSION:
+        break;
+    case I2C_MEM_LOAD:
+        g_Mem_Load = (unsigned char)Data;
         break;
     case I2C_REMOTE:
         if(g_Remote != (unsigned char)Data) {
@@ -87,6 +95,7 @@ void DTC03Master::QCP0_REG_PROCESS(unsigned short Command, unsigned short Data)
             p_blinkTsetCursorFlag = 0;
             g_tsetstep = 1.0;
             PrintTset();
+            ShowCursor(0);
         }
         break;
     case I2C_IO_STATE:
@@ -173,7 +182,9 @@ void DTC03Master::QCP0_REG_PROCESS(unsigned short Command, unsigned short Data)
         if(g_I_Lim != Data) {
             g_I_Lim = Data;
             if(!g_Remote) {
-                g_I_Print = round(g_I_Lim * Bin_To_Ilim);
+                g_I_Print = Bin_To_Ilim * (float)(g_I_Lim);
+                g_I_Print = round(g_I_Print * 100);
+                g_I_Print /= 100;
                 PrintIlim();
             }
             p_ee_changed = 1;
@@ -275,6 +286,8 @@ void DTC03Master::ParamInit()
 {
     Wire.begin();
     lcd.Init();
+    g_Dev_State = PowerOff;
+    g_Mem_Load = 0x00;
     g_Remote = 0x01;
     g_IO_State = 0x00;
     g_PID_Mode = PID_Normal;
@@ -374,7 +387,7 @@ MemoryError:
     EEPROM.write(EEADD_K_LOWER, NOEE_K);
     EEPROM.write(EEADD_Ti_UPPER, NOEE_Ti >> 8);
     EEPROM.write(EEADD_Ti_LOWER, NOEE_Ti);
-    EEPROM.write(EEADD_Td_LOWER, NOEE_Td >> 8);
+    EEPROM.write(EEADD_Td_UPPER, NOEE_Td >> 8);
     EEPROM.write(EEADD_Td_LOWER, NOEE_Td);
     EEPROM.write(EEADD_HiLimit_UPPER, NOEE_HI_LIMIT >> 8);
     EEPROM.write(EEADD_HiLimit_LOWER, NOEE_HI_LIMIT);
@@ -399,6 +412,8 @@ MemoryError:
 
     g_T_Set = ReturnTemp(g_V_Set);
     g_I_Print = Bin_To_Ilim * (float)(g_I_Lim);
+    g_I_Print = round(g_I_Print * 100);
+    g_I_Print /= 100;
     g_I_AutoDelta = round(Bin_To_Idelta * (float)(g_Auto_Delta));
 }
 
@@ -527,6 +542,21 @@ void DTC03Master::I2CWriteAll()
     }
     I2CWriteData(I2C_ATUN_TYPE, g_Auto_Type);
     I2CWriteData(I2C_ATUN_DeltaDuty, (unsigned short)g_Auto_Delta);
+    I2CWriteData(I2C_MEM_LOAD, 0x0001);
+}
+
+void DTC03Master::WaitPowerOn()
+{
+    do {
+        I2CReadData(I2C_DEVICE_STATE);
+        delay(10);
+    } while (g_Dev_State != PowerOn);
+}
+
+bool DTC03Master::MemReload()
+{
+    I2CReadData(I2C_MEM_LOAD);
+    return (!g_Mem_Load && g_Remote);
 }
 
 void DTC03Master::CheckStatus()
@@ -535,7 +565,9 @@ void DTC03Master::CheckStatus()
     switch (p_loopindex)
     {
     case 0:
-        I2CReadData(I2C_REMOTE);
+        if(g_Remote) {
+            I2CReadData(I2C_REMOTE);
+        }
         break;
     case 1:
         I2CReadData(I2C_IO_STATE);

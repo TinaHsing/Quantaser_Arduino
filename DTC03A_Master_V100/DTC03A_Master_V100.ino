@@ -11,15 +11,13 @@
 DTC03Master master;
 void setup() {
   // put your setup code here, to run once:
-  float tset, tact, itec;
-  unsigned int vact_mv;
-  int itec_mv;
   analogReference(DEFAULT);
   master.SetPinMode();
   master.ParamInit();
   master.ReadEEPROM();
   master.WelcomeScreen();
   master.BackGroundPrint();
+  master.WaitPowerOn();
   master.I2CWriteAll(); //
   master.PrintNormalAll(); //
 //  master.CheckStatus(); //
@@ -35,6 +33,11 @@ void loop() {
   master.blinkTsetCursor();
   master.UpdateParam(); //
   master.SaveEEPROM();
+  if(master.MemReload()) {
+    master.WaitPowerOn();
+    master.I2CWriteAll();
+    master.PrintNormalAll();
+  }
 }
 
 void CheckEncoder()
