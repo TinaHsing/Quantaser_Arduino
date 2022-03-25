@@ -749,10 +749,9 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
             } else if(g_I_Bias == Ib_1_6mA) {
                 I2CWriteData(I2C_TEMP_SENSOR_MODE, 0x0001);
             }
-            g_V_Set = ReturnVset(g_T_Set);
-            I2CWriteData(I2C_PID_TARGET, g_V_Set);
-            p_ee_changed = 1;
-            p_ee_change_state = EEADD_I_Bias;
+            Temp = ReturnVset(g_T_Set);
+            I2CWriteData(I2C_PID_TARGET, Temp);
+            EEPROM.write(NOEE_I_Bias, g_I_Bias);
             break;
         case 7:
             Temp = g_B_Const;
