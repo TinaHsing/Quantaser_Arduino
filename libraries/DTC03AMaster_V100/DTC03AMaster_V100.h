@@ -4,7 +4,7 @@
 #include <Wire.h>
 #include <fonts/SystemFont5x7.h>
 #include <fonts/fixednums7x15_S.h>
-#include <fonts/fixed_bold10x15.h>
+#include <fonts/Arial_bold_14.h>
 #include <avr/pgmspace.h>
 #include <DTC03A_MS.h>
 
@@ -121,6 +121,8 @@
 #define I2CREADDELAY			100			//delay100us
 
 //define calculation parameter
+#define V_ACT_LIM_H				64225
+#define V_ACT_LIM_L				1311
 #define T0INV					0.003354016			// 1 / 298.15
 #define RTHRatio_Lo				26214
 #define RTHRatio_Hi				209712

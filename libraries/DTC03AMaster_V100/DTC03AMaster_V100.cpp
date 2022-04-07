@@ -204,36 +204,37 @@ void DTC03Master::QCP0_REG_PROCESS(unsigned short Command, unsigned short Data)
     case I2C_TEMP_AVERAGE_DATA:
         g_V_Act = Data;
         Temp = ReturnTemp(g_V_Act);
-        if(Temp < 7) {
-            Temp = 7;
-        }
-        PrintTact(Temp);
-        if(g_Remote && (g_I_Bias == Ib_Auto)) {
-            if(Temp < 65) {
-                if(g_IO_State & IO_SENSOR_I_MODE) {
-                    if(g_PID_Mode != PID_Autotune) {
-                        I2CWriteData(I2C_PID_MODE, PID_Hold);
+        if((g_V_Act < V_ACT_LIM_H) && (g_V_Act > V_ACT_LIM_L)) {
+            PrintTact(Temp);
+            if(g_Remote && (g_I_Bias == Ib_Auto)) {
+                if(Temp < 65) {
+                    if(g_IO_State & IO_SENSOR_I_MODE) {
+                        if(g_PID_Mode != PID_Autotune) {
+                            I2CWriteData(I2C_PID_MODE, PID_Hold);
+                        }
+                        I2CWriteData(I2C_TEMP_SENSOR_MODE, 0x0000);
+                        Temp = ReturnVset(g_T_Set);
+                        I2CWriteData(I2C_PID_TARGET, Temp);
+                        if(g_PID_Mode != PID_Autotune) {
+                            I2CWriteData(I2C_PID_MODE, PID_Normal);
+                        }
                     }
-                    I2CWriteData(I2C_TEMP_SENSOR_MODE, 0x0000);
-                    Temp = ReturnVset(g_T_Set);
-                    I2CWriteData(I2C_PID_TARGET, Temp);
-                    if(g_PID_Mode != PID_Autotune) {
-                        I2CWriteData(I2C_PID_MODE, PID_Normal);
-                    }
-                }
-            } else if(Temp > 70) {
-                if(!(g_IO_State & IO_SENSOR_I_MODE)) {
-                    if(g_PID_Mode != PID_Autotune) {
-                        I2CWriteData(I2C_PID_MODE, PID_Hold);
-                    }
-                    I2CWriteData(I2C_TEMP_SENSOR_MODE, 0x0001);
-                    Temp = ReturnVset(g_T_Set);
-                    I2CWriteData(I2C_PID_TARGET, Temp);
-                    if(g_PID_Mode != PID_Autotune) {
-                        I2CWriteData(I2C_PID_MODE, PID_Normal);
+                } else if(Temp > 70) {
+                    if(!(g_IO_State & IO_SENSOR_I_MODE)) {
+                        if(g_PID_Mode != PID_Autotune) {
+                            I2CWriteData(I2C_PID_MODE, PID_Hold);
+                        }
+                        I2CWriteData(I2C_TEMP_SENSOR_MODE, 0x0001);
+                        Temp = ReturnVset(g_T_Set);
+                        I2CWriteData(I2C_PID_TARGET, Temp);
+                        if(g_PID_Mode != PID_Autotune) {
+                            I2CWriteData(I2C_PID_MODE, PID_Normal);
+                        }
                     }
                 }
             }
+        } else {
+            PrintTact(-1);
         }
         break;
     case I2C_TEMP_B_CONSTANT:
@@ -828,33 +829,36 @@ void DTC03Master::BackGroundPrint()
 
 void DTC03Master::PrintTset()
 {
+    lcd.GotoXY(TSET_COORD_X2, TSET_COORD_Y);
     if(g_Remote) {
-        //lcd.SelectFont(fixed_bold10x15);
         lcd.SelectFont(fixednums7x15_S);
-        lcd.GotoXY(TSET_COORD_X2, TSET_COORD_Y);
         if (g_T_Set < 10.000)
             lcd.print("  ");
         else if (g_T_Set < 100.000)
             lcd.print(" ");
         lcd.print(g_T_Set, 3);
+        lcd.print(" ");
     } else {
         lcd.SelectFont(Arial_bold_14);
-        lcd.GotoXY(TSET_COORD_X2, TSET_COORD_Y);
-        lcd.print(" Remote ");
+        lcd.print(" REMOTE");
     }
 }
 
 void DTC03Master::PrintTact(float tact)
 {
-    //lcd.SelectFont(Arial_bold_14);
-    lcd.SelectFont(fixednums7x15_S);
     lcd.GotoXY(TACT_COORD_X2, TACT_COORD_Y);
-    if (tact < 10.000)
-        lcd.print("  ");
-    else if (tact < 100.000)
-        lcd.print(" ");
+    if(tact > 0) {
+        lcd.SelectFont(fixednums7x15_S);
+        if (tact < 10.000)
+            lcd.print("  ");
+        else if (tact < 100.000)
+            lcd.print(" ");
 
-    lcd.print(tact, 3);
+        lcd.print(tact, 3);
+    } else {
+        lcd.SelectFont(Arial_bold_14);
+        lcd.print(" ERROR ");
+    }
 }
 
 void DTC03Master::PrintItec(float itec)
