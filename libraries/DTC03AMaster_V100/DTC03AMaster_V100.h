@@ -9,7 +9,8 @@
 #include <DTC03A_MS.h>
 
 //========Frequently update paramter===========
-#define DEBOUNCETIME			2			//debounceing time(ms) for ENC
+#define DEBOUNCETIME			5			//debounceing time(ms) for ENC
+#define ENC_SPEED_T				25			//rotate speed time(ms) for ENC
 #define LONGPRESSTIME			1000
 #define BLINKDELAY				350
 #define HIGHLOWBOUNDRY			500			//
@@ -221,9 +222,11 @@ private:
 	bool p_LongPress;
 	unsigned int p_PressTime[2];
 	unsigned int p_tBlink, p_holdCursorTimer;
+	unsigned int g_encstep;
 	unsigned char p_ee_change_state;
 	bool g_paramupdate, p_tBlink_toggle, p_blinkTsetCursorFlag;
 	bool p_ee_changed, p_atunProcess_flag;
 	unsigned long g_tenc, p_loopindex;
+	unsigned long g_param_t;
 	float g_tsetstep;
 };

@@ -308,6 +308,7 @@ void DTC03Master::ParamInit()
     p_holdCursorTimer = 0;
     p_atunProcess_flag = 0;
     g_lock_flag = 0;
+    g_param_t = millis();
     g_tenc = millis();
 }
 
@@ -641,8 +642,17 @@ void DTC03Master::CheckStatus()
 void DTC03Master::UpdateParam() // Still need to add the upper and lower limit of each variable
 {
     unsigned short Temp;
+    unsigned int encstep = 1;
+    unsigned long param_time = 0;
     if (g_paramupdate)
     {
+        param_time = millis();
+        if(abs(param_time - g_param_t) < ENC_SPEED_T) {
+            encstep = 10;
+        } else {
+            encstep = 1;
+        }
+        g_param_t = millis();
         g_paramupdate = 0;
         switch (g_cursorstate)
         {
@@ -708,28 +718,42 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
             PrintAtunDelta();
             break;
         case 4:
+            if(g_K >= 10000) {
+                encstep *= 10;
+            }
             Temp = g_K;
             if(g_EncodeDir) {
-                if(Temp < 15000)
-                    Temp+=10;
+                Temp += (10 * encstep);
             } else {
-                if(Temp >= 10)
-                    Temp-=10;
+                if(Temp > (10 * encstep)) {
+                    Temp -= (10 * encstep);
+                } else {
+                    Temp = 0;
+                }
+            }
+            if(Temp > 50000) {
+                Temp = 50000;
             }
             I2CWriteData(I2C_PID_K, Temp);
             break;
         case 5:
+            if(g_Ti >= 10000) {
+                encstep *= 10;
+            }
             Temp = g_Ti;
             if(g_EncodeDir) {
-                if(Temp < 9990)
-                    Temp+=10;
+                Temp += (10 * encstep);
             } else {
-                if(Temp >= 10)
-                    Temp-=10;
+                if(Temp > (10 * encstep)) {
+                    Temp -= (10 * encstep);
+                } else {
+                    Temp = 0;
+                }
+            }
+            if(Temp > 50000) {
+                Temp = 50000;
             }
             I2CWriteData(I2C_PID_Ti, Temp);
-            p_ee_changed = 1;
-            p_ee_change_state = EEADD_Ti_UPPER;
             break;
         case 6:
             if(g_EncodeDir) {
@@ -757,9 +781,9 @@ void DTC03Master::UpdateParam() // Still need to add the upper and lower limit o
         case 7:
             Temp = g_B_Const;
             if(g_EncodeDir) {
-                Temp++;
+                Temp += encstep;
             } else {
-                Temp--;
+                Temp -= encstep;
             }
             if (Temp > 4500)
                 Temp = 4500;
@@ -985,11 +1009,14 @@ void DTC03Master::PrintK()
     if(K == 0) {
         lcd.print("OFF  ");
     } else {
-        lcd.print(K, 1);
-        if (K < 10)
+        if(K < 100) {
+            lcd.print(K, 1);
+            if (K < 10)
+                lcd.print("  ");
+        } else {
+            lcd.print(K, 0);
             lcd.print("  ");
-        else if (K < 100)
-            lcd.print(" ");
+        }
     }
 }
 
@@ -1004,9 +1031,14 @@ void DTC03Master::PrintTi()
     if(Ti == 0) {
         lcd.print("OFF ");
     } else {
-        lcd.print(Ti, 1);
-        if (Ti < 10)
+        if(Ti < 100) {
+            lcd.print(Ti, 1);
+            if (Ti < 10)
+                lcd.print(" ");
+        } else {
+            lcd.print(Ti, 0);
             lcd.print(" ");
+        }
     }
 }
 
