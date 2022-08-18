@@ -26,29 +26,29 @@
 #define PUSH_ENABLE					A6
 
 //-----------EEPROM ADDRESS---------
-#define EEADD_BCONST_UPPER		0x00
-#define EEADD_BCONST_LOWER		0x01
+#define EEADD_BCONST_LOWER		0x00
+#define EEADD_BCONST_UPPER		0x01
 #define EEADD_I_Bias_IO			0x02
 #define EEADD_I_Bias			0x03
-#define EEADD_VSET_UPPER		0x04
-#define EEADD_VSET_LOWER		0x05
-#define EEADD_Ilim_UPPER		0x06
-#define EEADD_Ilim_LOWER		0x07
-#define EEADD_Vlim_UPPER		0x08
-#define EEADD_Vlim_LOWER		0x09
-#define EEADD_K_UPPER			0x0A
-#define EEADD_K_LOWER			0x0B
-#define EEADD_Ti_UPPER			0x0C
-#define EEADD_Ti_LOWER			0x0D
-#define EEADD_Td_UPPER			0x0E
-#define EEADD_Td_LOWER			0x0F
-#define EEADD_HiLimit_UPPER		0x10
-#define EEADD_HiLimit_LOWER		0x11
-#define EEADD_LoLimit_UPPER		0x12
-#define EEADD_LoLimit_LOWER		0x13
+#define EEADD_VSET_LOWER		0x04
+#define EEADD_VSET_UPPER		0x05
+#define EEADD_Ilim_LOWER		0x06
+#define EEADD_Ilim_UPPER		0x07
+#define EEADD_Vlim_LOWER		0x08
+#define EEADD_Vlim_UPPER		0x09
+#define EEADD_K_LOWER			0x0A
+#define EEADD_K_UPPER			0x0B
+#define EEADD_Ti_LOWER			0x0C
+#define EEADD_Ti_UPPER			0x0D
+#define EEADD_Td_LOWER			0x0E
+#define EEADD_Td_UPPER			0x0F
+#define EEADD_HiLimit_LOWER		0x10
+#define EEADD_HiLimit_UPPER		0x11
+#define EEADD_LoLimit_LOWER		0x12
+#define EEADD_LoLimit_UPPER		0x13
 #define EEADD_AutoType			0x14
-#define EEADD_AutoDelta_UPPER	0x15
-#define EEADD_AutoDelta_LOWER	0x16
+#define EEADD_AutoDelta_LOWER	0x15
+#define EEADD_AutoDelta_UPPER	0x16
 #define EEADD_DUMMY				0x64
 
 //----------NOEE Default value------
@@ -225,9 +225,9 @@ private:
 	unsigned int p_PressTime[2];
 	unsigned int p_tBlink, p_holdCursorTimer;
 	unsigned int g_encstep;
-	unsigned char p_ee_change_state;
+	unsigned char p_ee_update_state;
 	bool g_paramupdate, p_tBlink_toggle, p_blinkTsetCursorFlag;
-	bool p_ee_changed, p_atunProcess_flag;
+	bool p_atunProcess_flag;
 	unsigned long g_tenc, p_loopindex;
 	unsigned long g_param_t;
 	float g_tsetstep;

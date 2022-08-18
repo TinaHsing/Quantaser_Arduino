@@ -31,21 +31,6 @@
 #define I2C_ATUN_DeltaDuty		0x0501
 #define I2C_ATUN_Result			0x0502
 
-//=========request Events Mask ============
-#define REQMSK_ENSTATE 		0x80
-#define REQMSK_SENSTYPE		0x40
-#define REQMSK_BUPPER		0x07
-
-#define REQMSK_ITECU		0x03
-#define REQMSK_ITECSIGN		0x04
-#define REQMSK_ERR1		 	0x10
-#define REQMSK_ERR2			0x20
-#define REQMSK_WAKEUP   	0x40			//Tina 2017/2/15
-#define REQMSK_ATUNE_RUNTIMEERR	0X01
-#define REQMSK_ATUNE_DBR 		0X02
-#define REQMSK_ATUNE_DONE 		0X04
-#define REQMSK_ATUNE_STATUS		0x01
-
 //==========IO state============
 #define IO_MCU_READY		0x01 << 0
 #define IO_PWM_EN			0x01 << 1
