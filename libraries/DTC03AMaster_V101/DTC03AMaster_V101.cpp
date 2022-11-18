@@ -162,6 +162,9 @@ void DTC03Master::QCP0_REG_PROCESS(unsigned short Command, unsigned short Data)
         break;
     case I2C_V_Limit:
         g_V_Lim = Data;
+        if(g_V_Lim != NOEE_VLIM) {
+            I2CWriteData(I2C_V_Limit, NOEE_VLIM);
+        }
         break;
     case I2C_I_Limit:
         if(g_I_Lim != Data) {
@@ -523,8 +526,10 @@ void DTC03Master::I2CWriteAll()
     I2CWriteData(I2C_PID_Td, 0);
     I2CWriteData(I2C_PID_HI_LIMIT, g_HI_LIMIT);
     I2CWriteData(I2C_PID_LO_LIMIT, g_LO_LIMIT);
-    I2CWriteData(I2C_V_Limit, g_V_Lim);
+    I2CWriteData(I2C_V_Limit, NOEE_VLIM);
+    delay(100);
     I2CWriteData(I2C_I_Limit, g_I_Lim);
+    delay(100);
     I2CWriteData(I2C_TEMP_SENSOR_EN, 0x0001);
     if(g_I_Bias == Ib_200uA) {
         I2CWriteData(I2C_TEMP_SENSOR_MODE, 0x0000);
@@ -580,40 +585,43 @@ void DTC03Master::CheckStatus()
         }
         break;
     case 4:
-        I2CReadData(I2C_I_Limit);
+        I2CReadData(I2C_V_Limit);
         break;
     case 5:
+        I2CReadData(I2C_I_Limit);
+        break;
+    case 6:
          if(!g_Remote && !g_lock_flag) {
             I2CReadData(I2C_PID_K);
         }
         break;
-    case 6:
+    case 7:
          if(!g_Remote && !g_lock_flag) {
             I2CReadData(I2C_PID_Ti);
         }
         break;
-    case 7:
+    case 8:
          if(!g_Remote && !g_lock_flag) {
             I2CReadData(I2C_TEMP_B_CONSTANT);
         }
         break;
-    case 8:
+    case 9:
         if(!g_Remote && !g_lock_flag) {
             I2CReadData(I2C_PID_HI_LIMIT);
         }
         break;
-    case 9:
+    case 10:
         if(!g_Remote && !g_lock_flag) {
             I2CReadData(I2C_PID_LO_LIMIT);
         }
         break;
-    case 10:
+    case 11:
         I2CReadData(I2C_I_TEC);
         break;
-    case 11:
+    case 12:
         I2CReadData(I2C_TEMP_AVERAGE_DATA);
         break;
-    case 12:
+    case 13:
          if(!g_Remote && !g_lock_flag) {
             I2CReadData(I2C_ATUN_DeltaDuty);
         }
@@ -621,7 +629,7 @@ void DTC03Master::CheckStatus()
     default:
         break;
     }
-    if(p_loopindex == 12) {
+    if(p_loopindex == 13) {
         p_loopindex = 0;
     } else {
         p_loopindex++;
