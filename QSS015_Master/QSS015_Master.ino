@@ -7,8 +7,9 @@ LTC2615 ltc2615;
 LTC2451 ltc2451;
 
 #define DEBUG 0
+#define USB_CHECK_TIMER 1000
 
-unsigned long ul_time_begin = 0, ul_time_current = 0;
+unsigned long ul_time_begin = 0,ul_usbtimer_begin =0,  ul_time_current = 0 ;
 unsigned long ul_ReadCounter = 0;
 bool g_lock = true;
 volatile unsigned long ul_Counter = 0;
@@ -29,7 +30,9 @@ void setup() {
   ltc2615.init();
   ltc2451.Init(0);
   ul_time_begin = millis();
+  ul_usbtimer_begin = millis();
   Wire.begin();
+ 
 
 }
 
@@ -37,6 +40,11 @@ void loop() {
   // put your main code here, to run repeatedly:
   
   ul_time_current = millis();
+  if (ul_time_current -ul_usbtimer_begin > USB_CHECK_TIMER )
+  {
+    for (int i = 1 ; i < 6; i ++)
+          SetVoltage(i, 0); 
+  }
   if ( (ul_time_current - ul_time_begin) > 1000 )
   {
     ul_ReadCounter = ul_Counter;
@@ -104,6 +112,7 @@ void loop() {
 
     // clear the string:
     inputString = "";
+    ul_usbtimer_begin = millis();
     stringComplete = false;
   }
 
@@ -171,6 +180,8 @@ void SetVoltage(unsigned char ch, unsigned int vol)
 #endif
   }
 }
+
+
 
 void InterLock()
 {
