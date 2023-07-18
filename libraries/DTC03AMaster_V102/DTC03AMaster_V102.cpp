@@ -1,7 +1,7 @@
 /* 
 	09/19/2017
 */
-#include <DTC03AMaster_V101.h>
+#include <DTC03AMaster_V102.h>
 
 DTC03Master::DTC03Master()
 {
@@ -826,7 +826,7 @@ void DTC03Master::WelcomeScreen()
     lcd.SelectFont(SystemFont5x7);
     lcd.GotoXY(0, 0);
     //  lcd.print("DTC03 Ver.3.01");
-    lcd.print("DTC03A Ver.1.01"); // 3.02 for autotune
+    lcd.print("DTC03A Ver.1.02"); // 3.02 for autotune
     lcd.GotoXY(0, ROWPIXEL0507 * 1);
     lcd.print("Initializing");
     for (byte i = 5; i > 0; i--)
